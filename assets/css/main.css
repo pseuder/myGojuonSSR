@@ -1,0 +1,23 @@
+@import "element-plus/dist/index.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@reference "tailwindcss";
+
+body,
+html,
+#app,
+#__nuxt {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.el-tabs,
+.el-menu {
+  user-select: none;
+}

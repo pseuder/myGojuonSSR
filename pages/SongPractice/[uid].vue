@@ -1,0 +1,591 @@
+<template>
+  <!-- 頁面結構基本不變 -->
+  <div class="flex flex-col lg:h-[80vh] lg:overflow-hidden">
+    <!-- 增加 v-if="currentVideo" 確保數據載入後才渲染，提升體驗 -->
+    <div
+      v-if="currentVideo"
+      class="flex h-full flex-col gap-4 px-4 py-4 md:px-10 lg:flex-row"
+    >
+      <!-- 影片播放器+功能列 -->
+      <div class="flex flex-col lg:w-1/2">
+        <div class="gradient-text-tech-animated">
+          {{ currentVideo.video_name }} - {{ currentVideo.author }}
+        </div>
+        <!-- 影片播放器 -->
+        <div id="player-container" ref="playerContainerRef" class="h-[70%]">
+          <!-- Nuxt 3 中，可以使用 <ClientOnly> 包裝純客戶端元件，但此處在 onMounted 中初始化，所以不是必須 -->
+          <div
+            id="player"
+            ref="playerRef"
+            style="max-height: 430px; aspect-ratio: 4/3"
+          ></div>
+        </div>
+
+        <!-- 功能列 (結構不變) -->
+        <div class="flex h-[10%] flex-col gap-2">
+          <div class="my-4 flex w-full flex-col items-center gap-2">
+            <div
+              class="flex w-full flex-row items-center justify-between gap-4"
+            >
+              <div
+                class="cursor-pointer hover:text-blue-500"
+                @click="goToPreviousLyric()"
+              >
+                <el-tag>A</el-tag> {{ t("jump_previous_line") }}
+              </div>
+              <div
+                class="cursor-pointer hover:text-blue-500"
+                @click="goToNextLyric()"
+              >
+                <el-tag>D</el-tag> {{ t("jump_next_line") }}
+              </div>
+              <div
+                class="cursor-pointer hover:text-blue-500"
+                @click="toggleLoopCurrentLyric()"
+              >
+                <el-tag>S</el-tag>
+                <span v-if="isLooping" class="text-red-600">{{
+                  t("stop_looping")
+                }}</span>
+                <span v-else>{{ t("loop_playback") }}</span>
+              </div>
+            </div>
+
+            <div class="flex w-full items-center justify-between gap-2">
+              <el-checkbox v-model="autoScroll">{{
+                t("scrolling")
+              }}</el-checkbox>
+
+              <el-radio-group v-model="display_mode" size="large">
+                <el-radio
+                  value="hira"
+                  size="large"
+                  style="margin-right: 18px"
+                  >{{ t("normal") }}</el-radio
+                >
+                <el-radio value="both" size="large">{{ t("mixed") }}</el-radio>
+              </el-radio-group>
+              <el-input-number
+                v-model="playbackRate"
+                :precision="1"
+                :step="0.1"
+                :max="2"
+                :min="0.3"
+                @change="changePlaybackRate(playbackRate)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 歌詞 (結構不變) -->
+      <el-scrollbar class="lyrics-container h-full overflow-x-auto lg:w-1/2">
+        <el-button type="warning" size="small" @click="handleCopyLyrics" plain>
+          複製歌詞
+        </el-button>
+        <div class="">
+          <div
+            v-for="(line, index) in lyrics"
+            :key="index"
+            :id="`lyric-${index}`"
+            :class="{ 'bg-yellow-200': currentLyricIndex === index }"
+            class="flex items-center gap-4 py-2"
+          >
+            <div class="flex flex-shrink-0 items-center">
+              <el-button
+                type="text"
+                plain
+                @click="handleStartVideoClick(line.timestamp)"
+              >
+                <el-icon :size="25">
+                  <Switch />
+                </el-icon>
+              </el-button>
+
+              <el-button
+                type="text"
+                plain
+                @click="togglePlayPause"
+                style="margin-left: 4px"
+              >
+                <el-icon :size="25">
+                  <VideoPause v-if="isPlaying" />
+                  <VideoPlay v-else />
+                </el-icon>
+              </el-button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <template v-for="(ly, lyIndex) in line.lyrics" :key="lyIndex">
+                <div class="flex flex-col items-center justify-center">
+                  <div class="h-3 text-sm">
+                    {{ display_mode === "both" ? ly.cvt : "" }}
+                  </div>
+                  <div class="text-xl">
+                    {{ ly.ori }}
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </el-scrollbar>
+    </div>
+    <!-- 增加載入中狀態顯示 -->
+    <div v-else class="flex h-full items-center justify-center">
+      <p>Loading song...</p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+// [變更] 移除 vue-router 和 axios 的 import，Nuxt 3 會自動引入所需函式
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import { VideoPause, VideoPlay, Switch } from "@element-plus/icons-vue"; // 這些通常會由 element-plus/nuxt 自動引入
+import { ElMessage } from "element-plus";
+// [變更] useI18n 來自 @nuxtjs/i18n 模組，用法相同
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
+
+const MYAPI = useApi();
+
+// [變更] 使用 Nuxt 的 useRouter 和 useRoute
+const router = useRouter();
+const route = useRoute();
+
+// [變更] 使用 Nuxt 的 useRuntimeConfig 獲取環境變數，更安全
+const config = useRuntimeConfig();
+const API_BASE_URL = config.public.apiBase;
+
+// --- 核心變更：數據獲取與 SEO ---
+
+// [變更] 從路由參數獲取影片 ID，注意是 uid
+const videoId = computed(() => route.params.uid);
+
+const uid = route.params.uid;
+
+const {
+  data: videoData,
+  pending,
+  error,
+} = await useAsyncData(
+  `song-${uid}`, // 1. 唯一的 key，用於快取。通常用頁面名和參數組合
+  async () => {
+    // 2. 負責擷取資料的非同步函式
+    console.log("Fetching video data for UID:", uid);
+    try {
+      console.log("API_BASE_URL:", API_BASE_URL);
+      const response = await MYAPI.get(`/get_video/${uid}`);
+      if (!response.data) {
+        // 在 Nuxt 中，建議這樣拋出一個帶有狀態碼的錯誤
+        throw createError({
+          statusCode: 404,
+          statusMessage: "Song Not Found",
+          fatal: true,
+        });
+      }
+      return response.data; // 只返回需要的資料部分
+    } catch (err) {
+      console.error("Error fetching video data:", err);
+      throw createError({
+        statusCode: 500,
+        statusMessage: "無法載入歌曲資訊",
+        fatal: true,
+      });
+    }
+  },
+);
+
+console.log(videoData.value);
+
+// [變更] 將獲取到的數據轉換為響應式引用
+// computed 可以確保當 videoData 變化時，相關變數也跟著更新
+const currentVideo = computed(() => videoData.value);
+const lyrics = computed(() => {
+  if (videoData.value?.converted_lyrics) {
+    try {
+      return JSON.parse(videoData.value.converted_lyrics);
+    } catch (e) {
+      console.error("Failed to parse lyrics JSON", e);
+      return [];
+    }
+  }
+  return [];
+});
+
+// [變更] 使用 useSeoMeta 進行 SEO 優化，這是 Nuxt 3 的標準做法
+// 它是響應式的，當 currentVideo 變化時，meta 標籤會自動更新
+useSeoMeta({
+  title: () =>
+    `${currentVideo.value?.video_name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
+  description: () =>
+    `練習日語歌曲《${currentVideo.value?.video_name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能，幫助您學習日語。`,
+  keywords: () =>
+    `日語歌曲, ${currentVideo.value?.video_name}, ${currentVideo.value?.author}, 日語學習, 歌詞練習, 發音練習`,
+  ogTitle: () =>
+    `${currentVideo.value?.video_name} - ${currentVideo.value?.author} | 日語歌曲練習`,
+  ogDescription: () =>
+    `練習日語歌曲《${currentVideo.value?.video_name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能。`,
+  ogType: "website",
+  ogUrl: () => `http://localhost:3000${route.fullPath}`, // 正式環境請換成你的網域
+  twitterCard: "summary",
+});
+
+// [變更] 使用 useHead 處理 JSON-LD 結構化數據
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      // 使用 getter 函數使其響應式
+      children: () =>
+        JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: `${currentVideo.value?.video_name} - ${currentVideo.value?.author} | 日語歌曲練習`,
+          description: `練習日語歌曲《${currentVideo.value?.video_name}》by ${currentVideo.value?.author}。`,
+          url: `http://localhost:3000${route.fullPath}`, // 正式環境請換成你的網域
+          mainEntity: {
+            "@type": "MusicRecording",
+            name: currentVideo.value?.video_name,
+            byArtist: { "@type": "Person", name: currentVideo.value?.author },
+            inLanguage: "ja",
+          },
+        }),
+    },
+  ],
+  // [變更] 處理 YouTube API script 的載入
+  // 這樣 Nuxt 會幫我們管理 script 標籤
+  script: [
+    { src: "https://www.youtube.com/iframe_api", async: true, defer: true },
+  ],
+});
+
+// --- 播放器與互動邏輯 (大部分保留，但需要確保在客戶端執行) ---
+
+const playerRef = ref(null);
+let player = null;
+const currentLyricIndex = ref(-1);
+
+const display_mode = ref("both");
+const playbackRate = ref(1);
+const autoScroll = ref(true);
+const isPlaying = ref(false);
+const isLooping = ref(false);
+const loopStart = ref(0);
+const loopEnd = ref(0);
+
+const allVideos = ref([]);
+const fetchAllVideos = async () => {
+  try {
+    // 使用 $fetch
+    const response = await $fetch(`${API_BASE_URL}/get_all_videos`);
+    allVideos.value = response.videos;
+  } catch (error) {
+    console.error("Error fetching all videos:", error);
+    ElMessage.error("無法獲取所有歌曲列表");
+    allVideos.value = [];
+  }
+};
+
+const authorFilteredVideos = computed(() => {
+  if (
+    !currentVideo.value ||
+    !currentVideo.value.author ||
+    !allVideos.value.length
+  ) {
+    return [];
+  }
+  return allVideos.value
+    .filter((video) => video.author === currentVideo.value.author)
+    .sort((a, b) => a.uid - b.uid);
+});
+
+const currentVideoIndexInAuthorList = computed(() => {
+  if (!currentVideo.value || !authorFilteredVideos.value.length) {
+    return -1;
+  }
+  // 注意：原來的 videoId 是 YouTube ID，這裡假設 uid 是影片的唯一標識符
+  return authorFilteredVideos.value.findIndex(
+    (v) => v.video_id === videoId.value,
+  );
+});
+
+// 解析時間戳
+const parseTimeToSeconds = (timeString) => {
+  if (!timeString) return 0;
+  const timeStringmatch = timeString.match(/\[(\d+):(\d+\.\d+)\]/);
+  if (timeStringmatch) {
+    return parseInt(timeStringmatch[1]) * 60 + parseFloat(timeStringmatch[2]);
+  }
+  return 0;
+};
+
+// YouTube Player 初始化
+const initializePlayer = () => {
+  // 確保 YT API 已載入且在客戶端環境
+  if (
+    typeof window.YT === "undefined" ||
+    typeof window.YT.Player === "undefined"
+  ) {
+    // 如果 API 還沒好，稍後再試
+    setTimeout(initializePlayer, 100);
+    return;
+  }
+
+  if (!playerRef.value) return;
+
+  // 如果已有播放器實例，先銷毀
+  if (player) {
+    player.destroy();
+    player = null;
+  }
+
+  player = new window.YT.Player(playerRef.value, {
+    videoId: videoId.value, // 直接使用 videoId
+    height: "100%",
+    width: "100%",
+    playerVars: { autoplay: 1, playsinline: 1 },
+    events: {
+      onReady: (event) => {
+        setInterval(updateCurrentLyric, 100);
+        event.target.setPlaybackRate(playbackRate.value);
+      },
+      onStateChange: (event) => {
+        isPlaying.value = event.data === window.YT.PlayerState.PLAYING;
+        if (event.data === window.YT.PlayerState.ENDED) {
+          playNextSong();
+        }
+      },
+      onError: (event) => {
+        console.error("YouTube Player Error:", event.data);
+        ElMessage.error(`播放器錯誤: ${event.data}`);
+      },
+    },
+  });
+};
+
+const playNextSong = () => {
+  if (currentVideoIndexInAuthorList.value === -1) {
+    if (player && player.seekTo) player.seekTo(0);
+    return;
+  }
+
+  const nextIndex = currentVideoIndexInAuthorList.value + 1;
+  if (nextIndex < authorFilteredVideos.value.length) {
+    const nextSong = authorFilteredVideos.value[nextIndex];
+    ElMessage.info(`即將播放下一首: ${nextSong.video_name}`);
+    // [變更] 使用 Nuxt router 導航
+    router.push(`/SongPractice/${nextSong.video_id}`);
+  } else {
+    ElMessage.info("已是此歌手的最後一首歌，將從頭播放目前歌曲。");
+    if (player && player.seekTo) player.seekTo(0);
+  }
+};
+
+// 當 videoId 改變時，重新初始化播放器
+watch(videoId, (newId, oldId) => {
+  if (newId && newId !== oldId && process.client) {
+    // 重置狀態
+    currentLyricIndex.value = -1;
+    isLooping.value = false;
+    // useAsyncData 會自動獲取新數據，我們只需重新初始化播放器
+    initializePlayer();
+  }
+});
+
+// --- 以下是大部分可以保留的客戶端互動邏輯 ---
+
+const updateCurrentLyric = () => {
+  if (
+    player &&
+    typeof player.getCurrentTime === "function" &&
+    lyrics.value.length > 0
+  ) {
+    const currentTime = player.getCurrentTime();
+    if (isLooping.value && loopEnd.value > 0 && currentTime >= loopEnd.value) {
+      player.seekTo(loopStart.value);
+      return;
+    }
+    for (let i = 0; i < lyrics.value.length; i++) {
+      const lineStartTime = parseTimeToSeconds(lyrics.value[i].timestamp);
+      const nextLineStartTime =
+        i < lyrics.value.length - 1
+          ? parseTimeToSeconds(lyrics.value[i + 1].timestamp)
+          : player.getDuration() || Infinity;
+      if (currentTime >= lineStartTime && currentTime < nextLineStartTime) {
+        if (currentLyricIndex.value !== i) {
+          currentLyricIndex.value = i;
+          if (autoScroll.value) scrollToCurrentLyric(i);
+        }
+        break;
+      }
+    }
+  }
+};
+
+const scrollToCurrentLyric = (index) => {
+  // `document` 只能在客戶端使用
+  if (process.client) {
+    const lyricElement = document.getElementById(`lyric-${index}`);
+    if (lyricElement) {
+      lyricElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+};
+
+const startVideo = (time) => {
+  if (player && player.seekTo) {
+    player.seekTo(parseTimeToSeconds(time));
+    player.playVideo();
+  }
+};
+
+const handleStartVideoClick = (time) => {
+  if (isLooping.value) toggleLoopCurrentLyric();
+  startVideo(time);
+};
+
+const togglePlayPause = () => {
+  if (player) {
+    isPlaying.value ? player.pauseVideo() : player.playVideo();
+  }
+};
+
+const changePlaybackRate = (value) => {
+  if (player && player.setPlaybackRate) {
+    player.setPlaybackRate(value);
+  }
+};
+
+const goToPreviousLyric = () => {
+  if (currentLyricIndex.value > 0 && lyrics.value.length > 0) {
+    startVideo(lyrics.value[currentLyricIndex.value - 1].timestamp);
+  }
+};
+
+const goToNextLyric = () => {
+  if (currentLyricIndex.value < lyrics.value.length - 1) {
+    startVideo(lyrics.value[currentLyricIndex.value + 1].timestamp);
+  }
+};
+
+const toggleLoopCurrentLyric = () => {
+  if (lyrics.value.length === 0 || currentLyricIndex.value < 0) {
+    ElMessage.warning("沒有可循環的歌詞行");
+    return;
+  }
+  isLooping.value = !isLooping.value;
+  if (isLooping.value) {
+    loopStart.value = parseTimeToSeconds(
+      lyrics.value[currentLyricIndex.value].timestamp,
+    );
+    loopEnd.value =
+      currentLyricIndex.value < lyrics.value.length - 1
+        ? parseTimeToSeconds(
+            lyrics.value[currentLyricIndex.value + 1].timestamp,
+          )
+        : player && player.getDuration
+          ? player.getDuration()
+          : Infinity;
+    ElMessage.success("開始循環當前行");
+  } else {
+    loopStart.value = 0;
+    loopEnd.value = 0;
+    ElMessage.info("停止循環");
+  }
+};
+
+const handleCopyLyrics = () => {
+  // `navigator` 只能在客戶端使用
+  if (process.client) {
+    let result = "";
+    for (const line of lyrics.value) {
+      let combinedLyric = "";
+      for (const lyric of line.lyrics) combinedLyric += `${lyric.ori}`;
+      result += `${line.timestamp}${combinedLyric}\n`;
+    }
+    navigator.clipboard.writeText(result);
+    ElMessage.success("複製成功");
+  }
+};
+
+const handleKeyPress = (event) => {
+  if (
+    process.client &&
+    (document.activeElement.tagName === "INPUT" ||
+      document.activeElement.tagName === "TEXTAREA")
+  ) {
+    return;
+  }
+  switch (event.key.toLowerCase()) {
+    case "a":
+      goToPreviousLyric();
+      break;
+    case "d":
+      goToNextLyric();
+      break;
+    case "s":
+      toggleLoopCurrentLyric();
+      break;
+  }
+};
+
+// [變更] onMounted 只在客戶端執行，是放置客戶端專用邏輯的最佳位置
+onMounted(() => {
+  // 確保在客戶端環境下執行
+  if (process.client) {
+    fetchAllVideos();
+
+    // 監聽 YouTube API 是否準備就緒
+    window.onYouTubeIframeAPIReady = () => {
+      initializePlayer();
+    };
+
+    // 如果 API 已經載入，直接初始化
+    if (window.YT && window.YT.Player) {
+      initializePlayer();
+    }
+
+    window.addEventListener("keypress", handleKeyPress);
+  }
+});
+
+onUnmounted(() => {
+  if (process.client) {
+    if (player) {
+      player.destroy();
+      player = null;
+    }
+    window.removeEventListener("keypress", handleKeyPress);
+    // onYouTubeIframeAPIReady 設為 null，避免組件卸載後觸發
+    window.onYouTubeIframeAPIReady = null;
+  }
+});
+</script>
+
+<!-- <style> 區塊保持不變 -->
+<style scoped>
+/* ... 您的樣式 ... */
+.gradient-text-tech-animated {
+  background: linear-gradient(120deg, #4caf50, #2196f3, #673ab7, #4caf50);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+  animation: gradient-animation 8s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+</style>
