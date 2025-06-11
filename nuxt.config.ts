@@ -1,7 +1,7 @@
 // nuxt.config.ts
 import tailwindcss from "@tailwindcss/vite";
 
-const API_BASE_URL = "http://localhost:5001/";
+const API_BASE_URL = "https://pseuder.xyz/srv_mygojuon2/";
 const GOOGLE_CLIENT_ID =
   "314080941126-4t3fosnf64q4jcqe3lltftq1melsguq8.apps.googleusercontent.com";
 
