@@ -21,11 +21,11 @@
     </el-space>
     <div class="flex items-center gap-4">
       <el-space class="justify-center" style="width: 100%" wrap>
-        <template v-for="video in filteredVideos" :key="video.UID">
+        <template v-for="video in filteredVideos" :key="video.source_id">
           <el-card class="w-full max-w-[380px]" shadow="hover">
             <div class="p-4">
               <a
-                :href="resolveVideoUrl(video.video_id)"
+                :href="resolveVideoUrl(video.source_id)"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="mb-2 block w-full"
@@ -33,7 +33,7 @@
                 <img
                   :src="
                     'https://i.ytimg.com/vi/' +
-                    video.video_id +
+                    video.source_id +
                     '/hqdefault.jpg'
                   "
                   class="h-48 w-full cursor-pointer object-cover"
@@ -42,12 +42,12 @@
               </a>
 
               <a
-                :href="resolveVideoUrl(video.video_id)"
+                :href="resolveVideoUrl(video.source_id)"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="mb-2 block w-full truncate text-lg text-blue-400 no-underline hover:text-blue-600 hover:underline"
               >
-                {{ video.video_name }}
+                {{ video.name }}
               </a>
 
               <div class="flex gap-2" v-if="video.tags">
@@ -78,6 +78,9 @@ const allVideos = ref([]);
 const allAuthors = ref([]);
 const selectedAuthor = ref(null);
 
+const page_size = ref(50);
+const page_number = ref(1);
+
 const filteredVideos = computed(() => {
   if (selectedAuthor.value) {
     return allVideos.value.filter(
@@ -88,8 +91,8 @@ const filteredVideos = computed(() => {
 });
 
 // 輔助函式: 解析路由
-const resolveVideoUrl = (uid) => {
-  return "/SongPractice/" + uid;
+const resolveVideoUrl = (source_id) => {
+  return "/SongPractice/" + source_id;
 };
 
 const filterByAuthor = (authorName) => {
@@ -103,11 +106,14 @@ const resetFilter = () => {
 };
 
 const fetchVideos = async () => {
-  const data = await MYAPI.get("/get_all_videos");
-  allVideos.value = data;
+  let res = await MYAPI.get("/get_all_videos", {
+    page_size: page_size.value,
+    page_number: page_number.value,
+  });
+  allVideos.value = res.data;
 
-  const data2 = await MYAPI.get("/get_all_authors");
-  allAuthors.value = data2;
+  res = await MYAPI.get("/get_all_authors");
+  allAuthors.value = res.data;
 };
 
 onMounted(() => {

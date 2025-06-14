@@ -63,12 +63,10 @@ const handleLoginCallback = async (response) => {
       picture: picture,
       sub: sub,
     };
-    const data = await myAPI.post("/login", api_params);
-
-    console.log("登入成功，返回的資料:", data);
+    const res = await myAPI.post("/login", api_params);
 
     // 更新全局狀態和 localStorage
-    setLoginInfo(data.token, { email, name, picture, sub });
+    setLoginInfo(res.data.token, { email, name, picture, sub });
 
     ElMessage.success(t("login_success"));
   } catch (error) {

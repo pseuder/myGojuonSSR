@@ -346,7 +346,11 @@ const autoDetect = (predict_res) => {
     return;
   }
 
-  const { predicted_hiragana, confidence } = predict_res;
+  if (predict_res.status == "error") {
+    ElMessage.error(predict_res["message"] ?? "伺服器錯誤");
+  }
+
+  const { predicted_hiragana, confidence } = predict_res.data;
   const currentKana = selectedSound.value.kana;
 
   // 更新預測結果

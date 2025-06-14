@@ -20,7 +20,7 @@ export default defineSitemapEventHandler(async (e) => {
   // 為每首歌曲生成 sitemap URL
   const songUrls = songs.map((song) => {
     return asSitemapUrl({
-      loc: `${SITE_BASE_URL}/SongPractice/${song.video_id}`,
+      loc: `${SITE_BASE_URL}/SongPractice/${song.source_id}`,
       lastmod: song.update_time || new Date(),
       // 添加更多 sitemap 屬性
       changefreq: "monthly",
