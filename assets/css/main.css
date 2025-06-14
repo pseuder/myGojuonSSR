@@ -15,6 +15,7 @@ html,
   height: 100%;
   touch-action: manipulation;
   -webkit-touch-callout: none;
+  overflow: hidden;
 }
 
 .el-tabs,

@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex h-[85vh] flex-col gap-4 overflow-x-hidden overflow-y-auto px-4 py-4 lg:flex-row"
-  >
+  <div class="flex h-full flex-col gap-4 px-4 py-4 lg:flex-row">
     <!-- 50音列表 -->
     <div class="w-full" :key="activeTab">
       <h2 class="mb-3 text-xl font-semibold">

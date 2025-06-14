@@ -1,9 +1,9 @@
 <template>
-  <div class="layout relative flex h-dvh flex-col">
-    <nav class="relative flex h-[7%] bg-white">
+  <div class="relative h-full">
+    <nav class="navbar">
       <el-menu
         :default-active="activeIndex"
-        class="user-select-none h-full w-full overflow-hidden"
+        class="user-select-none w-full overflow-hidden"
         mode="horizontal"
         router
       >
@@ -23,17 +23,17 @@
         />
       </el-menu>
 
-      <div class="flex h-full flex-shrink-0 items-center gap-4 overflow-hidden">
+      <div class="flex flex-shrink-0 items-center gap-4">
         <!-- <LocaleSwitcher @update:locale="recordActivity" /> -->
         <myGoogleLogin />
       </div>
     </nav>
 
-    <main class="content relative h-[90%] p-2">
+    <main class="content">
       <!-- 文字瀑布 -->
       <div ref="textContainer" class="text-fall-container"></div>
       <div
-        class="main-component"
+        class="main-component relative"
         :class="{
           'wide-layout': isInSongPractice || isInBackend || isInSongEdit,
         }"
@@ -139,23 +139,30 @@ onMounted(() => {
 </script>
 
 <style>
-.layout {
-  background-image: url("/images/gojuon-writing.jpg");
-  background-size: cover;
-  background-position: center;
+.navbar {
+  height: fit-content;
+  position: relative;
+  z-index: 2;
+  display: flex;
 }
 
 .content {
+  /* height: calc(100% - 60px); */
+  height: 90%;
+  overflow-y: auto;
+  padding: 20px;
+  background-image: url("/images/gojuon-writing.jpg");
+  background-size: cover;
+  background-position: center;
   position: relative; /* 關鍵：用來相對定位瀑布 */
 }
 
 .main-component {
   position: relative;
-  height: fit-content;
-  max-width: 1000px;
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 10px;
   z-index: 2; /* 大於文字瀑布容器，確保主內容在文字上方 */
+  max-width: 1000px;
   margin: auto;
 }
 

@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex h-[87vh] flex-col gap-4 overflow-x-hidden overflow-y-auto px-4 py-4"
-  >
+  <div class="flex h-full flex-col gap-4 px-4 py-4">
     <div class="py-10 text-center">
       <h1 class="text-4xl font-bold text-indigo-700">{{ t("site_title") }}</h1>
       <p class="mt-2 text-xl text-gray-600">{{ t("feature_description") }}</p>
@@ -166,57 +164,57 @@
       </section>
 
       <!-- 聯絡方式 -->
-      <section class="my-10 flex">
+
+      <section class="my-10 flex flex-col">
         <h2 class="mb-4 text-2xl font-bold text-indigo-700">
           {{ t("feedback_and_feature_request") }}
         </h2>
-      </section>
-
-      <section class="my-10 flex">
-        <!-- gmail -->
-        <div
-          class="my-4 flex flex-col gap-4"
-          @click="handleReportClick('gmail')"
-        >
-          <div class="flex items-center gap-4">
-            <img
-              src="/images/gmail.png"
-              alt="gmail"
-              class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
-            />
-            <a
-              href="mailto:iop890520@gmail.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-            </a>
+        <div class="flex">
+          <!-- gmail -->
+          <div
+            class="my-4 flex flex-col gap-4"
+            @click="handleReportClick('gmail')"
+          >
+            <div class="flex items-center gap-4">
+              <img
+                src="/images/gmail.png"
+                alt="gmail"
+                class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
+              />
+              <a
+                href="mailto:iop890520@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+              </a>
+            </div>
           </div>
-        </div>
 
-        <!-- fb -->
-        <div
-          class="my-4 flex flex-col gap-4"
-          @click="handleReportClick('facebook')"
-        >
-          <div class="flex items-center gap-4">
-            <img
-              src="/images/facebook.png"
-              alt="facebook"
-              class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
-            />
-            <a
-              href="https://www.facebook.com/Pseuder/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-            </a>
+          <!-- fb -->
+          <div
+            class="my-4 flex flex-col gap-4"
+            @click="handleReportClick('facebook')"
+          >
+            <div class="flex items-center gap-4">
+              <img
+                src="/images/facebook.png"
+                alt="facebook"
+                class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
+              />
+              <a
+                href="https://www.facebook.com/Pseuder/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+              </a>
+            </div>
           </div>
-        </div>
 
-        <div class="my-4 flex flex-col gap-4">
-          <el-button @click="router.push('/songEdit')" class="">
-            YT 影片剪輯
-          </el-button>
+          <div class="my-4 flex flex-col gap-4">
+            <el-button @click="router.push('/songEdit')" class="">
+              YT 影片剪輯
+            </el-button>
+          </div>
         </div>
       </section>
     </div>

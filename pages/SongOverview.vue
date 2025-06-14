@@ -1,7 +1,6 @@
 <template>
   <div class="flex flex-col gap-4 px-10 py-4">
     <el-space class="mb-4 flex w-full items-center gap-4 select-none" wrap>
-      <!-- ... 其他 el-tag 程式碼保持不變 ... -->
       <el-tag
         class="cursor-pointer text-blue-400 hover:text-blue-600 hover:underline"
         @click="resetFilter"
@@ -25,7 +24,6 @@
         <template v-for="video in filteredVideos" :key="video.UID">
           <el-card class="w-full max-w-[380px]" shadow="hover">
             <div class="p-4">
-              <!-- ===== START: 修改從這裡開始 ===== -->
               <a
                 :href="resolveVideoUrl(video.video_id)"
                 target="_blank"
@@ -43,7 +41,6 @@
                 />
                 {{ video.video_name }}
               </a>
-              <!-- ===== END: 修改在這裡結束 ===== -->
 
               <div class="flex gap-2" v-if="video.tags">
                 <el-tag
@@ -63,7 +60,6 @@
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-// 在 Nuxt 3 中，useRouter 和 useRoute 通常是自動導入的，但顯式寫出來也沒問題
 import { useRouter, useRoute } from "vue-router";
 
 const MYAPI = useApi();
@@ -83,7 +79,7 @@ const filteredVideos = computed(() => {
   return allVideos.value;
 });
 
-// 新增一個輔助函式來解析路由
+// 輔助函式: 解析路由
 const resolveVideoUrl = (uid) => {
   return "/SongPractice/" + uid;
 };
@@ -115,7 +111,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 你的樣式保持不變 */
 .gradient-text-tech-animated {
   background: linear-gradient(120deg, #4caf50, #2196f3, #673ab7, #4caf50);
   background-size: 300% 100%;
