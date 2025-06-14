@@ -76,8 +76,8 @@ watch(
 //   document.documentElement.setAttribute("lang", newLocale);
 // });
 
-const isInSongPractice = computed(() => route.path.includes("/songPractice"));
-const isInBackend = computed(() => route.path.includes("/backend"));
+const isInSongPractice = computed(() => route.path.includes("/SongPractice"));
+const isInBackend = computed(() => route.path.includes("/Backend"));
 const isInSongEdit = computed(() => route.path.includes("/songEdit"));
 
 // ===== 文字瀑布 =====
