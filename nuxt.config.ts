@@ -31,7 +31,7 @@ export default defineNuxtConfig({
     "@nuxtjs/sitemap",
     "@element-plus/nuxt",
     "@nuxtjs/i18n",
-    "@nuxtjs/tailwindcss", // 推薦使用模組取代手動設定 Vite
+    "@nuxtjs/tailwindcss",
   ],
 
   //================================================================
