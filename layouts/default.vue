@@ -1,9 +1,9 @@
 <template>
-  <div class="layout relative flex h-full flex-col">
-    <nav class="relative flex">
+  <div class="layout relative flex h-dvh flex-col">
+    <nav class="relative flex h-[7%] bg-white">
       <el-menu
         :default-active="activeIndex"
-        class="user-select-none w-full overflow-hidden"
+        class="user-select-none h-full w-full overflow-hidden"
         mode="horizontal"
         router
       >
@@ -23,17 +23,17 @@
         />
       </el-menu>
 
-      <div class="flex flex-shrink-0 items-center gap-4">
+      <div class="flex h-full flex-shrink-0 items-center gap-4 overflow-hidden">
         <!-- <LocaleSwitcher @update:locale="recordActivity" /> -->
         <myGoogleLogin />
       </div>
     </nav>
 
-    <main class="content relative h-fit p-2 lg:flex-grow">
+    <main class="content relative h-[90%] p-2">
       <!-- 文字瀑布 -->
       <div ref="textContainer" class="text-fall-container"></div>
       <div
-        class="main-component relative"
+        class="main-component"
         :class="{
           'wide-layout': isInSongPractice || isInBackend || isInSongEdit,
         }"
@@ -151,10 +151,11 @@ onMounted(() => {
 
 .main-component {
   position: relative;
+  height: fit-content;
+  max-width: 1000px;
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 10px;
   z-index: 2; /* 大於文字瀑布容器，確保主內容在文字上方 */
-  max-width: 1000px;
   margin: auto;
 }
 

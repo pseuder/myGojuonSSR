@@ -1,5 +1,7 @@
 <template>
-  <div class="flex h-full flex-col gap-4 px-4 py-4">
+  <div
+    class="flex h-[87vh] flex-col gap-4 overflow-x-hidden overflow-y-auto px-4 py-4"
+  >
     <div class="py-10 text-center">
       <h1 class="text-4xl font-bold text-indigo-700">{{ t("site_title") }}</h1>
       <p class="mt-2 text-xl text-gray-600">{{ t("feature_description") }}</p>
@@ -33,13 +35,13 @@
         class="my-10 flex flex-col justify-center gap-4 text-center md:flex-row"
       >
         <el-button
-          @click="router.push('/writing')"
+          @click="router.push('/WritingPractice')"
           class="rounded-lg bg-indigo-600 px-6 py-6 text-xl text-white transition duration-300 hover:bg-indigo-700"
         >
           {{ t("start_handwriting_practice") }}
         </el-button>
         <el-button
-          @click="router.push('/listening')"
+          @click="router.push('/ListeningPractice')"
           style="margin-left: 0px"
           class="rounded-lg bg-indigo-600 px-6 py-6 text-xl text-white transition duration-300 hover:bg-indigo-700"
         >
@@ -47,7 +49,7 @@
         </el-button>
 
         <el-button
-          @click="router.push('/songOverview')"
+          @click="router.push('/SongOverview')"
           style="margin-left: 0px"
           class="rounded-lg bg-indigo-600 px-6 py-6 text-xl text-white transition duration-300 hover:bg-indigo-700"
         >
@@ -81,45 +83,6 @@
             class="mb-2 block w-full truncate text-lg text-blue-400 hover:text-blue-600 hover:underline"
           >
             <span class="gradient-text-animated">NELKE</span>
-          </router-link>
-
-          <!-- 孤獨搖滾 -->
-          <router-link
-            :to="{
-              path: '/songOverview',
-              query: { author: '孤獨搖滾' },
-            }"
-            class="mb-2 block w-full truncate text-lg text-blue-400 hover:text-blue-600 hover:underline"
-          >
-            <span class="gradient-text-animated"
-              >孤獨搖滾！ ぼっち・ざ・ろっく！</span
-            >
-          </router-link>
-
-          <!-- Girls band Cry -->
-          <router-link
-            :to="{
-              path: '/songOverview',
-              query: { author: 'Girls Band Cry' },
-            }"
-            class="mb-2 block w-full truncate text-lg text-blue-400 hover:text-blue-600 hover:underline"
-          >
-            <span class="gradient-text-animated"
-              >Girls band Cry ガールズバンドクライ</span
-            >
-          </router-link>
-
-          <!-- Mygo -->
-          <router-link
-            :to="{
-              path: '/songOverview',
-              query: { author: 'MYGO!!!!!' },
-            }"
-            class="mb-2 block w-full truncate text-lg text-blue-400 hover:text-blue-600 hover:underline"
-          >
-            <span class="gradient-text-animated"
-              >BanG Dream! It's MyGO!!!!!</span
-            >
           </router-link>
 
           <h2 class="mb-4 text-2xl font-bold text-indigo-700">Powered by</h2>
@@ -198,20 +161,18 @@
                 class="h-10 w-10 transition-opacity hover:opacity-80"
               />
             </a>
-
-            <el-button @click="router.push('/songEdit')" class="">
-              YT 影片剪輯
-            </el-button>
           </div>
         </div>
       </section>
 
       <!-- 聯絡方式 -->
-      <section class="my-10">
+      <section class="my-10 flex">
         <h2 class="mb-4 text-2xl font-bold text-indigo-700">
           {{ t("feedback_and_feature_request") }}
         </h2>
+      </section>
 
+      <section class="my-10 flex">
         <!-- gmail -->
         <div
           class="my-4 flex flex-col gap-4"
@@ -228,7 +189,6 @@
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span>iop890520@gmail.com</span>
             </a>
           </div>
         </div>
@@ -249,9 +209,14 @@
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span>https://www.facebook.com/Pseuder/</span>
             </a>
           </div>
+        </div>
+
+        <div class="my-4 flex flex-col gap-4">
+          <el-button @click="router.push('/songEdit')" class="">
+            YT 影片剪輯
+          </el-button>
         </div>
       </section>
     </div>
