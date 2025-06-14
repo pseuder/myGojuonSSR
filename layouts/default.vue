@@ -150,7 +150,7 @@ onMounted(() => {
 
 .content {
   /* height: calc(100% - 60px); */
-  height: 90%;
+  height: 93%;
   overflow-y: auto;
   padding: 20px;
   background-image: url("/images/gojuon-writing.jpg");

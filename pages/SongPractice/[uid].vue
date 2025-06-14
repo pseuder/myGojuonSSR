@@ -8,7 +8,7 @@
       <!-- 影片播放器+功能列 -->
       <div class="flex flex-col lg:w-1/2">
         <div class="gradient-text-tech-animated">
-          {{ currentVideo.video_name }} - {{ currentVideo.author }}
+          {{ currentVideo.name }} - {{ currentVideo.author }}
         </div>
         <!-- 影片播放器 -->
         <div id="player-container" ref="playerContainerRef" class="h-[70%]">
@@ -191,13 +191,12 @@ const {
   },
 );
 
-// [變更] 將獲取到的數據轉換為響應式引用
-// computed 可以確保當 videoData 變化時，相關變數也跟著更新
+// 確保當 videoData 變化時，相關變數也跟著更新
 const currentVideo = computed(() => videoData.value);
 const lyrics = computed(() => {
-  if (videoData.value?.converted_lyrics) {
+  if (videoData.value?.converted) {
     try {
-      return JSON.parse(videoData.value.converted_lyrics);
+      return JSON.parse(videoData.value.converted);
     } catch (e) {
       console.error("Failed to parse lyrics JSON", e);
       return [];
@@ -206,21 +205,18 @@ const lyrics = computed(() => {
   return [];
 });
 
-// [變更] 使用 useSeoMeta 進行 SEO 優化，這是 Nuxt 3 的標準做法
-// 它是響應式的，當 currentVideo 變化時，meta 標籤會自動更新
+// 當 currentVideo 變化時，meta 標籤會自動更新
 useSeoMeta({
   title: () =>
-    `${currentVideo.value?.video_name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
+    `${currentVideo.value?.name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
   description: () =>
-    `練習日語歌曲《${currentVideo.value?.video_name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能，幫助您學習日語。`,
+    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能，幫助您學習日語。`,
   keywords: () =>
-    `日語歌曲, ${currentVideo.value?.video_name}, ${currentVideo.value?.author}, 日語學習, 歌詞練習, 發音練習`,
+    `日語歌曲, ${currentVideo.value?.name}, ${currentVideo.value?.author}, 日語學習, 歌詞練習, 發音練習`,
   ogTitle: () =>
-    `${currentVideo.value?.video_name} - ${currentVideo.value?.author} | 日語歌曲練習`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author} | 日語歌曲練習`,
   ogDescription: () =>
-    `練習日語歌曲《${currentVideo.value?.video_name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能。`,
-  ogType: "website",
-  ogUrl: () => `http://localhost:3000${route.fullPath}`, // 正式環境請換成你的網域
+    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能。`,
   twitterCard: "summary",
 });
 
@@ -234,12 +230,12 @@ useHead({
         JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebPage",
-          name: `${currentVideo.value?.video_name} - ${currentVideo.value?.author} | 日語歌曲練習`,
-          description: `練習日語歌曲《${currentVideo.value?.video_name}》by ${currentVideo.value?.author}。`,
+          name: `${currentVideo.value?.name} - ${currentVideo.value?.author} | 日語歌曲練習`,
+          description: `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。`,
           url: `http://localhost:3000${route.fullPath}`, // 正式環境請換成你的網域
           mainEntity: {
             "@type": "MusicRecording",
-            name: currentVideo.value?.video_name,
+            name: currentVideo.value?.name,
             byArtist: { "@type": "Person", name: currentVideo.value?.author },
             inLanguage: "ja",
           },
@@ -299,7 +295,7 @@ const currentVideoIndexInAuthorList = computed(() => {
   }
   // 注意：原來的 videoId 是 YouTube ID，這裡假設 uid 是影片的唯一標識符
   return authorFilteredVideos.value.findIndex(
-    (v) => v.video_id === videoId.value,
+    (v) => v.source_id === videoId.value,
   );
 });
 
@@ -366,9 +362,9 @@ const playNextSong = () => {
   const nextIndex = currentVideoIndexInAuthorList.value + 1;
   if (nextIndex < authorFilteredVideos.value.length) {
     const nextSong = authorFilteredVideos.value[nextIndex];
-    ElMessage.info(`即將播放下一首: ${nextSong.video_name}`);
+    ElMessage.info(`即將播放下一首: ${nextSong.name}`);
     // [變更] 使用 Nuxt router 導航
-    router.push(`/SongPractice/${nextSong.video_id}`);
+    router.push(`/SongPractice/${nextSong.source_id}`);
   } else {
     ElMessage.info("已是此歌手的最後一首歌，將從頭播放目前歌曲。");
     if (player && player.seekTo) player.seekTo(0);

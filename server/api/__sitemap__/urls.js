@@ -11,7 +11,7 @@ export default defineSitemapEventHandler(async (e) => {
   let songs = [];
   try {
     const response = await $fetch(`${API_BASE_URL}/get_all_videos`);
-    songs = response || [];
+    songs = response.data || [];
   } catch (error) {
     console.error("獲取歌曲數據失敗:", error);
     songs = [];
