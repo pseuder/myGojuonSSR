@@ -35,7 +35,8 @@
       <div
         class="main-component relative"
         :class="{
-          'wide-layout': isInSongPractice || isInBackend || isInSongEdit,
+          'wide-layout':
+            isInSongPractice || isInBackend || isInSongEdit || isInSongOverview,
         }"
       >
         <router-view> </router-view>
@@ -77,6 +78,7 @@ watch(
 // });
 
 const isInSongPractice = computed(() => route.path.includes("/SongPractice"));
+const isInSongOverview = computed(() => route.path.includes("/SongOverview"));
 const isInBackend = computed(() => route.path.includes("/Backend"));
 const isInSongEdit = computed(() => route.path.includes("/songEdit"));
 

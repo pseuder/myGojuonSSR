@@ -13,6 +13,16 @@ const GOOGLE_CLIENT_ID =
   "314080941126-4t3fosnf64q4jcqe3lltftq1melsguq8.apps.googleusercontent.com";
 
 export default defineNuxtConfig({
+  app: {
+    head: {
+      title: "日語50音學習網站", // default fallback title
+      htmlAttrs: {
+        lang: "zh-TW",
+      },
+      link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.png" }],
+    },
+  },
+
   compatibilityDate: "2025-05-15",
   devtools: { enabled: true },
   modules: ["@nuxtjs/sitemap", "@element-plus/nuxt", "@nuxtjs/i18n"],

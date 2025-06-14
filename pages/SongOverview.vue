@@ -28,7 +28,7 @@
                 :href="resolveVideoUrl(video.video_id)"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="mb-2 block w-full truncate text-lg text-blue-400 hover:text-blue-600 hover:underline"
+                class="mb-2 block w-full"
               >
                 <img
                   :src="
@@ -39,6 +39,14 @@
                   class="h-48 w-full cursor-pointer object-cover"
                   alt="video thumbnail"
                 />
+              </a>
+
+              <a
+                :href="resolveVideoUrl(video.video_id)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mb-2 block w-full truncate text-lg text-blue-400 no-underline hover:text-blue-600 hover:underline"
+              >
                 {{ video.video_name }}
               </a>
 
