@@ -169,10 +169,7 @@ const {
 } = await useAsyncData(
   `song-${uid}`, // 1. 唯一的 key，用於快取。通常用頁面名和參數組合
   async () => {
-    // 2. 負責擷取資料的非同步函式
-    console.log("Fetching video data for UID:", uid);
     try {
-      console.log("API_BASE_URL:", API_BASE_URL);
       const response = await MYAPI.get(`/get_video/${uid}`);
       if (!response.data) {
         // 在 Nuxt 中，建議這樣拋出一個帶有狀態碼的錯誤
@@ -193,8 +190,6 @@ const {
     }
   },
 );
-
-console.log(videoData.value);
 
 // [變更] 將獲取到的數據轉換為響應式引用
 // computed 可以確保當 videoData 變化時，相關變數也跟著更新

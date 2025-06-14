@@ -401,7 +401,6 @@ const handleWidthenLyric = (lyricIndex, lyricLineIndex) => {
     `#lyric-cvt-${lyricIndex}-${lyricLineIndex}`,
   );
   if (input) {
-    console.log(input);
     let originWidth = input.style.width;
     if (originWidth == "") {
       input.style.width = "162px";
