@@ -1,21 +1,18 @@
-// server/api/__sitemap__/urls.js
+// sitemap/urls.js
 
 import { asSitemapUrl, defineSitemapEventHandler } from "#imports";
 
 export default defineSitemapEventHandler(async (e) => {
-  // 獲取 Nuxt 運行時配置
   const config = useRuntimeConfig();
   const API_BASE_URL = config.public.apiBase;
 
   // 獲取所有歌曲數據
   let songs = [];
   try {
-    // 使用 $fetch 獲取所有歌曲
     const response = await $fetch(`${API_BASE_URL}/get_all_videos`);
-    songs = response.videos || [];
+    songs = response || [];
   } catch (error) {
     console.error("獲取歌曲數據失敗:", error);
-    // 如果獲取失敗，使用空數組
     songs = [];
   }
 
@@ -39,12 +36,6 @@ export default defineSitemapEventHandler(async (e) => {
       priority: 1.0,
     }),
     asSitemapUrl({
-      loc: "/SongOverview",
-      lastmod: new Date(),
-      changefreq: "weekly",
-      priority: 0.9,
-    }),
-    asSitemapUrl({
       loc: "/WritingPractice",
       lastmod: new Date(),
       changefreq: "monthly",
@@ -55,6 +46,12 @@ export default defineSitemapEventHandler(async (e) => {
       lastmod: new Date(),
       changefreq: "monthly",
       priority: 0.7,
+    }),
+    asSitemapUrl({
+      loc: "/SongOverview",
+      lastmod: new Date(),
+      changefreq: "weekly",
+      priority: 0.9,
     }),
   ];
 

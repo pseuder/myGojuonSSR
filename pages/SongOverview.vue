@@ -96,8 +96,10 @@ const resetFilter = () => {
 
 const fetchVideos = async () => {
   const data = await MYAPI.get("/get_all_videos");
-  allVideos.value = data["videos"];
-  allAuthors.value = data["authors"];
+  allVideos.value = data;
+
+  const data2 = await MYAPI.get("/get_all_authors");
+  allAuthors.value = data2;
 };
 
 onMounted(() => {
