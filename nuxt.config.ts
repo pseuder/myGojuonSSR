@@ -32,6 +32,7 @@ export default defineNuxtConfig({
     "@element-plus/nuxt",
     "@nuxtjs/i18n",
     "@nuxtjs/tailwindcss",
+    "nuxt-gtag",
   ],
 
   //================================================================
@@ -67,6 +68,11 @@ export default defineNuxtConfig({
       },
     ],
     defaultLocale: "zh-TW",
+  },
+
+  // GA4
+  gtag: {
+    id: "G-CB4PE7FVJP",
   },
 
   //================================================================
