@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 // 正式
 const API_BASE_URL = "https://pseuder.xyz/srv_mygojuon2/";
-const SITE_BASE_URL = "https://my-gojuon-ssr.vercel.app/";
+const SITE_BASE_URL = "https://my-gojuon.vercel.app/";
 
 // 開發
 // const SITE_BASE_URL = "http://localhost:3000/";
