@@ -1,8 +1,14 @@
 // nuxt.config.ts
 import tailwindcss from "@tailwindcss/vite";
 
+// 正式
 const API_BASE_URL = "https://pseuder.xyz/srv_mygojuon2/";
+const SITE_BASE_URL = "https://my-gojuon-ssr.vercel.app/";
+
+// 開發
+// const SITE_BASE_URL = "http://localhost:3000/";
 // const API_BASE_URL = "http://localhost:5002/";
+
 const GOOGLE_CLIENT_ID =
   "314080941126-4t3fosnf64q4jcqe3lltftq1melsguq8.apps.googleusercontent.com";
 
@@ -19,6 +25,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: API_BASE_URL,
+      siteBase: SITE_BASE_URL,
       googleClientId: GOOGLE_CLIENT_ID || "",
     },
   },
