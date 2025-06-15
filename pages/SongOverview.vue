@@ -72,6 +72,7 @@
       </el-space>
 
       <el-pagination
+        v-if="filteredVideos.length > 0"
         background
         layout="sizes, prev, pager, next"
         :total="total"
