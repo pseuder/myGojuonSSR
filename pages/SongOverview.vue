@@ -1,6 +1,8 @@
 <template>
   <div class="flex h-[88vh] w-full p-2">
-    <div class="font h-full flex-none overflow-x-hidden overflow-y-auto">
+    <div
+      class="h-full max-w-[30vw] flex-none overflow-x-hidden overflow-y-auto"
+    >
       <el-menu
         :default-active="selectedAuthor || 'all'"
         class="w-fit"
