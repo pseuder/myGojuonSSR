@@ -20,10 +20,13 @@
       </el-menu>
     </div>
 
-    <div
-      class="flex h-full grow items-center gap-4 overflow-x-hidden overflow-y-auto"
-    >
-      <el-space class="h-full justify-center" style="width: 100%" wrap>
+    <div class="flex h-full grow flex-col items-center gap-4 overflow-x-hidden">
+      <el-space
+        class="flex-1 justify-center overflow-y-auto"
+        style="width: 100%"
+        wrap
+        v-if="filteredVideos.length > 0"
+      >
         <template v-for="video in filteredVideos" :key="video.source_id">
           <el-card class="w-full max-w-[380px]" shadow="hover">
             <div class="p-4">
@@ -65,6 +68,18 @@
           </el-card>
         </template>
       </el-space>
+
+      <el-pagination
+        background
+        layout="sizes, prev, pager, next"
+        :total="total"
+        :page-size="page_size"
+        :current-page="page_number"
+        :page-sizes="[10, 50, 100, 500]"
+        @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"
+        class="mt-4 flex-none"
+      />
     </div>
   </div>
 </template>
@@ -81,8 +96,9 @@ const allVideos = ref([]);
 const allAuthors = ref([]);
 const selectedAuthor = ref(null);
 
-const page_size = ref(50);
+const page_size = ref(10);
 const page_number = ref(1);
+const total = ref(0);
 
 const filteredVideos = computed(() => {
   if (selectedAuthor.value) {
@@ -106,26 +122,53 @@ const handleSelect = (index) => {
     selectedAuthor.value = index;
     router.push({ query: { author: index } });
   }
+  page_number.value = 1;
+  fetchVideos();
+};
+
+const handleCurrentChange = (val) => {
+  page_number.value = val;
+  fetchVideos();
+};
+
+const handleSizeChange = (val) => {
+  page_size.value = val;
+  fetchVideos();
 };
 
 const fetchVideos = async () => {
-  let res = await MYAPI.get("/get_all_videos", {
+  const params = {
     page_size: page_size.value,
     page_number: page_number.value,
-  });
-  allVideos.value = res.data;
+  };
+  if (selectedAuthor.value) {
+    params.author = selectedAuthor.value;
+  }
+  let res = await MYAPI.get("/get_all_videos", params);
 
-  res = await MYAPI.get("/get_all_authors");
-  allAuthors.value = res.data;
+  if (res["status"] == "success") {
+    allVideos.value = res.data.data;
+    total.value = res.data.total;
+  } else {
+    ElMessage({
+      type: res["status"],
+      message: res["message"],
+    });
+  }
+
+  if (allAuthors.value.length === 0) {
+    res = await MYAPI.get("/get_all_authors");
+    allAuthors.value = res.data;
+  }
 };
 
 onMounted(() => {
-  fetchVideos().then(() => {
-    const author = route.query.author;
-    if (author) {
-      selectedAuthor.value = author;
-    }
-  });
+  const author = route.query.author;
+  if (author) {
+    selectedAuthor.value = author;
+  }
+
+  fetchVideos();
 });
 </script>
 

@@ -289,7 +289,7 @@ const saveVideo = async () => {
 const fetchData = () => {
   MYAPI.get("/get_all_videos").then((res) => {
     if (res["status"] == "success") {
-      tableData.value = res["data"];
+      tableData.value = res["data"]["data"];
     } else {
       ElMessage({
         type: res["status"],

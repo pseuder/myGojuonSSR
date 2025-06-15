@@ -149,8 +149,8 @@ onMounted(() => {
 }
 
 .content {
-  /* height: calc(100% - 60px); */
-  height: 93%;
+  height: calc(100% - 60px);
+  /* height: 94%; */
   overflow-y: auto;
   padding: 20px;
   background-image: url("/images/gojuon-writing.jpg");
