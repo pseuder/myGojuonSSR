@@ -137,27 +137,23 @@
 </template>
 
 <script setup>
-// [變更] 移除 vue-router 和 axios 的 import，Nuxt 3 會自動引入所需函式
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import { VideoPause, VideoPlay, Switch } from "@element-plus/icons-vue"; // 這些通常會由 element-plus/nuxt 自動引入
+import { VideoPause, VideoPlay, Switch } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
-// [變更] useI18n 來自 @nuxtjs/i18n 模組，用法相同
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 
 const MYAPI = useApi();
-
-// [變更] 使用 Nuxt 的 useRouter 和 useRoute
 const router = useRouter();
 const route = useRoute();
 
-// [變更] 使用 Nuxt 的 useRuntimeConfig 獲取環境變數，更安全
+// 使用 Nuxt 的 useRuntimeConfig 獲取環境變數，更安全
 const config = useRuntimeConfig();
 const API_BASE_URL = config.public.apiBase;
 
 // --- 核心變更：數據獲取與 SEO ---
 
-// [變更] 從路由參數獲取影片 ID，注意是 uid
+// 從路由參數獲取影片 ID，注意是 uid
 const videoId = computed(() => route.params.uid);
 
 const uid = route.params.uid;
@@ -242,14 +238,13 @@ useHead({
         }),
     },
   ],
-  // [變更] 處理 YouTube API script 的載入
-  // 這樣 Nuxt 會幫我們管理 script 標籤
+  // 處理 YouTube API script 的載入
   script: [
     { src: "https://www.youtube.com/iframe_api", async: true, defer: true },
   ],
 });
 
-// --- 播放器與互動邏輯 (大部分保留，但需要確保在客戶端執行) ---
+// --- 播放器與互動邏輯  ---
 
 const playerRef = ref(null);
 let player = null;
@@ -519,11 +514,11 @@ const handleKeyPress = (event) => {
   }
 };
 
-// [變更] onMounted 只在客戶端執行，是放置客戶端專用邏輯的最佳位置
+// onMounted 只在客戶端執行，是放置客戶端專用邏輯的最佳位置
 onMounted(() => {
   // 確保在客戶端環境下執行
   if (process.client) {
-    fetchAllVideos();
+    // fetchAllVideos();
 
     // 監聽 YouTube API 是否準備就緒
     window.onYouTubeIframeAPIReady = () => {
@@ -534,6 +529,17 @@ onMounted(() => {
     if (window.YT && window.YT.Player) {
       initializePlayer();
     }
+
+    const dataToSend = {
+      learningModule: "song",
+      learningMethod: "get_video",
+      learningItem: videoId.value,
+    };
+
+    // 發送數據到後端
+    MYAPI.post("/record_activity", dataToSend).catch((error) => {
+      console.error("Error recording activity:", error);
+    });
 
     window.addEventListener("keypress", handleKeyPress);
   }

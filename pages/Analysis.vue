@@ -164,7 +164,7 @@ const showUserDetail = async (row) => {
       ip_address: row.ip_address,
       isSpecialSearch: isSpecialSearch.value,
     });
-    userDetailData.value = response;
+    userDetailData.value = response.data;
     dialogVisible.value = true;
   } catch (error) {
     ElMessage.error("獲取使用者詳情失敗");
@@ -193,15 +193,12 @@ const fetchData = async () => {
     };
 
     const response = await MYAPI.get("/fetch_all_user_activity", params);
-    tableData.value = response;
+    tableData.value = response.data;
 
     // 僅在初始化或搜尋時獲取總數
     if (totalCount.value === 0) {
-      const countResponse = await MYAPI.get(
-        "/fetch_all_user_activity_count",
-        params,
-      );
-      totalCount.value = countResponse;
+      const res = await MYAPI.get("/fetch_all_user_activity_count", params);
+      totalCount.value = res.data;
     }
 
     loading.value = false;

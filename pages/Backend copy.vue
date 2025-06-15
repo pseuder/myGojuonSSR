@@ -36,9 +36,9 @@
           >
         </template>
       </el-table-column>
-      <el-table-column prop="is_public" label="公開" min-width="200">
+      <el-table-column prop="public" label="公開" min-width="200">
         <template #default="scope">
-          <el-tag v-if="scope.row.is_public" type="success">公開</el-tag>
+          <el-tag v-if="scope.row.public" type="success">公開</el-tag>
           <el-tag v-else type="danger">未公開</el-tag>
         </template>
       </el-table-column>
@@ -76,13 +76,7 @@
     </el-table>
   </div>
 
-  <el-dialog
-    :title="dialogTitle"
-    v-model="dialogVisible"
-    width="80%"
-    top="5vh"
-    style="height: 85vh; overflow: auto"
-  >
+  <el-dialog :title="dialogTitle" v-model="dialogVisible" width="80%" top="5vh">
     <el-form
       :model="formData"
       ref="form"
@@ -95,31 +89,32 @@
       <el-form-item label="作者" prop="author">
         <el-input v-model="formData.author"></el-input>
       </el-form-item>
-      <el-form-item label="影片ID" prop="source_id">
-        <el-input v-model="formData.source_id"></el-input>
+      <el-form-item label="影片ID" prop="video_id">
+        <el-input v-model="formData.video_id"></el-input>
+      </el-form-item>
+      <el-form-item label="影片縮圖" prop="video_thumbnail">
+        <el-input v-model="formData.video_thumbnail"></el-input>
       </el-form-item>
       <el-form-item label="影片標籤" prop="tags">
         <el-input v-model="formData.tags" placeholder="請用逗號分隔"></el-input>
       </el-form-item>
-      <el-form-item label="公開" prop="is_public">
-        <el-switch v-model="formData.is_public"></el-switch>
+      <el-form-item label="公開" prop="public">
+        <el-switch v-model="formData.public"></el-switch>
       </el-form-item>
-      <el-form-item label="歌詞" prop="original">
-        <div class="flex w-full">
-          <el-input
-            v-model="formData.original"
-            class="flex-1"
-            type="textarea"
-            rows="15"
-          ></el-input>
-          <el-input
-            v-model="formData.converted"
-            class="flex-1"
-            type="textarea"
-            rows="15"
-            v-loading="convertLoading"
-          ></el-input>
-        </div>
+      <el-form-item label="歌詞" prop="lyrics">
+        <el-input
+          v-model="formData.original_lyrics"
+          type="textarea"
+          rows="10"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="轉換歌詞" prop="converted_lyrics">
+        <el-input
+          v-model="formData.converted_lyrics"
+          type="textarea"
+          rows="10"
+          v-loading="convertLoading"
+        ></el-input>
       </el-form-item>
     </el-form>
     <div slot="footer" class="text-right">
@@ -151,8 +146,8 @@ const formData = ref({
   author: "",
   tags: "",
   is_public: false,
-  original: "",
-  converted: "",
+  original_lyrics: "",
+  converted_lyrics: "",
 });
 
 const filteredTableData = computed(() => {
@@ -180,9 +175,9 @@ const handleEdit = (row) => {
   MYAPI.get("/get_video/" + row.source_id).then((res) => {
     let data = res["data"];
     formData.value = { ...row };
-    formData.value.is_public = data.is_public === 1;
-    formData.value.original = data.original;
-    formData.value.converted = data.converted;
+    formData.value.public = data.public === 1;
+    formData.value.lyrics = data.lyrics;
+    formData.value.converted_lyrics = data.converted_lyrics;
     isEdit.value = true;
     dialogVisible.value = true;
   });
@@ -227,42 +222,43 @@ function customStringify(obj) {
   );
 }
 
-const convert_lyrics = async () => {
+const convert_lyrics = () => {
   convertLoading.value = true;
-  let res = await MYAPI.post("/convert_lyrics", {
-    lyrics: formData.value.original,
-  });
-
-  if (res["status"] === "success") {
-    formData.value.converted = customStringify(res["data"]);
-  } else {
-    console.error(res);
-  }
-
-  ElMessage({
-    type: "success",
-    message: "轉換成功",
-  });
-
-  convertLoading.value = false;
+  MYAPI.post("/convert_lyrics", { lyrics: formData.value.lyrics })
+    .then((res) => {
+      formData.value.converted_lyrics = customStringify(res["data"]);
+      ElMessage({
+        type: "success",
+        message: "轉換成功",
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      ElMessage({
+        type: "error",
+        message: "轉換失敗",
+      });
+    })
+    .finally(() => {
+      convertLoading.value = false;
+    });
 };
 
-const saveVideo = async () => {
-  // let myFromData = JSON.parse(JSON.stringify(formData.value));
-  // myFromData.converted = JSON.parse(myFromData.converted);
-  let res = await MYAPI.post("/upsert_video", formData.value);
-
-  if (res["status"] === "success") {
-    fetchData();
-    dialogVisible.value = false;
-  } else {
-    console.error(res);
-  }
-
-  ElMessage({
-    type: res["status"],
-    message: res["message"],
-  });
+const saveVideo = () => {
+  let myFromData = JSON.parse(JSON.stringify(formData.value));
+  myFromData.converted_lyrics = JSON.parse(myFromData.converted_lyrics);
+  MYAPI.post("/upsert_video", formData.value)
+    .then((res) => {
+      fetchData();
+      dialogVisible.value = false;
+      ElMessage({
+        type: "success",
+        message: isEdit.value ? "更新成功" : "新增成功",
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 };
 
 const fetchData = () => {
@@ -286,8 +282,8 @@ const resetForm = () => {
     author: "",
     tags: "",
     is_public: false,
-    original: "",
-    converted: "",
+    original_lyrics: "",
+    converted_lyrics: "",
   };
 };
 
