@@ -131,6 +131,25 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+
+definePageMeta({
+  middleware: [
+    function (to, from) {
+      if (process.client) {
+        const storedUser = localStorage.getItem("myGojuon_userInfo");
+        let user = null;
+        if (storedUser) {
+          user = JSON.parse(storedUser);
+        }
+        const isAdmin = user?.email === "iop890520@gmail.com";
+        if (!isAdmin) {
+          return navigateTo("/404", { replace: true });
+        }
+      }
+    },
+  ],
+});
+
 const MYAPI = useApi();
 
 const tableData = ref([]);

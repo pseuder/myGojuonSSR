@@ -122,19 +122,40 @@
         </div>
       </el-form-item>
     </el-form>
-    <div slot="footer" class="text-right">
-      <el-button @click="convert_lyrics">取得轉換歌詞</el-button>
-      <el-button type="primary" @click="saveVideo">{{
-        isEdit ? "更新" : "新增"
-      }}</el-button>
-      <el-button @click="dialogVisible = false">取消</el-button>
-    </div>
+    <template #footer>
+      <div class="text-right">
+        <el-button @click="convert_lyrics">取得轉換歌詞</el-button>
+        <el-button type="primary" @click="saveVideo">{{
+          isEdit ? "更新" : "新增"
+        }}</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+      </div>
+    </template>
   </el-dialog>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+
+definePageMeta({
+  middleware: [
+    function (to, from) {
+      if (process.client) {
+        const storedUser = localStorage.getItem("myGojuon_userInfo");
+        let user = null;
+        if (storedUser) {
+          user = JSON.parse(storedUser);
+        }
+        const isAdmin = user?.email === "iop890520@gmail.com";
+        if (!isAdmin) {
+          return navigateTo("/404", { replace: true });
+        }
+      }
+    },
+  ],
+});
+
 const MYAPI = useApi();
 
 const tableData = ref([]);
