@@ -27,9 +27,9 @@
         class="flex-1 justify-center overflow-y-auto"
         style="width: 100%"
         wrap
-        v-if="filteredVideos.length > 0"
+        v-if="allVideos.length > 0"
       >
-        <template v-for="video in filteredVideos" :key="video.source_id">
+        <template v-for="video in allVideos" :key="video.source_id">
           <el-card class="w-full max-w-[380px]" shadow="hover">
             <div class="p-4">
               <a
@@ -72,7 +72,7 @@
       </el-space>
 
       <el-pagination
-        v-if="filteredVideos.length > 0"
+        v-if="allVideos.length > 0"
         background
         layout="sizes, prev, pager, next"
         :total="total"
@@ -102,15 +102,6 @@ const selectedAuthor = ref(null);
 const page_size = ref(10);
 const page_number = ref(1);
 const total = ref(0);
-
-const filteredVideos = computed(() => {
-  if (selectedAuthor.value) {
-    return allVideos.value.filter(
-      (video) => video.author === selectedAuthor.value,
-    );
-  }
-  return allVideos.value;
-});
 
 // 輔助函式: 解析路由
 const resolveVideoUrl = (source_id) => {
