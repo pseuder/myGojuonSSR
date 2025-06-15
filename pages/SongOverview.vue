@@ -1,26 +1,29 @@
 <template>
-  <div class="flex flex-col gap-4 px-10 py-4">
-    <el-space class="mb-4 flex w-full items-center gap-4 select-none" wrap>
-      <el-tag
-        class="cursor-pointer text-blue-400 hover:text-blue-600 hover:underline"
-        @click="resetFilter"
+  <div class="flex h-[88vh] w-full p-2">
+    <div class="font h-full flex-none overflow-x-hidden overflow-y-auto">
+      <el-menu
+        :default-active="selectedAuthor || 'all'"
+        class="w-fit"
+        @select="handleSelect"
       >
-        全部
-      </el-tag>
-      <el-tag
-        v-for="author in allAuthors"
-        :key="author.author"
-        class="cursor-pointer text-blue-400 hover:text-blue-600 hover:underline"
-        :class="[
-          author.author === 'NELKE' ? 'gradient-text-tech-animated' : '',
-        ]"
-        @click="filterByAuthor(author.author)"
-      >
-        {{ author.author }}
-      </el-tag>
-    </el-space>
-    <div class="flex items-center gap-4">
-      <el-space class="justify-center" style="width: 100%" wrap>
+        <el-menu-item index="all">
+          <span>全部</span>
+        </el-menu-item>
+        <el-menu-item
+          v-for="author in allAuthors"
+          :key="author.author"
+          :index="author.author"
+          :class="{ 'gradient-text-tech-animated': author.author == 'NELKE' }"
+        >
+          <span>{{ author.author }}</span>
+        </el-menu-item>
+      </el-menu>
+    </div>
+
+    <div
+      class="flex h-full grow items-center gap-4 overflow-x-hidden overflow-y-auto"
+    >
+      <el-space class="h-full justify-center" style="width: 100%" wrap>
         <template v-for="video in filteredVideos" :key="video.source_id">
           <el-card class="w-full max-w-[380px]" shadow="hover">
             <div class="p-4">
@@ -95,14 +98,14 @@ const resolveVideoUrl = (source_id) => {
   return "/SongPractice/" + source_id;
 };
 
-const filterByAuthor = (authorName) => {
-  selectedAuthor.value = authorName;
-  router.push({ query: { author: authorName } });
-};
-
-const resetFilter = () => {
-  selectedAuthor.value = null;
-  router.push({ query: {} });
+const handleSelect = (index) => {
+  if (index === "all") {
+    selectedAuthor.value = null;
+    router.push({ query: {} });
+  } else {
+    selectedAuthor.value = index;
+    router.push({ query: { author: index } });
+  }
 };
 
 const fetchVideos = async () => {
@@ -132,7 +135,7 @@ onMounted(() => {
   background-size: 300% 100%;
   -webkit-background-clip: text; /* 為了 Safari 瀏覽器 */
   background-clip: text;
-  color: transparent; /* 文字顏色設為透明，顯示背景漸層 */
+  color: black; /* 文字顏色設為透明，顯示背景漸層 */
   animation: gradient-animation 8s ease infinite;
   background-color: #ecf5ff; /* 指定背景顏色 */
 }
