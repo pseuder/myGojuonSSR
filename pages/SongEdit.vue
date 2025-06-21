@@ -31,12 +31,12 @@
             class="w-full"
             placeholder="輸入時間差"
           ></el-input>
-          <el-button type="danger" @click="handleBulkTimeDiff('minus')"
+          <!-- <el-button type="danger" @click="handleBulkTimeDiff('minus')"
             >減時</el-button
-          >
-          <!-- <el-button type="success" @click="handleBulkTimeDiff('add')"
-            >加時</el-button
           > -->
+          <el-button type="success" @click="handleBulkTimeDiff('add')"
+            >加時</el-button
+          >
         </div>
 
         <div class="flex flex-col gap-2">
@@ -489,7 +489,7 @@ const handleRecommendHiragana = async (text) => {
   recommendQuery.value = text;
   try {
     const response = await MYAPI.get("gemini_recommend_hiragana", {
-      params: { text },
+      text,
     });
     recommendHiraganas.value = response.data;
   } catch (error) {
@@ -842,7 +842,7 @@ const handlePublishSong = async () => {
     formData.value.source_id = videoId.value;
     formData.value.name = videoTitle.value;
     formData.value.author = videoChannel.value;
-    formData.value.original = "";
+    formData.value.original = originalLyrics.value;
 
     // 將歌詞轉換為JSON格式
     let result = [];
@@ -891,7 +891,7 @@ const saveVideo = async () => {
 onMounted(async () => {
   await initializePlayer();
   await getApiKey();
-  window.addEventListener("keypress", handleKeyPress);
+  window.addEventListener("keypress", handleKeyPress, true);
   recordActivity("enter_page", "");
 });
 
@@ -899,7 +899,7 @@ onUnmounted(() => {
   if (player) {
     player.destroy();
   }
-  window.removeEventListener("keypress", handleKeyPress);
+  window.removeEventListener("keypress", handleKeyPress, true);
 });
 </script>
 
