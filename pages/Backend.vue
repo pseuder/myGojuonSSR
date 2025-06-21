@@ -211,21 +211,18 @@ const handleEdit = (row) => {
 
 const handleDelete = (row) => {
   ElMessageBox.confirm("確定刪除此影片嗎?", "提示", {
+    confirmButtonText: "OK",
+    cancelButtonText: "Cancel",
     type: "warning",
   })
-    .then(() => {
-      MYAPI.delete("/delete_video/" + row.id)
-        .then((data) => {
-          fetchData();
-          dialogVisible.value = false;
-          ElMessage({
-            type: "success",
-            message: "刪除成功",
-          });
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+    .then(async () => {
+      await MYAPI.del("/delete_video/" + row.id);
+      fetchData();
+      dialogVisible.value = false;
+      ElMessage({
+        type: "success",
+        message: "刪除成功",
+      });
     })
     .catch(() => {
       ElMessage({
