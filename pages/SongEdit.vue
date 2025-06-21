@@ -431,18 +431,22 @@ const handleDeleteLyric = (lyricIndex, lyricLineIndex) => {
 };
 
 //-- 複製歌詞 --//
-const handleCopy = () => {
-  let result = "";
 
+const combinedLyric = () => {
+  let result = [];
   for (const line of allLyrics.value) {
+    if (line.lyrics.length === 0) continue;
     let combinedLyric = "";
     for (const lyric of line.lyrics) {
       combinedLyric += `${lyric.ori}`;
     }
-    result += `${line.timestamp}${combinedLyric}\n`;
+    result.push(`${line.timestamp}${combinedLyric}`);
   }
+  return result.join("\n");
+};
 
-  navigator.clipboard.writeText(result);
+const handleCopy = () => {
+  navigator.clipboard.writeText(combinedLyric());
   ElMessage.success("複製成功");
 };
 
