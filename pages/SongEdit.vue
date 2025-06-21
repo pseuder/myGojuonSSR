@@ -79,6 +79,13 @@
             </el-button>
           </div>
 
+          <!-- 發布歌曲按鈕 -->
+          <div class="flex w-full items-center gap-2">
+            <el-button class="w-full" type="danger" @click="handlePublishSong">
+              發布歌曲
+            </el-button>
+          </div>
+
           <!-- 第二列 -->
           <div class="w-full">
             <el-space wrap>
@@ -264,7 +271,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { Delete, Switch } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 const MYAPI = useApi();
 
 // 影片資訊
@@ -303,6 +310,18 @@ const apiKey = ref("");
 
 // 時間差
 const timeDiff = ref("00:00.20");
+
+// 發布歌曲相關
+const formData = ref({
+  id: "",
+  source_id: "",
+  name: "",
+  author: "",
+  tags: "",
+  is_public: true,
+  original: "",
+  converted: "",
+});
 
 // 轉換時間字串為秒
 const parseTimeToSeconds = (timeString) => {
@@ -797,6 +816,76 @@ const recordActivity = (learningMethod = "", learningItem = "") => {
   MYAPI.post("/record_activity", dataToSend).catch((error) => {
     console.error("Error recording activity:", error);
   });
+};
+
+// 發布歌曲
+const handlePublishSong = async () => {
+  if (!videoId.value) {
+    ElMessage.error("請先載入影片");
+    return;
+  }
+
+  if (allLyrics.value.length === 0) {
+    ElMessage.error("請先添加歌詞");
+    return;
+  }
+
+  // 確認發布
+  try {
+    await ElMessageBox.confirm("確定要發布這首歌曲嗎?", "提示", {
+      confirmButtonText: "確定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+
+    // 準備表單數據
+    formData.value.source_id = videoId.value;
+    formData.value.name = videoTitle.value;
+    formData.value.author = videoChannel.value;
+    formData.value.original = "";
+
+    // 將歌詞轉換為JSON格式
+    let result = [];
+    for (const line of allLyrics.value) {
+      if (line.lyrics.length === 0) continue;
+      result.push({
+        timestamp: line.timestamp,
+        lyrics: line.lyrics,
+      });
+    }
+    formData.value.converted = customStringify(result);
+
+    // 發送請求
+    saveVideo();
+  } catch (error) {
+    // 用戶取消操作
+    if (error !== "cancel") {
+      console.error("發布歌曲時發生錯誤：", error);
+    }
+  }
+};
+
+// 保存歌曲
+const saveVideo = async () => {
+  try {
+    const res = await MYAPI.post("/upsert_video", formData.value);
+
+    if (res["status"] === "success") {
+      ElMessage({
+        type: "success",
+        message: "歌曲發布成功",
+      });
+    } else {
+      console.error(res);
+      ElMessage({
+        type: res["status"] || "error",
+        message: res["message"] || "發布失敗",
+      });
+    }
+  } catch (error) {
+    console.error("保存歌曲時發生錯誤：", error);
+    ElMessage.error("保存歌曲時發生錯誤");
+  }
 };
 
 onMounted(async () => {
