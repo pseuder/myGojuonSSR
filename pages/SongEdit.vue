@@ -31,10 +31,10 @@
             class="w-full"
             placeholder="輸入時間差"
           ></el-input>
-          <!-- <el-button type="danger" @click="handleBulkTimeDiff('minus')"
+          <el-button type="success" @click="handleBulkTimeDiff('minus')"
             >減時</el-button
-          > -->
-          <el-button type="success" @click="handleBulkTimeDiff('add')"
+          >
+          <el-button type="info" @click="handleBulkTimeDiff('add')"
             >加時</el-button
           >
         </div>
