@@ -5,12 +5,7 @@
       <div class="flex flex-col gap-2 sm:w-1/3">
         <!-- 載入影片 -->
         <div class="flex">
-          <el-input
-            v-model="videoId"
-            class="w-full"
-            placeholder="輸入YT ID"
-            @click="handleCopyToClipboard(videoId)"
-          />
+          <el-input v-model="videoId" class="w-full" placeholder="輸入YT ID" />
           <el-button type="success " plain @click="handleReloadYT">
             載入影片
           </el-button>
@@ -39,12 +34,12 @@
           <el-button type="danger" @click="handleBulkTimeDiff('minus')"
             >減時</el-button
           >
-          <el-button type="success" @click="handleBulkTimeDiff('add')"
+          <!-- <el-button type="success" @click="handleBulkTimeDiff('add')"
             >加時</el-button
-          >
+          > -->
         </div>
 
-        <div class="flex">
+        <div class="flex flex-col gap-2">
           <el-input
             v-model="videoTitle"
             class="w-full"
@@ -307,7 +302,7 @@ const recommendHiraganas = ref([]);
 const apiKey = ref("");
 
 // 時間差
-const timeDiff = ref("00:00.00");
+const timeDiff = ref("00:00.20");
 
 // 轉換時間字串為秒
 const parseTimeToSeconds = (timeString) => {
@@ -646,7 +641,7 @@ const searchYouTube = async () => {
   nextPageToken.value = ""; // 重置分頁 token
   recordActivity("search_youtube", searchQuery.value);
   try {
-    const response = await MYAPI.get(
+    const response = await $fetch(
       "https://www.googleapis.com/youtube/v3/search",
       {
         params: {
@@ -658,8 +653,8 @@ const searchYouTube = async () => {
         },
       },
     );
-    searchResults.value = response.data.items;
-    nextPageToken.value = response.data.nextPageToken || "";
+    searchResults.value = response.items;
+    nextPageToken.value = response.nextPageToken || "";
   } catch (error) {
     console.error("搜尋 YouTube 影片時發生錯誤：", error);
     ElMessage.error("搜尋 YouTube 影片時發生錯誤");
@@ -674,9 +669,7 @@ const selectVideo = (videoItemFromSearch) => {
   videoTitle.value = videoItemFromSearch.snippet.title;
   videoChannel.value = videoItemFromSearch.snippet.channelTitle;
   closeSearchDialog();
-  handleFindLyrics().then(() => {
-    handleReloadYT();
-  });
+  handleReloadYT();
 };
 
 // 載入更多 YouTube 影片
@@ -685,7 +678,7 @@ const loadMoreResults = async () => {
 
   loading.value = true;
   try {
-    const response = await MYAPI.get(
+    const response = await $fetch(
       "https://www.googleapis.com/youtube/v3/search",
       {
         params: {
@@ -698,8 +691,8 @@ const loadMoreResults = async () => {
         },
       },
     );
-    searchResults.value = [...searchResults.value, ...response.data.items];
-    nextPageToken.value = response.data.nextPageToken || "";
+    searchResults.value = [...searchResults.value, ...response.items];
+    nextPageToken.value = response.nextPageToken || "";
   } catch (error) {
     console.error("載入更多 YouTube 影片時發生錯誤：", error);
     ElMessage.error("載入更多 YouTube 影片時發生錯誤");
