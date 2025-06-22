@@ -6,7 +6,7 @@
         <!-- 載入影片 -->
         <div class="flex">
           <el-input v-model="videoId" class="w-full" placeholder="輸入YT ID" />
-          <el-button type="success " plain @click="handleReloadYT">
+          <el-button type="primary" plain @click="handleReloadYT">
             載入影片
           </el-button>
           <el-button type="primary" @click="openSearchDialog">
@@ -40,7 +40,7 @@
         <div class="flex gap-2">
           <el-button
             class="flex-1"
-            type="warning "
+            type="primary"
             plain
             @click="handleLyricsDialogOpen"
           >
@@ -57,7 +57,7 @@
             class="w-full"
             placeholder="輸入時間差"
           ></el-input>
-          <el-button type="warning" plain @click="handleBulkTimeDiff('minus')"
+          <el-button type="primary" plain @click="handleBulkTimeDiff('minus')"
             >減時</el-button
           >
           <el-button type="info" plain @click="handleBulkTimeDiff('add')"
@@ -66,12 +66,12 @@
         </div>
 
         <div class="flex gap-2">
-          <el-button class="flex-1" type="primary" plain @click="handleCopy">
+          <el-button class="flex-1" type="warning" plain @click="handleCopy">
             複製歌詞
           </el-button>
           <el-button
             class="flex-1"
-            type="primary"
+            type="warning"
             plain
             @click="handleCopyHiragana"
           >
@@ -142,8 +142,12 @@
               />
 
               <div class="flex">
-                <el-button type="text" @click=""> -10 </el-button>
-                <el-button type="text" @click=""> -20 </el-button>
+                <el-button type="text" @click="handleDecreaseTime(index, 10)">
+                  -10
+                </el-button>
+                <el-button type="text" @click="handleDecreaseTime(index, 20)">
+                  -20
+                </el-button>
               </div>
             </div>
             <div class="flex w-full flex-wrap gap-2">
@@ -762,6 +766,39 @@ const handleFindLyrics = async () => {
   } finally {
     lyricsLoading.value = false;
   }
+};
+
+const handleDecreaseTime = (index, milliseconds) => {
+  // 確保索引有效
+  if (index < 0 || index >= allLyrics.value.length) return;
+
+  const line = allLyrics.value[index];
+  const timestampPattern = /\[(\d{2}):(\d{2})\.(\d{2})\]/;
+  const match = line.timestamp.match(timestampPattern);
+  if (!match) return;
+
+  // 解析時間戳
+  const [_, minutes, seconds, ms] = match;
+  const totalMs =
+    parseInt(minutes) * 60 * 100 + parseInt(seconds) * 100 + parseInt(ms);
+
+  // 減去指定的毫秒數
+  let newTotalMs = totalMs - milliseconds;
+  if (newTotalMs < 0) newTotalMs = 0;
+
+  // 轉換回 mm:ss.ms 格式
+  const newMinutes = Math.floor(newTotalMs / (60 * 100));
+  const newSeconds = Math.floor((newTotalMs % (60 * 100)) / 100);
+  const newMs = newTotalMs % 100;
+
+  // 更新時間戳
+  allLyrics.value[index].timestamp =
+    `[${String(newMinutes).padStart(2, "0")}:${String(newSeconds).padStart(
+      2,
+      "0",
+    )}.${String(newMs).padStart(2, "0")}]`;
+
+  ElMessage.success(`時間戳減少 ${milliseconds} 毫秒`);
 };
 
 const handleBulkTimeDiff = (operator) => {
