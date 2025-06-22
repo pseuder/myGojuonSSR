@@ -12,7 +12,6 @@
         </div>
         <!-- 影片播放器 -->
         <div id="player-container" ref="playerContainerRef" class="h-[70%]">
-          <!-- Nuxt 3 中，可以使用 <ClientOnly> 包裝純客戶端元件，但此處在 onMounted 中初始化，所以不是必須 -->
           <div
             id="player"
             ref="playerRef"
@@ -541,7 +540,7 @@ onMounted(() => {
       console.error("Error recording activity:", error);
     });
 
-    window.addEventListener("keypress", handleKeyPress);
+    window.addEventListener("keypress", handleKeyPress, true);
   }
 });
 
