@@ -27,13 +27,11 @@
             v-model="videoTitle"
             class="w-full"
             placeholder="輸入標題"
-            @click="handleCopyToClipboard(videoTitle)"
           />
           <el-input
             v-model="videoChannel"
             class="w-full"
             placeholder="輸入頻道名稱"
-            @click="handleCopyToClipboard(videoChannel)"
           />
         </div>
 
