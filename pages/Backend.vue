@@ -14,18 +14,25 @@
       style="width: 100%"
       highlight-current-row
     >
-      <el-table-column prop="id" label="id" min-width="50"></el-table-column>
+      <el-table-column
+        prop="id"
+        label="id"
+        min-width="50"
+        sortable
+      ></el-table-column>
       <el-table-column
         prop="name"
         label="影片名稱"
         min-width="180"
+        sortable
       ></el-table-column>
       <el-table-column
         prop="author"
         label="作者"
         min-width="100"
+        sortable
       ></el-table-column>
-      <el-table-column prop="tags" label="影片標籤" min-width="200">
+      <el-table-column prop="tags" label="影片標籤" min-width="200" sortable>
         <template #default="scope">
           <el-tag
             v-for="tag in scope.row.tags?.split(',')"
@@ -36,7 +43,7 @@
           >
         </template>
       </el-table-column>
-      <el-table-column prop="is_public" label="公開" min-width="200">
+      <el-table-column prop="is_public" label="公開" min-width="200" sortable>
         <template #default="scope">
           <el-tag v-if="scope.row.is_public" type="success">公開</el-tag>
           <el-tag v-else type="danger">未公開</el-tag>
@@ -86,52 +93,59 @@
   <el-dialog
     :title="dialogTitle"
     v-model="dialogVisible"
-    v-loading="dialogtLoading"
     width="80%"
     top="5vh"
     style="height: 85vh; overflow: auto"
+    body-class="h-[85%]"
   >
-    <el-form
-      :model="formData"
-      ref="form"
-      label-width="80px"
-      label-position="left"
-    >
-      <el-form-item label="影片名稱" prop="name">
-        <el-input v-model="formData.name"></el-input>
-      </el-form-item>
-      <el-form-item label="作者" prop="author">
-        <el-input v-model="formData.author"></el-input>
-      </el-form-item>
-      <el-form-item label="影片ID" prop="source_id">
-        <el-input v-model="formData.source_id"></el-input>
-      </el-form-item>
-      <el-form-item label="影片標籤" prop="tags">
-        <el-input v-model="formData.tags" placeholder="請用逗號分隔"></el-input>
-      </el-form-item>
-      <el-form-item label="公開" prop="is_public">
-        <el-switch v-model="formData.is_public"></el-switch>
-      </el-form-item>
-      <el-form-item label="歌詞" prop="original">
-        <div class="flex w-full">
+    <div class="h-full">
+      <el-form
+        :model="formData"
+        ref="form"
+        label-width="80px"
+        label-position="left"
+        v-loading="dialogLoading"
+        class="h-full overflow-auto"
+      >
+        <el-form-item label="影片名稱" prop="name">
+          <el-input v-model="formData.name"></el-input>
+        </el-form-item>
+        <el-form-item label="作者" prop="author">
+          <el-input v-model="formData.author"></el-input>
+        </el-form-item>
+        <el-form-item label="影片ID" prop="source_id">
+          <el-input v-model="formData.source_id"></el-input>
+        </el-form-item>
+        <el-form-item label="影片標籤" prop="tags">
           <el-input
-            v-model="formData.original"
-            class="flex-1"
-            type="textarea"
-            rows="15"
+            v-model="formData.tags"
+            placeholder="請用逗號分隔"
           ></el-input>
-          <el-input
-            v-model="formData.converted"
-            class="flex-1"
-            type="textarea"
-            rows="15"
-            v-loading="convertLoading"
-          ></el-input>
-        </div>
-      </el-form-item>
-    </el-form>
+        </el-form-item>
+        <el-form-item label="公開" prop="is_public">
+          <el-switch v-model="formData.is_public"></el-switch>
+        </el-form-item>
+        <el-form-item label="歌詞" prop="original">
+          <div class="flex w-full">
+            <el-input
+              v-model="formData.original"
+              class="flex-1"
+              type="textarea"
+              rows="15"
+            ></el-input>
+            <el-input
+              v-model="formData.converted"
+              class="flex-1"
+              type="textarea"
+              rows="15"
+              v-loading="convertLoading"
+            ></el-input>
+          </div>
+        </el-form-item>
+      </el-form>
+    </div>
     <template #footer>
-      <div class="text-right">
+      <div class="shrink-0 text-right">
         <el-button @click="convert_lyrics">取得轉換歌詞</el-button>
         <el-button type="primary" @click="saveVideo">{{
           isEdit ? "更新" : "新增"
@@ -168,7 +182,7 @@ const MYAPI = useApi();
 
 const tableData = ref([]);
 const dialogVisible = ref(false);
-const dialogtLoading = ref(false);
+const dialogLoading = ref(false);
 const isEdit = ref(false);
 const filterText = ref("");
 const dialogTitle = computed(() => (isEdit.value ? "編輯歌曲" : "新增歌曲"));
@@ -208,7 +222,7 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   resetForm();
   dialogVisible.value = true;
-  dialogtLoading.value = true;
+  dialogLoading.value = true;
   MYAPI.get("/get_video/" + row.source_id).then((res) => {
     let data = res["data"];
     formData.value = { ...row };
@@ -216,7 +230,7 @@ const handleEdit = (row) => {
     formData.value.original = data.original;
     formData.value.converted = data.converted;
     isEdit.value = true;
-    dialogtLoading.value = false;
+    dialogLoading.value = false;
   });
 };
 
@@ -279,7 +293,7 @@ const convert_lyrics = async () => {
 const saveVideo = async () => {
   // let myFromData = JSON.parse(JSON.stringify(formData.value));
   // myFromData.converted = JSON.parse(myFromData.converted);
-  dialogtLoading.value = true;
+  dialogLoading.value = true;
   let res = await MYAPI.post("/upsert_video", formData.value);
 
   if (res["status"] === "success") {
@@ -293,7 +307,7 @@ const saveVideo = async () => {
     type: res["status"],
     message: res["message"],
   });
-  dialogtLoading.value = false;
+  dialogLoading.value = false;
 };
 
 const fetchData = () => {
