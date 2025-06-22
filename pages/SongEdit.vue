@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col sm:h-[80vh] sm:overflow-hidden">
+  <div class="flex flex-col sm:h-[85vh] sm:overflow-hidden">
     <div class="flex h-full flex-col gap-2 px-4 py-4 sm:flex-row sm:px-10">
       <!-- 影片播放器+功能列 -->
       <div class="flex flex-col gap-2 sm:w-1/3">
@@ -22,24 +22,7 @@
           ></div>
         </div>
 
-        <div class="flex gap-2">
-          <el-button type="warning" @click="handleClearLyrics"
-            >清空歌詞</el-button
-          >
-          <el-input
-            v-model="timeDiff"
-            class="w-full"
-            placeholder="輸入時間差"
-          ></el-input>
-          <el-button type="success" @click="handleBulkTimeDiff('minus')"
-            >減時</el-button
-          >
-          <el-button type="info" @click="handleBulkTimeDiff('add')"
-            >加時</el-button
-          >
-        </div>
-
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-2 lg:flex-row">
           <el-input
             v-model="videoTitle"
             class="w-full"
@@ -54,34 +37,55 @@
           />
         </div>
 
+        <div class="flex gap-2">
+          <el-button
+            class="flex-1"
+            type="warning "
+            plain
+            @click="handleLyricsDialogOpen"
+          >
+            貼上歌詞
+          </el-button>
+          <el-button type="info" plain @click="handleClearLyrics" class="flex-1"
+            >清空歌詞</el-button
+          >
+        </div>
+
+        <div class="flex gap-2">
+          <el-input
+            v-model="timeDiff"
+            class="w-full"
+            placeholder="輸入時間差"
+          ></el-input>
+          <el-button type="warning" plain @click="handleBulkTimeDiff('minus')"
+            >減時</el-button
+          >
+          <el-button type="info" plain @click="handleBulkTimeDiff('add')"
+            >加時</el-button
+          >
+        </div>
+
+        <div class="flex gap-2">
+          <el-button class="flex-1" type="primary" plain @click="handleCopy">
+            複製歌詞
+          </el-button>
+          <el-button
+            class="flex-1"
+            type="primary"
+            plain
+            @click="handleCopyHiragana"
+          >
+            複製轉換歌詞
+          </el-button>
+        </div>
+
         <!-- 功能列 -->
         <div class="flex h-[10%] flex-col gap-2">
           <!-- 第一列 -->
-          <div class="flex w-full items-center gap-2">
-            <el-button
-              class="w-full"
-              type="warning "
-              plain
-              @click="handleLyricsDialogOpen"
-            >
-              貼上歌詞
-            </el-button>
-            <el-button class="w-full" type="success" plain @click="handleCopy">
-              複製歌詞
-            </el-button>
-            <el-button
-              class="w-full"
-              type="primary"
-              plain
-              @click="handleCopyHiragana"
-            >
-              複製轉換格式歌詞
-            </el-button>
-          </div>
 
           <!-- 發布歌曲按鈕 -->
           <div class="flex w-full items-center gap-2">
-            <el-button class="w-full" type="danger" @click="handlePublishSong">
+            <el-button class="w-full" type="success" @click="handlePublishSong">
               發布歌曲
             </el-button>
           </div>
