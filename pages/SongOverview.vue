@@ -22,9 +22,11 @@
       </el-menu>
     </div>
 
-    <div class="flex h-full grow flex-col items-center gap-4 overflow-x-hidden">
+    <div
+      class="flex h-full w-full grow flex-col items-center gap-4 overflow-x-hidden"
+    >
       <el-space
-        class="flex-1 justify-center overflow-y-auto"
+        class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"
         style="width: 100%"
         wrap
         v-if="allVideos.length > 0"
