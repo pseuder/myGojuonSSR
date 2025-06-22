@@ -44,15 +44,22 @@
       </el-table-column>
       <el-table-column label="影片縮圖" min-width="100">
         <template #default="scope">
-          <img
-            :src="
-              'https://img.youtube.com/vi/' +
-              scope.row.source_id +
-              '/hqdefault.jpg'
-            "
-            alt="video thumbnail"
-            class="h-24 w-24 object-cover"
-          />
+          <a
+            :href="resolveVideoUrl(scope.row.source_id)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mb-2 block w-full"
+          >
+            <img
+              :src="
+                'https://img.youtube.com/vi/' +
+                scope.row.source_id +
+                '/hqdefault.jpg'
+              "
+              alt="video thumbnail"
+              class="h-24 w-24 object-cover"
+            />
+          </a>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="180">
@@ -79,6 +86,7 @@
   <el-dialog
     :title="dialogTitle"
     v-model="dialogVisible"
+    v-loading="dialogtLoading"
     width="80%"
     top="5vh"
     style="height: 85vh; overflow: auto"
@@ -160,6 +168,7 @@ const MYAPI = useApi();
 
 const tableData = ref([]);
 const dialogVisible = ref(false);
+const dialogtLoading = ref(false);
 const isEdit = ref(false);
 const filterText = ref("");
 const dialogTitle = computed(() => (isEdit.value ? "編輯歌曲" : "新增歌曲"));
@@ -198,6 +207,8 @@ const handleAdd = () => {
 
 const handleEdit = (row) => {
   resetForm();
+  dialogVisible.value = true;
+  dialogtLoading.value = true;
   MYAPI.get("/get_video/" + row.source_id).then((res) => {
     let data = res["data"];
     formData.value = { ...row };
@@ -205,7 +216,7 @@ const handleEdit = (row) => {
     formData.value.original = data.original;
     formData.value.converted = data.converted;
     isEdit.value = true;
-    dialogVisible.value = true;
+    dialogtLoading.value = false;
   });
 };
 
@@ -268,11 +279,12 @@ const convert_lyrics = async () => {
 const saveVideo = async () => {
   // let myFromData = JSON.parse(JSON.stringify(formData.value));
   // myFromData.converted = JSON.parse(myFromData.converted);
+  dialogtLoading.value = true;
   let res = await MYAPI.post("/upsert_video", formData.value);
 
   if (res["status"] === "success") {
     fetchData();
-    dialogVisible.value = false;
+    // dialogVisible.value = false;
   } else {
     console.error(res);
   }
@@ -281,6 +293,7 @@ const saveVideo = async () => {
     type: res["status"],
     message: res["message"],
   });
+  dialogtLoading.value = false;
 };
 
 const fetchData = () => {
@@ -307,6 +320,10 @@ const resetForm = () => {
     original: "",
     converted: "",
   };
+};
+
+const resolveVideoUrl = (source_id) => {
+  return "/SongPractice/" + source_id;
 };
 
 onMounted(() => {
