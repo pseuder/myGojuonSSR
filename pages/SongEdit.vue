@@ -140,6 +140,11 @@
                 class="h-6 w-24 rounded border border-gray-300 px-1"
                 placeholder="輸入時間"
               />
+
+              <div class="flex">
+                <el-button type="text" @click=""> -10 </el-button>
+                <el-button type="text" @click=""> -20 </el-button>
+              </div>
             </div>
             <div class="flex w-full flex-wrap gap-2">
               <template v-for="(ly, lyIndex) in line.lyrics" :key="lyIndex">
@@ -148,20 +153,20 @@
                   :id="`lyric-cvt-${index}-${lyIndex}`"
                 >
                   <span class="flex gap-6">
-                    <button
-                      type="button"
+                    <el-button
+                      type="text"
                       class="text-sm text-blue-500"
                       @click="handleWidthenLyric(index, lyIndex)"
                     >
                       加寬
-                    </button>
-                    <button
-                      type="button"
+                    </el-button>
+                    <el-button
+                      type="text"
                       class="text-sm text-red-500"
                       @click="handleDeleteLyric(index, lyIndex)"
                     >
                       刪除
-                    </button></span
+                    </el-button></span
                   >
                   <input
                     v-model="ly.cvt"
