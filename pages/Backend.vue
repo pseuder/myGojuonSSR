@@ -26,15 +26,16 @@
         min-width="100"
         sortable
       ></el-table-column>
+
       <el-table-column
-        prop="display_order"
-        label="顯示順序"
+        prop="is_public"
+        label="公開"
         min-width="100"
         sortable
       ></el-table-column>
       <el-table-column
-        prop="is_public"
-        label="公開"
+        prop="display_order"
+        label="顯示順序"
         min-width="100"
         sortable
       ></el-table-column>
