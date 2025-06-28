@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
       <el-input
         v-model="filterText"
-        placeholder="請輸入影片名稱、作者進行過濾"
+        placeholder="請輸入作者名稱進行過濾"
         class="w-full"
         clearable
       />
@@ -15,75 +15,33 @@
       highlight-current-row
     >
       <el-table-column
-        prop="id"
-        label="id"
-        min-width="50"
-        sortable
-      ></el-table-column>
-      <el-table-column
         prop="name"
-        label="影片名稱"
+        label="作者"
         min-width="180"
         sortable
       ></el-table-column>
       <el-table-column
-        prop="author"
-        label="作者"
+        prop="song_count"
+        label="歌曲數量"
         min-width="100"
         sortable
       ></el-table-column>
-      <el-table-column prop="tags" label="影片標籤" min-width="200" sortable>
-        <template #default="scope">
-          <el-tag
-            v-for="tag in scope.row.tags?.split(',')"
-            :key="tag"
-            type="success"
-            class="mb-1"
-            >{{ tag }}</el-tag
-          >
-        </template>
-      </el-table-column>
-      <el-table-column prop="is_public" label="公開" min-width="200" sortable>
-        <template #default="scope">
-          <el-tag v-if="scope.row.is_public" type="success">公開</el-tag>
-          <el-tag v-else type="danger">未公開</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="影片縮圖" min-width="100">
-        <template #default="scope">
-          <a
-            :href="resolveVideoUrl(scope.row.source_id)"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="mb-2 block w-full"
-          >
-            <img
-              :src="
-                'https://img.youtube.com/vi/' +
-                scope.row.source_id +
-                '/hqdefault.jpg'
-              "
-              alt="video thumbnail"
-              class="h-24 w-24 object-cover"
-            />
-          </a>
-        </template>
-      </el-table-column>
+      <el-table-column
+        prop="display_order"
+        label="顯示順序"
+        min-width="100"
+        sortable
+      ></el-table-column>
+      <el-table-column
+        prop="is_public"
+        label="公開"
+        min-width="100"
+        sortable
+      ></el-table-column>
       <el-table-column label="操作" width="180">
         <template #header>
           <div class="text-center">
-            <el-button type="success" @click="handleAdd">新增</el-button>
-          </div>
-        </template>
-
-        <template #default="scope">
-          <div class="text-center">
-            <el-button type="danger" @click="handleDelete(scope.row)"
-              >刪除</el-button
-            >
-            <el-button type="primary" @click="handleEdit(scope.row)"
-              >編輯</el-button
-            >
+            <el-button type="success" @click="handleAdd">新增歌曲</el-button>
           </div>
         </template>
       </el-table-column>
@@ -157,8 +115,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, watch } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ref, onMounted, computed } from "vue";
+import { ElMessage } from "element-plus";
 
 definePageMeta({
   middleware: [
@@ -205,11 +163,7 @@ const filteredTableData = computed(() => {
   }
   const lowerCaseFilter = filterText.value.toLowerCase();
   return tableData.value.filter((item) => {
-    return (
-      item.name.toLowerCase().includes(lowerCaseFilter) ||
-      item.author.toLowerCase().includes(lowerCaseFilter) ||
-      item.tags?.toLowerCase().includes(lowerCaseFilter)
-    );
+    return item.name && item.name.toLowerCase().includes(lowerCaseFilter);
   });
 });
 
@@ -311,9 +265,9 @@ const saveVideo = async () => {
 };
 
 const fetchData = () => {
-  MYAPI.get("/get_all_videos").then((res) => {
+  MYAPI.get("/get_all_authors").then((res) => {
     if (res["status"] == "success") {
-      tableData.value = res["data"]["data"];
+      tableData.value = res["data"];
     } else {
       ElMessage({
         type: res["status"],
