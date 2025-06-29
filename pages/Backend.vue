@@ -3,7 +3,7 @@
     <!-- filter bar -->
     <div class="flex items-center justify-between">
       <el-input
-        v-model="filterText"
+        v-model="songFilterText"
         placeholder="請輸入作者名稱進行過濾"
         class="w-full"
         clearable
@@ -21,7 +21,7 @@
 
             <th class="operations">
               <div class="text-center">
-                <el-button type="success" @click="handleAdd"
+                <el-button type="success" @click="songhandleAdd"
                   >新增歌曲</el-button
                 >
               </div>
@@ -30,7 +30,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="row in filteredTableData"
+            v-for="row in authorfilteredTableData"
             :key="row.id"
             :data-id="row.id"
             class="table-row"
@@ -41,11 +41,11 @@
             <td>{{ row.is_public ? "是" : "否" }}</td>
 
             <td class="operations">
-              <el-button type="primary" size="small" @click="handleEdit(row)"
+              <el-button
+                type="primary"
+                size="small"
+                @click="authorhandleEdit(row)"
                 >編輯</el-button
-              >
-              <el-button type="danger" size="small" @click="handleDelete(row)"
-                >刪除</el-button
               >
             </td>
           </tr>
@@ -55,8 +55,8 @@
   </div>
 
   <el-dialog
-    :title="dialogTitle"
-    v-model="dialogVisible"
+    :title="authorDialogTitle"
+    v-model="authorDialogVisible"
     width="80%"
     top="5vh"
     style="height: 85vh; overflow: auto"
@@ -64,45 +64,120 @@
   >
     <div class="h-full">
       <el-form
-        :model="formData"
-        ref="form"
+        :model="authorformData"
+        ref="authorform"
         label-width="80px"
         label-position="left"
-        v-loading="dialogLoading"
+        v-loading="authorDialogLoading"
+        class="h-full overflow-auto"
+      >
+        <el-form-item label="作者名稱" prop="name">
+          <el-input v-model="authorformData.name"></el-input>
+        </el-form-item>
+        <el-form-item label="公開" prop="is_public">
+          <el-switch v-model="authorformData.is_public"></el-switch>
+        </el-form-item>
+        <el-form-item label="歌曲列表">
+          <div class="table-container">
+            <table class="native-table" ref="songTableRef">
+              <thead>
+                <tr>
+                  <th>顯示順序</th>
+                  <th>歌曲名稱</th>
+                  <th>影片ID</th>
+                  <th>公開</th>
+                  <th>標籤</th>
+                  <th class="operations">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="song in authorformData.songs" :key="song.id">
+                  <td>{{ song.display_order }}</td>
+                  <td>{{ song.name }}</td>
+                  <td>{{ song.source_id }}</td>
+                  <td>{{ song.is_public ? "是" : "否" }}</td>
+                  <td>{{ song.tags }}</td>
+
+                  <td class="operations">
+                    <el-button
+                      type="primary"
+                      size="small"
+                      @click="songhandleEdit(song)"
+                      >編輯歌曲</el-button
+                    >
+                    <el-button
+                      type="danger"
+                      size="small"
+                      @click="songhandleDelete(song)"
+                      >刪除歌曲</el-button
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </el-form-item>
+      </el-form>
+    </div>
+    <template #footer>
+      <div class="shrink-0 text-right">
+        <el-button type="primary" @click="updateAuthorInfo">{{
+          authorIsEdit ? "更新" : "新增"
+        }}</el-button>
+        <el-button @click="authorDialogVisible = false">取消</el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <el-dialog
+    :title="songDialogTitle"
+    v-model="songDialogVisible"
+    width="80%"
+    top="5vh"
+    style="height: 85vh; overflow: auto"
+    body-class="h-[85%]"
+  >
+    <div class="h-full">
+      <el-form
+        :model="songformData"
+        ref="songform"
+        label-width="80px"
+        label-position="left"
+        v-loading="songDialogLoading"
         class="h-full overflow-auto"
       >
         <el-form-item label="影片名稱" prop="name">
-          <el-input v-model="formData.name"></el-input>
+          <el-input v-model="songformData.name"></el-input>
         </el-form-item>
-        <el-form-item label="作者" prop="author">
-          <el-input v-model="formData.author"></el-input>
+        <el-form-item label="作者" prop="name">
+          <el-input v-model="songformData.author"></el-input>
         </el-form-item>
         <el-form-item label="影片ID" prop="source_id">
-          <el-input v-model="formData.source_id"></el-input>
+          <el-input v-model="songformData.source_id"></el-input>
         </el-form-item>
         <el-form-item label="影片標籤" prop="tags">
           <el-input
-            v-model="formData.tags"
+            v-model="songformData.tags"
             placeholder="請用逗號分隔"
           ></el-input>
         </el-form-item>
         <el-form-item label="公開" prop="is_public">
-          <el-switch v-model="formData.is_public"></el-switch>
+          <el-switch v-model="songformData.is_public"></el-switch>
         </el-form-item>
         <el-form-item label="歌詞" prop="original">
           <div class="flex w-full">
             <el-input
-              v-model="formData.original"
+              v-model="songformData.original"
               class="flex-1"
               type="textarea"
               rows="15"
             ></el-input>
             <el-input
-              v-model="formData.converted"
+              v-model="songformData.converted"
               class="flex-1"
               type="textarea"
               rows="15"
-              v-loading="convertLoading"
+              v-loading="songconvertLoading"
             ></el-input>
           </div>
         </el-form-item>
@@ -112,9 +187,9 @@
       <div class="shrink-0 text-right">
         <el-button @click="convert_lyrics">取得轉換歌詞</el-button>
         <el-button type="primary" @click="saveVideo">{{
-          isEdit ? "更新" : "新增"
+          songIsEdit ? "更新" : "新增"
         }}</el-button>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="songDialogVisible = false">取消</el-button>
       </div>
     </template>
   </el-dialog>
@@ -145,15 +220,17 @@ definePageMeta({
 
 const MYAPI = useApi();
 
-const tableData = ref([]);
-const dialogVisible = ref(false);
-const dialogLoading = ref(false);
-const isEdit = ref(false);
-const filterText = ref("");
-const dialogTitle = computed(() => (isEdit.value ? "編輯歌曲" : "新增歌曲"));
-const convertLoading = ref(false);
-const form = ref(null);
-const formData = ref({
+const songTableData = ref([]);
+const songDialogVisible = ref(false);
+const songDialogLoading = ref(false);
+const songIsEdit = ref(false);
+const songFilterText = ref("");
+const songDialogTitle = computed(() =>
+  songIsEdit.value ? "編輯歌曲" : "新增歌曲",
+);
+const songconvertLoading = ref(false);
+const songform = ref(null);
+const songformData = ref({
   id: "",
   source_id: "",
   name: "",
@@ -164,40 +241,162 @@ const formData = ref({
   converted: "",
 });
 
-const authorTableRef = ref(null);
+const authorTableData = ref([]);
+const authorDialogVisible = ref(false);
+const authorDialogLoading = ref(false);
+const authorIsEdit = ref(false);
+const authorFilterText = ref("");
+const authorDialogTitle = "編輯作者";
+const authorform = ref(null);
+const authorformData = ref({
+  id: "",
+  name: "",
+  is_public: false,
+  display_order: 0,
+  songs: [],
+  orderData: [],
+});
 
-const filteredTableData = computed(() => {
-  if (!filterText.value) {
-    return tableData.value;
+const authorTableRef = ref(null);
+const songTableRef = ref(null);
+
+const authorfilteredTableData = computed(() => {
+  if (!songFilterText.value) {
+    return songTableData.value;
   }
-  const lowerCaseFilter = filterText.value.toLowerCase();
-  return tableData.value.filter((item) => {
+  const lowerCaseFilter = songFilterText.value.toLowerCase();
+  return songTableData.value.filter((item) => {
     return item.name && item.name.toLowerCase().includes(lowerCaseFilter);
   });
 });
 
-const handleAdd = () => {
-  resetForm();
-  isEdit.value = false;
-  dialogVisible.value = true;
+const songhandleAdd = () => {
+  songresetForm();
+  songIsEdit.value = false;
+  songDialogVisible.value = true;
 };
 
-const handleEdit = (row) => {
-  resetForm();
-  dialogVisible.value = true;
-  dialogLoading.value = true;
+const songhandleEdit = (row) => {
+  songresetForm();
+  songDialogVisible.value = true;
+  songDialogLoading.value = true;
   MYAPI.get("/get_video/" + row.source_id).then((res) => {
     let data = res["data"];
-    formData.value = { ...row };
-    formData.value.is_public = data.is_public === 1;
-    formData.value.original = data.original;
-    formData.value.converted = data.converted;
-    isEdit.value = true;
-    dialogLoading.value = false;
+    songformData.value = { ...row };
+    songformData.value.is_public = data.is_public === 1;
+    songformData.value.original = data.original;
+    songformData.value.converted = data.converted;
+    songformData.value.author = authorformData.value.name;
+    songIsEdit.value = true;
+    songDialogLoading.value = false;
   });
 };
 
-const handleDelete = (row) => {
+const authorresetForm = () => {
+  authorformData.value = {
+    id: "",
+    name: "",
+    is_public: false,
+    display_order: 0,
+    songs: [],
+  };
+};
+
+const authorhandleAdd = () => {
+  authorresetForm();
+  authorIsEdit.value = false;
+  authorDialogVisible.value = true;
+};
+
+const authorhandleEdit = (row) => {
+  authorresetForm();
+  authorDialogVisible.value = true;
+  authorDialogLoading.value = true;
+  MYAPI.get("/get_author/" + row.id).then((res) => {
+    let data = res["data"];
+    authorformData.value.is_public = data.is_public === 1;
+    authorformData.value.songs = data.songs || [];
+    authorformData.value.id = data.id;
+    authorformData.value.name = data.name;
+
+    authorIsEdit.value = true;
+    authorDialogLoading.value = false;
+
+    // 初始化歌曲拖曳排序
+    nextTick(() => {
+      songinitSortable();
+
+      ElMessage.info("歌曲列表已初始化拖曳排序功能");
+    });
+  });
+};
+
+// 初始化特定作者的歌曲拖曳排序
+const songinitSortable = () => {
+  // 獲取原生表格的 tbody 元素
+  const tbody = songTableRef.value.querySelector("tbody");
+
+  Sortable.create(tbody, {
+    animation: 150, // 拖曳動畫時間
+    // 拖曳結束後觸發的事件
+    onEnd: async (evt) => {
+      ElMessage.info("拖曳結束，正在更新順序...");
+      const { oldIndex, newIndex } = evt;
+
+      // 如果位置沒有改變，則不執行任何操作
+      if (oldIndex === newIndex) {
+        return;
+      }
+
+      // 1. 更新前端數據順序，讓畫面保持同步
+      const itemToMove = authorformData.value.songs.splice(oldIndex, 1)[0];
+      authorformData.value.songs.splice(newIndex, 0, itemToMove);
+
+      // 2. 準備要送到後端的資料
+      const orderData = authorformData.value.songs.map((item, index) => {
+        // 更新本地的 display_order，雖然不是必須，但保持資料一致性是個好習慣
+        item.display_order = index + 1;
+        return {
+          video_id: item.id,
+          author_id: authorformData.value.id,
+          display_order: index + 1, // 順序從 1 開始
+        };
+      });
+
+      authorformData.value.orderData = orderData;
+
+      // 3. 呼叫 API 更新後端資料庫
+      // await updateSongOrder(orderData);
+    },
+  });
+};
+
+const updateAuthorInfo = async () => {
+  try {
+    const res = await MYAPI.post("/update_authorInfo", {
+      author_id: authorformData.value.id,
+      author_name: authorformData.value.name,
+      author_is_public: authorformData.value.is_public ? 1 : 0,
+      new_orders: authorformData.value.orderData,
+    });
+    if (res.status === "success") {
+      ElMessage.success("歌曲順序更新成功！");
+      // 可以選擇重新獲取一次資料，以確保完全同步
+      // authorfetchData();
+    } else {
+      ElMessage.error(res.message || "更新順序失敗");
+      // 如果更新失敗，最好是重新載入資料以還原順序
+      authorfetchData();
+    }
+  } catch (error) {
+    console.error("更新歌曲順序時發生錯誤:", error);
+    ElMessage.error("更新順序時發生網路錯誤");
+    // 出錯時也還原順序
+    authorfetchData();
+  }
+};
+
+const songhandleDelete = (row) => {
   ElMessageBox.confirm("確定刪除此影片嗎?", "提示", {
     confirmButtonText: "OK",
     cancelButtonText: "Cancel",
@@ -205,8 +404,8 @@ const handleDelete = (row) => {
   })
     .then(async () => {
       await MYAPI.del("/delete_video/" + row.id);
-      fetchData();
-      dialogVisible.value = false;
+      authorfetchData();
+      songDialogVisible.value = false;
       ElMessage({
         type: "success",
         message: "刪除成功",
@@ -234,13 +433,13 @@ function customStringify(obj) {
 }
 
 const convert_lyrics = async () => {
-  convertLoading.value = true;
+  songconvertLoading.value = true;
   let res = await MYAPI.post("/convert_lyrics", {
-    lyrics: formData.value.original,
+    lyrics: songformData.value.original,
   });
 
   if (res["status"] === "success") {
-    formData.value.converted = customStringify(res["data"]);
+    songformData.value.converted = customStringify(res["data"]);
   } else {
     console.error(res);
   }
@@ -250,15 +449,15 @@ const convert_lyrics = async () => {
     message: "轉換成功",
   });
 
-  convertLoading.value = false;
+  songconvertLoading.value = false;
 };
 
 const saveVideo = async () => {
-  dialogLoading.value = true;
-  let res = await MYAPI.post("/upsert_video", formData.value);
+  songDialogLoading.value = true;
+  let res = await MYAPI.post("/upsert_video", songformData.value);
 
   if (res["status"] === "success") {
-    fetchData();
+    authorfetchData();
   } else {
     console.error(res);
   }
@@ -267,16 +466,16 @@ const saveVideo = async () => {
     type: res["status"],
     message: res["message"],
   });
-  dialogLoading.value = false;
+  songDialogLoading.value = false;
 };
 
-const fetchData = () => {
+const authorfetchData = () => {
   MYAPI.get("/get_all_authors").then((res) => {
     if (res["status"] == "success") {
-      tableData.value = res["data"];
+      songTableData.value = res["data"];
 
       nextTick(() => {
-        initSortable();
+        authorinitSortable();
       });
     } else {
       ElMessage({
@@ -287,7 +486,7 @@ const fetchData = () => {
   });
 };
 
-const initSortable = () => {
+const authorinitSortable = () => {
   // 獲取原生表格的 tbody 元素
   const tbody = authorTableRef.value.querySelector("tbody");
 
@@ -304,11 +503,11 @@ const initSortable = () => {
       }
 
       // 1. 更新前端數據順序，讓畫面保持同步
-      const itemToMove = tableData.value.splice(oldIndex, 1)[0];
-      tableData.value.splice(newIndex, 0, itemToMove);
+      const itemToMove = songTableData.value.splice(oldIndex, 1)[0];
+      songTableData.value.splice(newIndex, 0, itemToMove);
 
       // 2. 準備要送到後端的資料
-      const orderData = tableData.value.map((item, index) => {
+      const orderData = songTableData.value.map((item, index) => {
         // 更新本地的 display_order，雖然不是必須，但保持資料一致性是個好習慣
         item.display_order = index + 1;
         return {
@@ -316,8 +515,6 @@ const initSortable = () => {
           display_order: index + 1, // 順序從 1 開始
         };
       });
-
-      console.log("更新的順序資料:", orderData);
 
       // 3. 呼叫 API 更新後端資料庫
       await updateAuthorOrder(orderData);
@@ -333,22 +530,22 @@ const updateAuthorOrder = async (orderData) => {
     if (res.status === "success") {
       ElMessage.success("作者順序更新成功！");
       // 可以選擇重新獲取一次資料，以確保完全同步
-      // fetchData();
+      // authorfetchData();
     } else {
       ElMessage.error(res.message || "更新順序失敗");
       // 如果更新失敗，最好是重新載入資料以還原順序
-      fetchData();
+      authorfetchData();
     }
   } catch (error) {
     console.error("更新作者順序時發生錯誤:", error);
     ElMessage.error("更新順序時發生網路錯誤");
     // 出錯時也還原順序
-    fetchData();
+    authorfetchData();
   }
 };
 
-const resetForm = () => {
-  formData.value = {
+const songresetForm = () => {
+  songformData.value = {
     id: "",
     source_id: "",
     name: "",
@@ -365,7 +562,7 @@ const resolveVideoUrl = (source_id) => {
 };
 
 onMounted(() => {
-  fetchData();
+  authorfetchData();
 });
 </script>
 

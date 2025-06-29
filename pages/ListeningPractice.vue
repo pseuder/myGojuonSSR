@@ -62,7 +62,7 @@
       </div>
 
       <el-button
-        v-if="user"
+        v-show="isLogin"
         @click="handwritingCanvas.sendCanvasImageToBackend()"
         type="primary"
         class="h-12 w-full"
@@ -71,7 +71,12 @@
       >
         {{ t("ai_recognition") }}
       </el-button>
-      <el-button v-else type="primary" class="h-12 w-full" :disabled="true">
+      <el-button
+        v-show="!isLogin"
+        type="primary"
+        class="h-12 w-full"
+        :disabled="true"
+      >
         {{ t("login_to_enable_ai_recognition") }}
       </el-button>
 
@@ -175,6 +180,8 @@ const predictConfidence = ref(0);
 
 let soundCounts = reactive({});
 const round = ref(1);
+
+const isLogin = computed(() => !!user.value);
 
 const currentSounds = computed(() =>
   fiftySounds.value ? fiftySounds.value[activeTab.value] : [],

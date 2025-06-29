@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-[88vh] w-full p-2">
+  <div class="flex h-[88vh] w-full p-2" v-loading="isLoading">
     <div
       class="h-full max-w-[30vw] flex-none overflow-x-hidden overflow-y-auto"
     >
@@ -8,16 +8,16 @@
         class="w-fit"
         @select="handleSelect"
       >
-        <el-menu-item index="all">
+        <el-menu-item key="all" index="all">
           <span>全部</span>
         </el-menu-item>
         <el-menu-item
           v-for="author in allAuthors"
-          :key="author.author"
-          :index="author.author"
+          :key="author.id"
+          :index="author.id"
           :class="{ 'gradient-text-tech-animated': author.author == 'NELKE' }"
         >
-          <span>{{ author.author }}</span>
+          <span>{{ author.name }}</span>
         </el-menu-item>
       </el-menu>
     </div>
@@ -76,7 +76,7 @@
       <el-pagination
         v-if="allVideos.length > 0"
         background
-        layout="sizes, prev, pager, next"
+        layout="sizes, prev, pager, next, total"
         :total="total"
         :page-size="page_size"
         :current-page="page_number"
@@ -101,9 +101,11 @@ const allVideos = ref([]);
 const allAuthors = ref([]);
 const selectedAuthor = ref(null);
 
-const page_size = ref(10);
+const page_size = ref(50);
 const page_number = ref(1);
 const total = ref(0);
+
+const isLoading = ref(true);
 
 // 輔助函式: 解析路由
 const resolveVideoUrl = (source_id) => {
@@ -133,12 +135,13 @@ const handleSizeChange = (val) => {
 };
 
 const fetchVideos = async () => {
+  isLoading.value = true;
   const params = {
     page_size: page_size.value,
     page_number: page_number.value,
   };
   if (selectedAuthor.value) {
-    params.author = selectedAuthor.value;
+    params.author_id = selectedAuthor.value;
   }
   let res = await MYAPI.get("/get_all_videos", params);
 
@@ -156,14 +159,14 @@ const fetchVideos = async () => {
     res = await MYAPI.get("/get_all_authors");
     allAuthors.value = res.data;
   }
+  isLoading.value = false;
 };
 
 onMounted(() => {
-  const author = route.query.author;
-  if (author) {
-    selectedAuthor.value = author;
+  const author_id = route.query.author;
+  if (author_id) {
+    selectedAuthor.value = author_id;
   }
-
   fetchVideos();
 });
 </script>
