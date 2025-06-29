@@ -9,10 +9,13 @@
         clearable
       />
     </div>
+    <!-- *** 主要修改點 1: 加上 ref *** -->
     <el-table
+      ref="authorTableRef"
       :data="filteredTableData"
       style="width: 100%"
       highlight-current-row
+      row-key="id"
     >
       <el-table-column
         prop="name"
@@ -26,7 +29,6 @@
         min-width="100"
         sortable
       ></el-table-column>
-
       <el-table-column
         prop="is_public"
         label="公開"
@@ -118,6 +120,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { ElMessage } from "element-plus";
+import Sortable from "sortablejs";
 
 definePageMeta({
   middleware: [
@@ -157,6 +160,8 @@ const formData = ref({
   original: "",
   converted: "",
 });
+
+const authorTableRef = ref(null);
 
 const filteredTableData = computed(() => {
   if (!filterText.value) {
@@ -269,6 +274,10 @@ const fetchData = () => {
   MYAPI.get("/get_all_authors").then((res) => {
     if (res["status"] == "success") {
       tableData.value = res["data"];
+
+      nextTick(() => {
+        initSortable();
+      });
     } else {
       ElMessage({
         type: res["status"],
@@ -276,6 +285,72 @@ const fetchData = () => {
       });
     }
   });
+};
+
+const initSortable = () => {
+  debugger;
+  // 如果 authorTableRef 不存在，則不執行
+  if (!authorTableRef.value) return;
+
+  // 獲取 el-table 的 tbody 元素
+  const tbody = authorTableRef.value.$el.querySelector(
+    ".el-table__body-wrapper tbody",
+  );
+
+  Sortable.create(tbody, {
+    animation: 150, // 拖曳動畫時間
+    // 拖曳結束後觸發的事件
+    onEnd: async (evt) => {
+      const { oldIndex, newIndex } = evt;
+
+      // 如果位置沒有改變，則不執行任何操作
+      if (oldIndex === newIndex) {
+        return;
+      }
+
+      // 1. 更新前端數據順序，讓畫面保持同步
+      const itemToMove = tableData.value.splice(oldIndex, 1)[0];
+      tableData.value.splice(newIndex, 0, itemToMove);
+
+      // 2. 準備要送到後端的資料
+      const orderData = tableData.value.map((item, index) => {
+        // 更新本地的 display_order，雖然不是必須，但保持資料一致性是個好習慣
+        item.display_order = index + 1;
+        return {
+          id: item.id,
+          display_order: index + 1, // 順序從 1 開始
+        };
+      });
+
+      console.log("更新的順序資料:", orderData);
+
+      // 3. 呼叫 API 更新後端資料庫
+      // await updateAuthorOrder(orderData);
+    },
+  });
+};
+
+// *** 主要修改點 6: 新增更新排序到後端的方法 ***
+const updateAuthorOrder = async (orderData) => {
+  try {
+    const res = await MYAPI.post("/update_authors_order", {
+      orders: orderData,
+    });
+    if (res.status === "success") {
+      ElMessage.success("作者順序更新成功！");
+      // 可以選擇重新獲取一次資料，以確保完全同步
+      // fetchData();
+    } else {
+      ElMessage.error(res.message || "更新順序失敗");
+      // 如果更新失敗，最好是重新載入資料以還原順序
+      fetchData();
+    }
+  } catch (error) {
+    console.error("更新作者順序時發生錯誤:", error);
+    ElMessage.error("更新順序時發生網路錯誤");
+    // 出錯時也還原順序
+    fetchData();
+  }
 };
 
 const resetForm = () => {
