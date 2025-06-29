@@ -9,46 +9,49 @@
         clearable
       />
     </div>
-    <!-- *** 主要修改點 1: 加上 ref *** -->
-    <el-table
-      ref="authorTableRef"
-      :data="filteredTableData"
-      style="width: 100%"
-      highlight-current-row
-      row-key="id"
-    >
-      <el-table-column
-        prop="name"
-        label="作者"
-        min-width="180"
-        sortable
-      ></el-table-column>
-      <el-table-column
-        prop="song_count"
-        label="歌曲數量"
-        min-width="100"
-        sortable
-      ></el-table-column>
-      <el-table-column
-        prop="is_public"
-        label="公開"
-        min-width="100"
-        sortable
-      ></el-table-column>
-      <el-table-column
-        prop="display_order"
-        label="顯示順序"
-        min-width="100"
-        sortable
-      ></el-table-column>
-      <el-table-column label="操作" width="180">
-        <template #header>
-          <div class="text-center">
-            <el-button type="success" @click="handleAdd">新增歌曲</el-button>
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
+    <!-- 原生HTML表格 -->
+    <div class="table-container">
+      <table ref="authorTableRef" class="native-table">
+        <thead>
+          <tr>
+            <th class="sortable">顯示順序</th>
+            <th class="sortable">作者</th>
+            <th class="sortable">歌曲數量</th>
+            <th class="sortable">公開</th>
+
+            <th class="operations">
+              <div class="text-center">
+                <el-button type="success" @click="handleAdd"
+                  >新增歌曲</el-button
+                >
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in filteredTableData"
+            :key="row.id"
+            :data-id="row.id"
+            class="table-row"
+          >
+            <td>{{ row.display_order }}</td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.song_count }}</td>
+            <td>{{ row.is_public ? "是" : "否" }}</td>
+
+            <td class="operations">
+              <el-button type="primary" size="small" @click="handleEdit(row)"
+                >編輯</el-button
+              >
+              <el-button type="danger" size="small" @click="handleDelete(row)"
+                >刪除</el-button
+              >
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <el-dialog
@@ -251,14 +254,11 @@ const convert_lyrics = async () => {
 };
 
 const saveVideo = async () => {
-  // let myFromData = JSON.parse(JSON.stringify(formData.value));
-  // myFromData.converted = JSON.parse(myFromData.converted);
   dialogLoading.value = true;
   let res = await MYAPI.post("/upsert_video", formData.value);
 
   if (res["status"] === "success") {
     fetchData();
-    // dialogVisible.value = false;
   } else {
     console.error(res);
   }
@@ -288,19 +288,14 @@ const fetchData = () => {
 };
 
 const initSortable = () => {
-  debugger;
-  // 如果 authorTableRef 不存在，則不執行
-  if (!authorTableRef.value) return;
-
-  // 獲取 el-table 的 tbody 元素
-  const tbody = authorTableRef.value.$el.querySelector(
-    ".el-table__body-wrapper tbody",
-  );
+  // 獲取原生表格的 tbody 元素
+  const tbody = authorTableRef.value.querySelector("tbody");
 
   Sortable.create(tbody, {
     animation: 150, // 拖曳動畫時間
     // 拖曳結束後觸發的事件
     onEnd: async (evt) => {
+      ElMessage.info("拖曳結束，正在更新順序...");
       const { oldIndex, newIndex } = evt;
 
       // 如果位置沒有改變，則不執行任何操作
@@ -325,16 +320,15 @@ const initSortable = () => {
       console.log("更新的順序資料:", orderData);
 
       // 3. 呼叫 API 更新後端資料庫
-      // await updateAuthorOrder(orderData);
+      await updateAuthorOrder(orderData);
     },
   });
 };
 
-// *** 主要修改點 6: 新增更新排序到後端的方法 ***
 const updateAuthorOrder = async (orderData) => {
   try {
     const res = await MYAPI.post("/update_authors_order", {
-      orders: orderData,
+      new_orders: orderData,
     });
     if (res.status === "success") {
       ElMessage.success("作者順序更新成功！");
@@ -375,4 +369,70 @@ onMounted(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.native-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+  background-color: white;
+}
+
+.native-table th,
+.native-table td {
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.native-table th {
+  background-color: #f5f7fa;
+  font-weight: 600;
+  color: #606266;
+  border-bottom: 2px solid #ddd;
+}
+
+.native-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s;
+}
+
+.native-table th.sortable:hover {
+  background-color: #ebeef5;
+}
+
+.native-table tbody tr {
+  transition: background-color 0.3s;
+}
+
+.native-table tbody tr:hover {
+  background-color: #f5f7fa;
+}
+
+.native-table tbody tr.table-row {
+  cursor: move;
+}
+
+.native-table .operations {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.native-table .operations .el-button {
+  margin: 0 2px;
+}
+
+.sortable-drag {
+  opacity: 0.6;
+}
+
+.sortable-ghost {
+  background-color: #409eff !important;
+  color: white;
+}
+</style>
