@@ -55,6 +55,7 @@
   "scrolling": "Scrolling",
   "normal": "Normal",
   "mixed": "Mixed",
+  "auto_play_next_song": "Auto Play Next Song",
   "logout": "Logout",
   "network_error": "Network Error, please try again later",
   "server_error": "Server Error, please try again later"

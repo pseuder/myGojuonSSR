@@ -50,9 +50,14 @@
             </div>
 
             <div class="flex w-full items-center justify-between gap-2">
-              <el-checkbox v-model="autoScroll">{{
-                t("scrolling")
-              }}</el-checkbox>
+              <div class="flex flex-col gap-1">
+                <el-checkbox v-model="autoScroll">{{
+                  t("scrolling")
+                }}</el-checkbox>
+                <el-checkbox v-model="autoPlayNext">{{
+                  t("auto_play_next_song")
+                }}</el-checkbox>
+              </div>
 
               <el-radio-group v-model="display_mode" size="large">
                 <el-radio
@@ -252,6 +257,7 @@ const currentLyricIndex = ref(-1);
 const display_mode = ref("both");
 const playbackRate = ref(1);
 const autoScroll = ref(true);
+const autoPlayNext = ref(false);
 const isPlaying = ref(false);
 const isLooping = ref(false);
 const loopStart = ref(0);
@@ -261,8 +267,11 @@ const allVideos = ref([]);
 const fetchAllVideos = async () => {
   try {
     // 使用 $fetch
-    const response = await $fetch(`${API_BASE_URL}/get_all_videos`);
-    allVideos.value = response.videos;
+    const params = {
+      author_id: currentVideo.value?.author_id || "",
+    };
+    const res = await MYAPI.get("/get_all_videos", params);
+    allVideos.value = res.data.data;
   } catch (error) {
     console.error("Error fetching all videos:", error);
     ElMessage.error("無法獲取所有歌曲列表");
@@ -348,6 +357,12 @@ const initializePlayer = () => {
 };
 
 const playNextSong = () => {
+  // 如果未勾選自動播放，只重播當前歌曲
+  if (!autoPlayNext.value) {
+    if (player && player.seekTo) player.seekTo(0);
+    return;
+  }
+
   if (currentVideoIndexInAuthorList.value === -1) {
     if (player && player.seekTo) player.seekTo(0);
     return;
@@ -373,6 +388,13 @@ watch(videoId, (newId, oldId) => {
     isLooping.value = false;
     // useAsyncData 會自動獲取新數據，我們只需重新初始化播放器
     initializePlayer();
+  }
+});
+
+// 監聽自動播放設定變化並保存到本地存儲
+watch(autoPlayNext, (newValue) => {
+  if (process.client) {
+    localStorage.setItem("autoPlayNext", JSON.stringify(newValue));
   }
 });
 
@@ -517,7 +539,13 @@ const handleKeyPress = (event) => {
 onMounted(() => {
   // 確保在客戶端環境下執行
   if (process.client) {
-    // fetchAllVideos();
+    // 載入本地存儲的設定
+    const savedAutoPlayNext = localStorage.getItem("autoPlayNext");
+    if (savedAutoPlayNext !== null) {
+      autoPlayNext.value = JSON.parse(savedAutoPlayNext);
+    }
+
+    fetchAllVideos();
 
     // 監聽 YouTube API 是否準備就緒
     window.onYouTubeIframeAPIReady = () => {
