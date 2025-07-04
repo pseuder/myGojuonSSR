@@ -166,11 +166,13 @@ const {
   data: videoData,
   pending,
   error,
+  refresh: refreshVideoData,
 } = await useAsyncData(
-  `song-${uid}`, // 1. 唯一的 key，用於快取。通常用頁面名和參數組合
+  () => `song-${route.params.uid}`, // 使用函數讓快取鍵響應式更新
   async () => {
     try {
-      const response = await MYAPI.get(`/get_video/${uid}`);
+      const currentUid = route.params.uid; // 使用當前路由的 uid
+      const response = await MYAPI.get(`/get_video/${currentUid}`);
       if (!response.data) {
         // 在 Nuxt 中，建議這樣拋出一個帶有狀態碼的錯誤
         throw createError({
@@ -188,6 +190,10 @@ const {
         fatal: true,
       });
     }
+  },
+  {
+    // 當路由參數改變時自動重新獲取數據
+    watch: [() => route.params.uid],
   },
 );
 
@@ -381,12 +387,19 @@ const playNextSong = () => {
 };
 
 // 當 videoId 改變時，重新初始化播放器
-watch(videoId, (newId, oldId) => {
+watch(videoId, async (newId, oldId) => {
   if (newId && newId !== oldId && process.client) {
     // 重置狀態
     currentLyricIndex.value = -1;
     isLooping.value = false;
-    // useAsyncData 會自動獲取新數據，我們只需重新初始化播放器
+
+    // 手動刷新數據以確保獲取新歌曲的信息
+    await refreshVideoData();
+
+    // 重新獲取所有影片列表（因為可能切換到不同歌手）
+    await fetchAllVideos();
+
+    // 重新初始化播放器
     initializePlayer();
   }
 });
