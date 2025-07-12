@@ -148,12 +148,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import {
-  VideoPause,
-  VideoPlay,
-  Switch,
-  VideoPlay,
-} from "@element-plus/icons-vue";
+import { VideoPause, VideoPlay, Switch } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
