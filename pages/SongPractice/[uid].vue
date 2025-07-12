@@ -107,7 +107,7 @@
                 @click="handleStartVideoClick(line.timestamp)"
               >
                 <el-icon :size="25" title="跳轉到此">
-                  <CaretRight />
+                  <VideoPlay />
                 </el-icon>
               </el-button>
 
@@ -152,7 +152,7 @@ import {
   VideoPause,
   VideoPlay,
   Switch,
-  CaretRight,
+  VideoPlay,
 } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
