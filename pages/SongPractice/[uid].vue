@@ -414,10 +414,22 @@ watch(videoId, async (newId, oldId) => {
   }
 });
 
-// 監聽自動播放設定變化並保存到本地存儲
+// 監聽自動播放, 播放速率和自動滾動的變化
 watch(autoPlayNext, (newValue) => {
   if (process.client) {
-    localStorage.setItem("autoPlayNext", JSON.stringify(newValue));
+    localStorage.setItem("myGojuon_autoPlayNext", JSON.stringify(newValue));
+  }
+});
+
+watch(playbackRate, (newValue) => {
+  if (process.client) {
+    localStorage.setItem("myGojuon_playbackRate", JSON.stringify(newValue));
+  }
+});
+
+watch(autoScroll, (newValue) => {
+  if (process.client) {
+    localStorage.setItem("myGojuon_autoScroll", JSON.stringify(newValue));
   }
 });
 
@@ -563,9 +575,18 @@ onMounted(() => {
   // 確保在客戶端環境下執行
   if (process.client) {
     // 載入本地存儲的設定
-    const savedAutoPlayNext = localStorage.getItem("autoPlayNext");
+    const savedAutoPlayNext = localStorage.getItem("myGojuon_autoPlayNext");
+    const savedPlaybackRate = localStorage.getItem("myGojuon_playbackRate");
+    const savedAutoScroll = localStorage.getItem("myGojuon_autoScroll");
+
     if (savedAutoPlayNext !== null) {
       autoPlayNext.value = JSON.parse(savedAutoPlayNext);
+    }
+    if (savedPlaybackRate !== null) {
+      playbackRate.value = JSON.parse(savedPlaybackRate);
+    }
+    if (savedAutoScroll !== null) {
+      autoScroll.value = JSON.parse(savedAutoScroll);
     }
 
     fetchAllVideos();
