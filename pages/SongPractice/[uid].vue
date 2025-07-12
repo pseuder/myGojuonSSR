@@ -10,6 +10,12 @@
         <div class="gradient-text-tech-animated">
           {{ currentVideo.name }} - {{ currentVideo.author }}
         </div>
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+          <!-- tags -->
+          <template v-for="tag in currentVideo.tags?.split(',')" :key="tag">
+            <el-tag type="info">{{ tag }}</el-tag>
+          </template>
+        </div>
         <!-- 影片播放器 -->
         <div id="player-container" ref="playerContainerRef" class="h-[70%]">
           <div
@@ -81,11 +87,11 @@
         </div>
       </div>
 
-      <!-- 歌詞 (結構不變) -->
+      <!-- 歌詞  -->
       <el-scrollbar class="lyrics-container h-full overflow-x-auto lg:w-1/2">
-        <el-button type="warning" size="small" @click="handleCopyLyrics" plain>
+        <!-- <el-button type="warning" size="small" @click="handleCopyLyrics" plain>
           複製歌詞
-        </el-button>
+        </el-button> -->
         <div class="">
           <div
             v-for="(line, index) in lyrics"
@@ -100,12 +106,12 @@
                 plain
                 @click="handleStartVideoClick(line.timestamp)"
               >
-                <el-icon :size="25">
-                  <Switch />
+                <el-icon :size="25" title="跳轉到此">
+                  <CaretRight />
                 </el-icon>
               </el-button>
 
-              <el-button
+              <!-- <el-button
                 type="text"
                 plain
                 @click="togglePlayPause"
@@ -115,7 +121,7 @@
                   <VideoPause v-if="isPlaying" />
                   <VideoPlay v-else />
                 </el-icon>
-              </el-button>
+              </el-button> -->
             </div>
             <div class="flex flex-wrap gap-2">
               <template v-for="(ly, lyIndex) in line.lyrics" :key="lyIndex">
@@ -142,7 +148,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import { VideoPause, VideoPlay, Switch } from "@element-plus/icons-vue";
+import {
+  VideoPause,
+  VideoPlay,
+  Switch,
+  CaretRight,
+} from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
@@ -153,9 +164,8 @@ const route = useRoute();
 
 // 使用 Nuxt 的 useRuntimeConfig 獲取環境變數，更安全
 const config = useRuntimeConfig();
-const API_BASE_URL = config.public.apiBase;
 
-// --- 核心變更：數據獲取與 SEO ---
+// --- 數據獲取與 SEO ---
 
 // 從路由參數獲取影片 ID，注意是 uid
 const videoId = computed(() => route.params.uid);
@@ -216,17 +226,17 @@ useSeoMeta({
   title: () =>
     `${currentVideo.value?.name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
   description: () =>
-    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能，幫助您學習日語。`,
+    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供平假名歌詞對照、時間軸High Light、循環播放、速度調整等功能，幫助您學習日語歌曲。`,
   keywords: () =>
-    `日語歌曲, ${currentVideo.value?.name}, ${currentVideo.value?.author}, 日語學習, 歌詞練習, 發音練習`,
+    `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 日語歌曲, 日文歌曲, 平假名歌詞對照`,
   ogTitle: () =>
     `${currentVideo.value?.name} - ${currentVideo.value?.author} | 日語歌曲練習`,
   ogDescription: () =>
-    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能。`,
+    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供平假名歌詞對照、時間軸High Light、循環播放、速度調整等功能，幫助您學習日語歌曲。`,
   twitterCard: "summary",
 });
 
-// [變更] 使用 useHead 處理 JSON-LD 結構化數據
+// 使用 useHead 處理 JSON-LD 結構化數據
 useHead({
   script: [
     {
