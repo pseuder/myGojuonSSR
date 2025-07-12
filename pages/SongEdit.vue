@@ -36,6 +36,10 @@
         </div>
 
         <div class="flex gap-2">
+          <el-button type="info" plain @click="handleClearLyrics" class="flex-1"
+            >清空歌詞</el-button
+          >
+
           <el-button
             class="flex-1"
             type="primary"
@@ -44,9 +48,14 @@
           >
             貼上歌詞
           </el-button>
-          <el-button type="info" plain @click="handleClearLyrics" class="flex-1"
-            >清空歌詞</el-button
+          <el-button
+            class="flex-1"
+            type="primary"
+            plain
+            @click="convertedLyricsDialogVisible = true"
           >
+            貼上轉換歌詞
+          </el-button>
         </div>
 
         <div class="flex gap-2">
@@ -131,6 +140,16 @@
                     <Delete />
                   </el-icon>
                 </el-button>
+
+                <el-button
+                  type="text"
+                  class="text-sm text-blue-500"
+                  @click="handleAddNewLyricLine(index)"
+                >
+                  <el-icon :size="25" color="blue">
+                    <Plus />
+                  </el-icon>
+                </el-button>
               </div>
 
               <input
@@ -154,13 +173,13 @@
                 </el-button>
               </div>
             </div>
-            <div class="flex w-full flex-wrap gap-2">
+            <div class="flex w-full flex-wrap items-center gap-2">
               <template v-for="(ly, lyIndex) in line.lyrics" :key="lyIndex">
                 <div
                   class="flex w-28 flex-col"
                   :id="`lyric-cvt-${index}-${lyIndex}`"
                 >
-                  <span class="flex gap-6">
+                  <span class="flex">
                     <el-button
                       type="text"
                       class="text-sm text-blue-500"
@@ -174,8 +193,15 @@
                       @click="handleDeleteLyric(index, lyIndex)"
                     >
                       刪除
-                    </el-button></span
-                  >
+                    </el-button>
+                    <el-button
+                      type="text"
+                      class="text-sm text-yellow-800"
+                      @click="handleAddLyric(index, lyIndex)"
+                    >
+                      增加
+                    </el-button>
+                  </span>
                   <input
                     v-model="ly.cvt"
                     class="lyric-cvt h-6 w-full rounded border border-gray-300 px-1"
@@ -226,6 +252,22 @@
         <div class="mt-4 flex justify-end gap-4">
           <el-button @click="handleLyricsDialogClose">取消</el-button>
           <el-button type="primary" @click="handleLyricsDialogSubmit"
+            >貼上</el-button
+          >
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- 轉換歌詞貼上 Dialog -->
+    <el-dialog
+      title="貼上轉換歌詞"
+      v-model="convertedLyricsDialogVisible"
+      width="80%"
+    >
+      <div>
+        <el-input v-model="convertedLyrics" type="textarea" rows="10" />
+        <div class="mt-4 flex justify-end gap-4">
+          <el-button type="primary" @click="convertedLyricsDialogSubmit"
             >貼上</el-button
           >
         </div>
@@ -289,7 +331,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
-import { Delete, Switch } from "@element-plus/icons-vue";
+import { Delete, Switch, Plus } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 const MYAPI = useApi();
 
@@ -311,6 +353,10 @@ const currentLyricIndex = ref(-1);
 // 歌詞貼上 Dialog
 const lyricsDialogVisible = ref(false);
 const originalLyrics = ref("");
+
+// 轉換歌詞 Dialog
+const convertedLyricsDialogVisible = ref(false);
+const convertedLyrics = ref("");
 
 // YouTube 搜尋 Dialog
 const searchDialogVisible = ref(false);
@@ -393,6 +439,12 @@ const handleLyricsDialogSubmit = async () => {
   lyricsDialogVisible.value = false;
 };
 
+// 將貼上的json格式的歌詞轉換為所需格式
+const convertedLyricsDialogSubmit = async () => {
+  allLyrics.value = JSON.parse(convertedLyrics.value);
+  convertedLyricsDialogVisible.value = false;
+};
+
 //-- 插入歌詞相關 --//
 
 const handleClearLyrics = () => {
@@ -453,6 +505,22 @@ const handleWidthenLyric = (lyricIndex, lyricLineIndex) => {
 
 const handleDeleteLyric = (lyricIndex, lyricLineIndex) => {
   allLyrics.value[lyricIndex].lyrics.splice(lyricLineIndex, 1);
+};
+
+const handleAddLyric = (lyricIndex, lyricLineIndex) => {
+  // 在指定位置增加一個空的 lyric
+  allLyrics.value[lyricIndex].lyrics.splice(lyricLineIndex + 1, 0, {
+    cvt: "",
+    ori: "",
+  });
+};
+
+const handleAddNewLyricLine = (lyricIndex) => {
+  // 在指定位置增加一個空的 lyric line
+  allLyrics.value.splice(lyricIndex + 1, 0, {
+    timestamp: "",
+    lyrics: [{ cvt: "", ori: "" }],
+  });
 };
 
 //-- 複製歌詞 --//
@@ -635,6 +703,7 @@ const updateCurrentLyric = () => {
       ) {
         if (currentLyricIndex.value !== i) {
           currentLyricIndex.value = i;
+          scrollToCurrentLyric(i);
         }
         break;
       }
