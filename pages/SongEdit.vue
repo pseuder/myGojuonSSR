@@ -22,7 +22,7 @@
           ></div>
         </div>
 
-        <div class="flex flex-col gap-2 lg:flex-row">
+        <div class="flex flex-col gap-2">
           <el-input
             v-model="videoTitle"
             class="w-full"
@@ -91,10 +91,10 @@
           <!-- 第二列 -->
           <div class="w-full">
             <el-space wrap>
-              <el-tag type="info"> a -> 往前3秒</el-tag>
-              <el-tag type="info"> s -> 暫停/開始</el-tag>
-              <el-tag type="info"> d -> 往後3秒</el-tag>
-              <el-tag type="info"> enter -> 插入中斷</el-tag>
+              <el-tag type="info"> a - 往前3秒</el-tag>
+              <el-tag type="info"> s - 暫停/開始</el-tag>
+              <el-tag type="info"> d - 往後3秒</el-tag>
+              <el-tag type="info"> enter - 紀錄時間</el-tag>
             </el-space>
           </div>
         </div>
@@ -135,7 +135,7 @@
 
               <input
                 v-model="line.timestamp"
-                class="h-6 w-24 rounded border border-gray-300 px-1"
+                class="h-6 w-28 cursor-auto rounded border border-gray-300 px-1"
                 placeholder="輸入時間"
               />
 
@@ -145,6 +145,12 @@
                 </el-button>
                 <el-button type="text" @click="handleDecreaseTime(index, 20)">
                   -20
+                </el-button>
+                <el-button type="text" @click="handleIncreaseTime(index, 10)">
+                  +10
+                </el-button>
+                <el-button type="text" @click="handleIncreaseTime(index, 20)">
+                  +20
                 </el-button>
               </div>
             </div>
@@ -214,13 +220,15 @@
     </div>
 
     <!-- 歌詞貼上 Dialog -->
-    <el-dialog title="貼上原始歌詞" v-model="lyricsDialogVisible">
-      <el-input v-model="originalLyrics" type="textarea" rows="10" />
-      <div class="mt-4 flex justify-end gap-4">
-        <el-button @click="handleLyricsDialogClose">取消</el-button>
-        <el-button type="primary" @click="handleLyricsDialogSubmit"
-          >貼上</el-button
-        >
+    <el-dialog title="貼上原始歌詞" v-model="lyricsDialogVisible" width="80%">
+      <div v-loading="lyricsLoading">
+        <el-input v-model="originalLyrics" type="textarea" rows="10" />
+        <div class="mt-4 flex justify-end gap-4">
+          <el-button @click="handleLyricsDialogClose">取消</el-button>
+          <el-button type="primary" @click="handleLyricsDialogSubmit"
+            >貼上</el-button
+          >
+        </div>
       </div>
     </el-dialog>
 
@@ -369,7 +377,13 @@ const handleLyricsDialogSubmit = async () => {
     const response = await MYAPI.post("/convert_lyrics", {
       lyrics: originalLyrics.value,
     });
-    allLyrics.value = response.data;
+    if (response.status == "success") {
+      ElMessage.success("歌詞轉換成功");
+      allLyrics.value = response.data;
+    } else {
+      ElMessage.error(response.message);
+      return;
+    }
   } catch (error) {
     console.error("轉換歌詞時發生錯誤：", error);
     ElMessage.error("轉換歌詞時發生錯誤");
@@ -764,6 +778,38 @@ const handleFindLyrics = async () => {
   } finally {
     lyricsLoading.value = false;
   }
+};
+
+const handleIncreaseTime = (index, milliseconds) => {
+  // 確保索引有效
+  if (index < 0 || index >= allLyrics.value.length) return;
+
+  const line = allLyrics.value[index];
+  const timestampPattern = /\[(\d{2}):(\d{2})\.(\d{2})\]/;
+  const match = line.timestamp.match(timestampPattern);
+  if (!match) return;
+
+  // 解析時間戳
+  const [_, minutes, seconds, ms] = match;
+  const totalMs =
+    parseInt(minutes) * 60 * 100 + parseInt(seconds) * 100 + parseInt(ms);
+
+  // 加上指定的毫秒數
+  let newTotalMs = totalMs + milliseconds;
+
+  // 轉換回 mm:ss.ms 格式
+  const newMinutes = Math.floor(newTotalMs / (60 * 100));
+  const newSeconds = Math.floor((newTotalMs % (60 * 100)) / 100);
+  const newMs = newTotalMs % 100;
+
+  // 更新時間戳
+  allLyrics.value[index].timestamp =
+    `[${String(newMinutes).padStart(2, "0")}:${String(newSeconds).padStart(
+      2,
+      "0",
+    )}.${String(newMs).padStart(2, "0")}]`;
+
+  ElMessage.success(`時間戳增加 ${milliseconds} 毫秒`);
 };
 
 const handleDecreaseTime = (index, milliseconds) => {
