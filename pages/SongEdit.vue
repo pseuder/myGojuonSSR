@@ -59,6 +59,16 @@
         </div>
 
         <div class="flex gap-2">
+          <el-checkbox v-model="autoScroll">scrolling</el-checkbox>
+          <el-input-number
+            v-model="playbackRate"
+            :precision="1"
+            :step="0.1"
+            :max="2"
+            :min="0.3"
+            @change="changePlaybackRate(playbackRate)"
+          />
+
           <el-input
             v-model="timeDiff"
             class="w-full"
@@ -99,7 +109,6 @@
 
           <!-- 第二列 -->
           <div class="w-full">
-            <el-checkbox v-model="autoScroll">scrolling</el-checkbox>
             <el-space wrap>
               <el-tag type="info"> a - 往前3秒</el-tag>
               <el-tag type="info"> s - 暫停/開始</el-tag>
@@ -337,6 +346,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 const MYAPI = useApi();
 
 const autoScroll = ref(true);
+const playbackRate = ref(1);
 
 // 影片資訊
 const videoId = ref("");
@@ -728,6 +738,7 @@ const initializePlayer = async () => {
     events: {
       onReady: (event) => {
         setInterval(updateCurrentLyric, 100); // Check every 100ms
+        event.target.setPlaybackRate(playbackRate.value);
         window.player = event.target;
       },
       onStateChange: (event) => {
@@ -915,6 +926,12 @@ const handleDecreaseTime = (index, milliseconds) => {
     )}.${String(newMs).padStart(2, "0")}]`;
 
   ElMessage.success(`時間戳減少 ${milliseconds} 毫秒`);
+};
+
+const changePlaybackRate = (value) => {
+  if (player && player.setPlaybackRate) {
+    player.setPlaybackRate(value);
+  }
 };
 
 const handleBulkTimeDiff = (operator) => {
