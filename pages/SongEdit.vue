@@ -99,6 +99,7 @@
 
           <!-- 第二列 -->
           <div class="w-full">
+            <el-checkbox v-model="autoScroll">scrolling</el-checkbox>
             <el-space wrap>
               <el-tag type="info"> a - 往前3秒</el-tag>
               <el-tag type="info"> s - 暫停/開始</el-tag>
@@ -334,6 +335,8 @@ import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { Delete, Switch, Plus } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 const MYAPI = useApi();
+
+const autoScroll = ref(true);
 
 // 影片資訊
 const videoId = ref("");
@@ -703,7 +706,7 @@ const updateCurrentLyric = () => {
       ) {
         if (currentLyricIndex.value !== i) {
           currentLyricIndex.value = i;
-          scrollToCurrentLyric(i);
+          if (autoScroll.value) scrollToCurrentLyric(i);
         }
         break;
       }
