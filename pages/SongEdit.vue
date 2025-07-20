@@ -57,7 +57,6 @@
             貼上轉換歌詞
           </el-button>
         </div>
-
         <div class="flex gap-2">
           <el-checkbox v-model="autoScroll">scrolling</el-checkbox>
           <el-input-number
@@ -68,7 +67,9 @@
             :min="0.3"
             @change="changePlaybackRate(playbackRate)"
           />
+        </div>
 
+        <div class="flex gap-2">
           <el-input
             v-model="timeDiff"
             class="w-full"

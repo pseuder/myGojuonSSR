@@ -58,5 +58,13 @@
   "auto_play_next_song": "自動播放下一首歌",
   "logout": "登出",
   "network_error": "網絡錯誤，請稍後再試",
-  "server_error": "伺服器錯誤，請稍後再試"
+  "server_error": "伺服器錯誤，請稍後再試",
+  "online_message": "線上留言",
+  "name": "姓名",
+  "email": "電子郵件",
+  "message_content": "留言內容",
+  "optional": "選填",
+  "required": "必填",
+  "cancel": "取消",
+  "submit": "送出"
 }

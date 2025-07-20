@@ -134,6 +134,12 @@
                 class="h-10 w-10 transition-opacity hover:opacity-80"
               />
             </a>
+
+            <el-button
+              :icon="VideoCameraFilled"
+              circle
+              @click="router.push('/songEdit')"
+            />
           </div>
         </div>
       </section>
@@ -186,21 +192,26 @@
           </div>
 
           <div class="my-4 flex flex-col gap-4">
-            <el-button @click="router.push('/songEdit')" class="">
-              YT 影片剪輯
+            <el-button type="primary" @click="showContactForm = true" class="">
+              {{ t("online_message") }}
             </el-button>
           </div>
         </div>
       </section>
     </div>
+    <ContactForm :visible="showContactForm" @close="showContactForm = false" />
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElementPlus } from "@element-plus/icons-vue";
+import ContactForm from "~/components/ContactForm.vue";
+import { VideoCameraFilled } from "@element-plus/icons-vue";
 
 const router = useRouter();
+const showContactForm = ref(false);
 
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
