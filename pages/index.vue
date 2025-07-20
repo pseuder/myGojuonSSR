@@ -58,31 +58,6 @@
       <!-- Powered by -->
       <section class="my-10">
         <div class="flex flex-col gap-4">
-          <h2 class="mb-4 text-2xl font-bold text-indigo-700">
-            {{ t("song_promotion") }}
-          </h2>
-
-          <!-- あたらよ -->
-          <router-link
-            :to="{
-              path: '/songOverview',
-              query: { author: 'あたらよ' },
-            }"
-            class="mb-2 block w-full truncate text-lg text-blue-400 hover:text-blue-600 hover:underline"
-          >
-            <span class="gradient-text-animated">あたらよ - Atarayo</span>
-          </router-link>
-
-          <router-link
-            :to="{
-              path: '/songOverview',
-              query: { author: 'NELKE' },
-            }"
-            class="mb-2 block w-full truncate text-lg text-blue-400 hover:text-blue-600 hover:underline"
-          >
-            <span class="gradient-text-animated">NELKE</span>
-          </router-link>
-
           <h2 class="mb-4 text-2xl font-bold text-indigo-700">Powered by</h2>
 
           <div class="flex items-center gap-2">
@@ -169,23 +144,23 @@
         <h2 class="mb-4 text-2xl font-bold text-indigo-700">
           {{ t("feedback_and_feature_request") }}
         </h2>
-        <div class="flex">
+        <div class="flex gap-4">
           <!-- gmail -->
           <div
             class="my-4 flex flex-col gap-4"
             @click="handleReportClick('gmail')"
           >
             <div class="flex items-center gap-4">
-              <img
-                src="/images/gmail.png"
-                alt="gmail"
-                class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
-              />
               <a
                 href="mailto:iop890520@gmail.com"
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                <img
+                  src="/images/gmail.png"
+                  alt="gmail"
+                  class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
+                />
               </a>
             </div>
           </div>
@@ -196,16 +171,16 @@
             @click="handleReportClick('facebook')"
           >
             <div class="flex items-center gap-4">
-              <img
-                src="/images/facebook.png"
-                alt="facebook"
-                class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
-              />
               <a
                 href="https://www.facebook.com/Pseuder/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                <img
+                  src="/images/facebook.png"
+                  alt="facebook"
+                  class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
+                />
               </a>
             </div>
           </div>
@@ -229,6 +204,7 @@ const router = useRouter();
 
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
+const MYAPI = useApi();
 
 const handleReportClick = (item) => {
   const dataToSend = {
@@ -238,9 +214,7 @@ const handleReportClick = (item) => {
   };
 
   // 發送數據到後端
-  // axios.post("/record_activity", dataToSend).catch((error) => {
-  //   console.error("Error recording activity:", error);
-  // });
+  MYAPI.post("/record_activity", dataToSend);
 };
 
 // onMounted(updateMeta);
