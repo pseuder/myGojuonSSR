@@ -1,7 +1,11 @@
 <template>
   <div class="flex h-full flex-col gap-4 px-4 py-4">
     <div class="py-10 text-center">
-      <h1 class="text-4xl font-bold text-indigo-700">{{ t("site_title") }}</h1>
+      <h1 class="text-4xl font-bold text-indigo-700">
+        <img src="/favicon.png" alt="Logo" class="mr-2 inline-block h-10" />{{
+          t("site_title")
+        }}
+      </h1>
       <p class="mt-2 text-xl text-gray-600">{{ t("feature_description") }}</p>
     </div>
 
@@ -12,19 +16,19 @@
           <h2 class="text-2xl font-semibold text-indigo-600">
             {{ t("syllabary_learning") }}
           </h2>
-          <p>{{ t("syllabary_description") }}</p>
+          <pre>{{ t("syllabary_description") }}</pre>
         </div>
         <div class="feature-card">
           <h2 class="text-2xl font-semibold text-indigo-600">
             {{ t("writing_friendly") }}
           </h2>
-          <p>{{ t("stylus_friendly") }}</p>
+          <pre>{{ t("stylus_friendly") }}</pre>
         </div>
         <div class="feature-card">
           <h2 class="text-2xl font-semibold text-indigo-600">
             {{ t("random_testing") }}
           </h2>
-          <p>{{ t("random_selection_ai_assessment") }}</p>
+          <pre>{{ t("random_selection_ai_assessment") }}</pre>
         </div>
       </div>
 
@@ -150,7 +154,21 @@
         <h2 class="mb-4 text-2xl font-bold text-indigo-700">
           {{ t("feedback_and_feature_request") }}
         </h2>
+
         <div class="flex gap-4">
+          <!-- 線上留言 -->
+          <div class="my-4 flex flex-col gap-4">
+            <el-button
+              type="warning"
+              @click="showContactForm = true"
+              class=""
+              plain
+              circle
+            >
+              <el-icon :size="20"><ChatLineRound /></el-icon>
+            </el-button>
+          </div>
+
           <!-- gmail -->
           <div
             class="my-4 flex flex-col gap-4"
@@ -190,12 +208,6 @@
               </a>
             </div>
           </div>
-
-          <div class="my-4 flex flex-col gap-4">
-            <el-button type="primary" @click="showContactForm = true" class="">
-              {{ t("online_message") }}
-            </el-button>
-          </div>
         </div>
       </section>
     </div>
@@ -208,7 +220,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElementPlus } from "@element-plus/icons-vue";
 import ContactForm from "~/components/ContactForm.vue";
-import { VideoCameraFilled } from "@element-plus/icons-vue";
+import { VideoCameraFilled, ChatLineRound } from "@element-plus/icons-vue";
 
 const router = useRouter();
 const showContactForm = ref(false);
