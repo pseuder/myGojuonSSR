@@ -151,7 +151,7 @@
       </div>
     </div>
     <!-- 右側手寫區 -->
-    <div class="w-full content-center">
+    <div class="w-full content-center select-none">
       <el-card>
         <HandwritingCanvas
           ref="handwritingCanvas"

@@ -1,27 +1,10 @@
 <template>
-  <div class="" ref="canvasContainer">
+  <div class="select-none" ref="canvasContainer">
+    <div class="flex grow gap-2" v-if="showExample">
+      <span class="flex-shrink-0">範例大小</span>
+      <el-slider v-model="exampleScale" />
+    </div>
     <div class="my-2 flex items-center justify-end gap-10">
-      <!-- <el-switch
-        v-model="penMode"
-        :active-text="t('stylus')"
-        :inactive-text="t('touch')"
-        @change="handleModeChange"
-      /> -->
-
-      <!-- <el-select
-        v-model="penSize"
-        placeholder="筆觸粗細"
-        size="small"
-        @change="updatePenStyle"
-        style="width: 50px"
-      >
-        <el-option
-          v-for="option in penSizeOptions"
-          :key="option.value"
-          :label="option.label"
-          :value="option.value"
-        />
-      </el-select> -->
       <el-button
         @click="handleClear"
         type="text"
@@ -100,6 +83,8 @@ const props = defineProps({
 
 const emit = defineEmits(["autoDetect", "changeSound"]);
 
+const exampleScale = ref(80);
+
 const handleChangeSound = (direction) => {
   emit("changeSound", direction);
 };
@@ -116,7 +101,7 @@ const {
   drawGrid,
   drawExampleKana,
   handleResize,
-} = useCanvas(props);
+} = useCanvas(props, exampleScale);
 
 const {
   penMode,
@@ -244,6 +229,7 @@ watch(
   },
 );
 watch(() => props.showExample, redrawCanvas);
+watch(exampleScale, redrawCanvas);
 
 // 確保在每次繪製後重新繪製用戶路徑
 watch(

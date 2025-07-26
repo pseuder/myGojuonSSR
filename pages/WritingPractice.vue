@@ -80,15 +80,21 @@
               v-if="isPlaying"
               src="/images/volume2.png"
               alt="暫停"
-              class="h-8 w-8"
+              class="h-8 w-8 select-none"
             />
-            <img v-else src="/images/volume.png" alt="播放" class="h-8 w-8" />
+            <img
+              v-else
+              src="/images/volume.png"
+              alt="播放"
+              class="h-8 w-8 select-none"
+            />
           </div>
         </div>
 
         <!-- 手寫區 -->
         <HandwritingCanvas
           ref="handwritingCanvas"
+          class="select-none"
           :example-kana="selectedSound.kana"
           :current-type="activeTab"
           :show-example="true"
