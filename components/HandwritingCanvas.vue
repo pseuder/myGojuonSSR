@@ -1,6 +1,6 @@
 <template>
   <div class="" ref="canvasContainer">
-    <div class="my-2 flex items-center justify-between">
+    <div class="my-2 flex items-center justify-end gap-10">
       <!-- <el-switch
         v-model="penMode"
         :active-text="t('stylus')"
