@@ -30,11 +30,9 @@
       </div>
     </template>
     <template v-else>
-      <!-- 關鍵：將 GoogleLogin 組件包裹在 ClientOnly 中 -->
       <ClientOnly>
-        <GoogleLogin :callback="handleLoginCallback" />
+        <GoogleLogin :callback="handleLoginCallback" prompt />
         <template #fallback>
-          <!-- 服務端渲染或客戶端加載完成前顯示的內容 -->
           <el-button loading>{{ t("loading_login") }}</el-button>
         </template>
       </ClientOnly>
