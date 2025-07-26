@@ -52,44 +52,7 @@
         /> -->
       </div>
 
-      <!-- 上一個、下一個按鈕 -->
-      <div
-        class="flex items-center gap-4"
-        :class="isRightAligned ? 'justify-end' : 'justify-start'"
-      >
-        <img
-          src="/images/arrow-circle-left-solid.svg"
-          alt="上一個"
-          class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
-          @click="changeSound('prev')"
-        />
-        <img
-          src="/images/arrow-circle-right-solid.svg"
-          alt="下一個"
-          class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
-          @click="changeSound('next')"
-        />
-      </div>
-
-      <el-button
-        v-show="isLogin"
-        @click="handwritingCanvas.sendCanvasImageToBackend()"
-        class="tech-gradient-button h-12 w-full text-[18px]"
-        v-loading="handwritingCanvas?.isSending"
-        :disabled="activeTab === 'yoon'"
-      >
-        {{ t("ai_recognition") }}
-        <img class="ml-2 h-6 w-6" src="/images/stars.png" alt="" />
-      </el-button>
-      <el-button
-        v-show="!isLogin"
-        type="primary"
-        class="h-12 w-full"
-        :disabled="true"
-      >
-        {{ t("login_to_enable_ai_recognition") }}
-      </el-button>
-
+      <!-- 預測值/信心值/Round -->
       <div class="flex items-center gap-4">
         <div>{{ t("predicted_value") }}：{{ predictKana }}</div>
         <div>{{ t("confidence_level") }}：{{ predictConfidence }}</div>
@@ -121,6 +84,44 @@
             </div>
           </div>
         </el-popover>
+      </div>
+
+      <!-- 上一個、下一個按鈕 -->
+      <div
+        class="flex items-center gap-4"
+        :class="isRightAligned ? 'justify-end' : 'justify-start'"
+      >
+        <img
+          src="/images/arrow-circle-left-solid.svg"
+          alt="上一個"
+          class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
+          @click="changeSound('prev')"
+        />
+        <img
+          src="/images/arrow-circle-right-solid.svg"
+          alt="下一個"
+          class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
+          @click="changeSound('next')"
+        />
+
+        <el-button
+          v-show="isLogin"
+          @click="handwritingCanvas.sendCanvasImageToBackend()"
+          class="tech-gradient-button h-12 w-full text-[18px]"
+          v-loading="handwritingCanvas?.isSending"
+          :disabled="activeTab === 'yoon'"
+        >
+          {{ t("ai_recognition") }}
+          <img class="ml-2 h-6 w-6" src="/images/stars.png" alt="" />
+        </el-button>
+        <el-button
+          v-show="!isLogin"
+          type="primary"
+          class="h-12 w-full"
+          :disabled="true"
+        >
+          {{ t("login_to_enable_ai_recognition") }}
+        </el-button>
       </div>
 
       <el-tag
