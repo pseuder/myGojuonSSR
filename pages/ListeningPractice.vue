@@ -45,26 +45,28 @@
         />
 
         <!-- 靠左/靠右 -->
-        <el-switch
+        <!-- <el-switch
           v-model="isRightAligned"
           active-text="靠右"
           inactive-text="靠左"
-          @change="handleModeChange"
-        />
+        /> -->
       </div>
 
       <!-- 上一個、下一個按鈕 -->
-      <div class="flex items-center gap-4">
+      <div
+        class="flex items-center gap-4"
+        :class="isRightAligned ? 'justify-end' : 'justify-start'"
+      >
         <img
           src="/images/arrow-circle-left-solid.svg"
           alt="上一個"
-          class="h-10 w-10 cursor-pointer"
+          class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
           @click="changeSound('prev')"
         />
         <img
           src="/images/arrow-circle-right-solid.svg"
           alt="下一個"
-          class="h-10 w-10 cursor-pointer"
+          class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
           @click="changeSound('next')"
         />
       </div>
@@ -90,15 +92,12 @@
 
       <div class="flex items-center gap-4">
         <div>{{ t("predicted_value") }}：{{ predictKana }}</div>
-        <div>
-          {{ t("confidence_level") }}：{{
-            predictConfidence.toString().slice(0, 5)
-          }}
-        </div>
+        <div>{{ t("confidence_level") }}：{{ predictConfidence }}</div>
         <el-popover placement="bottom" :width="300" trigger="click">
           <template #reference>
             <el-tag type="success" class="text-lg hover:cursor-pointer"
-              >Round {{ round }}</el-tag
+              >Round {{ round }} - {{ completedInRound }} /
+              {{ totalInRound }}</el-tag
             >
           </template>
 
@@ -188,13 +187,24 @@ const showCurrentWord = ref(false);
 const predictKana = ref("");
 const predictConfidence = ref(0);
 
-let soundCounts = reactive({});
+const soundCounts = reactive({});
 const round = ref(1);
 
 const isLogin = computed(() => !!user.value);
 
 const currentSounds = computed(() =>
   fiftySounds.value ? fiftySounds.value[activeTab.value] : [],
+);
+
+const totalInRound = computed(
+  () => currentSounds.value.filter((sound) => sound.kana).length,
+);
+
+const completedInRound = computed(
+  () =>
+    currentSounds.value.filter(
+      (sound) => sound.kana && soundCounts[sound.kana] >= round.value,
+    ).length,
 );
 
 // 監聽 currentSounds 的變化，如果變化則重新初始化計數器
@@ -206,7 +216,7 @@ watch(currentSounds, () => {
 // 初始化計數器
 const initializeCounts = () => {
   // reset soundCounts
-  soundCounts = {};
+  Object.keys(soundCounts).forEach((key) => delete soundCounts[key]);
   currentSounds.value.forEach((sound) => {
     if (sound.kana) {
       soundCounts[sound.kana] = 0;
