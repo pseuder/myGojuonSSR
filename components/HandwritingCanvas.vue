@@ -53,7 +53,7 @@
     <div class="canvas-wrapper" ref="canvasWrapper">
       <canvas
         ref="canvas"
-        @pointerdown="startDrawing"
+        @pointerdown="handlePointerDown"
         @pointermove="draw"
         @pointerup="stopDrawing"
         @pointerout="stopDrawing"
@@ -138,6 +138,13 @@ const {
   clearUserPaths,
   getDrawingDuration,
 } = useDrawing(canvas, penMode, penColor, penSize, ctx, handleDrawingStop);
+
+const handlePointerDown = (event) => {
+  if (event.pointerType === "pen") {
+    penMode.value = true;
+  }
+  startDrawing(event);
+};
 
 const isSending = ref(false);
 const isRotating = ref(false);

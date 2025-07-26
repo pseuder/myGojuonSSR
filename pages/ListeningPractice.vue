@@ -133,16 +133,17 @@
       </el-tag>
 
       <div v-if="showCurrentWord" class="mt-4 rounded-lg bg-gray-100 p-4">
-        <h3 class="mb-2 text-xl font-bold">{{ t("") }}</h3>
-        <p>
-          <strong>{{ t("japanese") }}：</strong>{{ selectedSound.kana }}
-        </p>
-        <p>
-          <strong>{{ t("romaji") }}：</strong>{{ selectedSound.romaji }}
-        </p>
-        <p>
-          <strong>{{ t("kanji_source") }}：</strong>{{ selectedSound.evo }}
-        </p>
+        <div class="flex justify-between md:flex-col">
+          <p>
+            <strong>{{ t("japanese") }}：</strong>{{ selectedSound.kana }}
+          </p>
+          <p>
+            <strong>{{ t("romaji") }}：</strong>{{ selectedSound.romaji }}
+          </p>
+          <p>
+            <strong>{{ t("kanji_source") }}：</strong>{{ selectedSound.evo }}
+          </p>
+        </div>
       </div>
     </div>
     <!-- 右側手寫區 -->
@@ -363,6 +364,8 @@ const SPECIAL_KANA_MATCHES = {
   ぜ: ["ぜ", "だ"],
   ぞ: ["ぞ", "だ"],
   ぱ: ["ぱ", "ぽ"],
+  ク: ["ク", "ワ"],
+  ワ: ["ワ", "ク"],
 };
 
 const autoDetect = (predict_res) => {
