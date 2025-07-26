@@ -1,12 +1,12 @@
 <template>
   <div class="" ref="canvasContainer">
     <div class="my-2 flex items-center justify-between">
-      <el-switch
+      <!-- <el-switch
         v-model="penMode"
         :active-text="t('stylus')"
         :inactive-text="t('touch')"
         @change="handleModeChange"
-      />
+      /> -->
 
       <!-- <el-select
         v-model="penSize"
