@@ -108,11 +108,15 @@
           v-show="isLogin"
           @click="handwritingCanvas.sendCanvasImageToBackend()"
           class="tech-gradient-button h-12 w-full text-[18px]"
-          v-loading="handwritingCanvas?.isSending"
-          :disabled="activeTab === 'yoon'"
+          :disabled="handwritingCanvas?.isSending || activeTab === 'yoon'"
         >
           {{ t("ai_recognition") }}
-          <img class="ml-2 h-6 w-6" src="/images/stars.png" alt="" />
+          <img
+            class="ml-2 h-6 w-6"
+            :class="{ 'animate-spin': handwritingCanvas?.isSending }"
+            src="/images/stars.png"
+            alt=""
+          />
         </el-button>
         <el-button
           v-show="!isLogin"
