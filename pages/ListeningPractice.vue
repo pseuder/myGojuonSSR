@@ -44,32 +44,40 @@
           @change="handleModeChange"
         />
 
-        <!-- 上一個、下一個按鈕 -->
-        <div class="flex items-center gap-4">
-          <img
-            src="/images/arrow-circle-left-solid.svg"
-            alt="上一個"
-            class="h-8 w-8 cursor-pointer"
-            @click="changeSound('prev')"
-          />
-          <img
-            src="/images/arrow-circle-right-solid.svg"
-            alt="下一個"
-            class="h-8 w-8 cursor-pointer"
-            @click="changeSound('next')"
-          />
-        </div>
+        <!-- 靠左/靠右 -->
+        <el-switch
+          v-model="isRightAligned"
+          active-text="靠右"
+          inactive-text="靠左"
+          @change="handleModeChange"
+        />
+      </div>
+
+      <!-- 上一個、下一個按鈕 -->
+      <div class="flex items-center gap-4">
+        <img
+          src="/images/arrow-circle-left-solid.svg"
+          alt="上一個"
+          class="h-10 w-10 cursor-pointer"
+          @click="changeSound('prev')"
+        />
+        <img
+          src="/images/arrow-circle-right-solid.svg"
+          alt="下一個"
+          class="h-10 w-10 cursor-pointer"
+          @click="changeSound('next')"
+        />
       </div>
 
       <el-button
         v-show="isLogin"
         @click="handwritingCanvas.sendCanvasImageToBackend()"
-        type="primary"
-        class="h-12 w-full"
+        class="tech-gradient-button h-12 w-full text-[18px]"
         v-loading="handwritingCanvas?.isSending"
         :disabled="activeTab === 'yoon'"
       >
         {{ t("ai_recognition") }}
+        <img class="ml-2 h-6 w-6" src="/images/stars.png" alt="" />
       </el-button>
       <el-button
         v-show="!isLogin"
@@ -147,6 +155,7 @@
           :show-example="false"
           :current-type="activeTab"
           :learning-module="'listening'"
+          :show-change-sound-buttons="false"
         />
       </el-card>
     </div>
@@ -173,6 +182,7 @@ const handwritingCanvas = ref(null);
 const audioPlayer = ref(null);
 const isPlaying = ref(false);
 const isRandomMode = ref(false);
+const isRightAligned = ref(true);
 const showCurrentWord = ref(false);
 
 const predictKana = ref("");
@@ -424,6 +434,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.tech-gradient-button {
+  background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
+  color: white;
+  border: none;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.3s ease;
+}
+
+.tech-gradient-button:hover {
+  box-shadow: 0 0 15px rgba(37, 117, 252, 0.7);
+}
+
 .sound-counts-container {
   font-family: Arial, sans-serif;
   width: 300px;

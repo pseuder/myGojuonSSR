@@ -34,6 +34,21 @@
           :class="{ 'rotate-animation': isRotating }"
         />
       </el-button>
+      <!-- 上一個、下一個按鈕 -->
+      <div v-if="showChangeSoundButtons" class="flex items-center gap-4">
+        <img
+          src="/images/arrow-circle-left-solid.svg"
+          alt="上一個"
+          class="h-10 w-10 cursor-pointer"
+          @click="handleChangeSound('prev')"
+        />
+        <img
+          src="/images/arrow-circle-right-solid.svg"
+          alt="下一個"
+          class="h-10 w-10 cursor-pointer"
+          @click="handleChangeSound('next')"
+        />
+      </div>
     </div>
     <div class="canvas-wrapper" ref="canvasWrapper">
       <canvas
@@ -77,9 +92,17 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  showChangeSoundButtons: {
+    type: Boolean,
+    default: true,
+  },
 });
 
-const emit = defineEmits(["autoDetect"]);
+const emit = defineEmits(["autoDetect", "changeSound"]);
+
+const handleChangeSound = (direction) => {
+  emit("changeSound", direction);
+};
 
 const {
   canvas,

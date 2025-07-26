@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full flex-col gap-4 px-4 py-4 lg:flex-row">
+  <div class="flex h-full flex-col gap-4 px-4 py-4 md:flex-row">
     <!-- 50音列表 -->
     <div class="w-full" :key="activeTab">
       <h2 class="mb-3 text-xl font-semibold">
@@ -75,22 +75,6 @@
             />
             <img v-else src="/images/volume.png" alt="播放" class="h-8 w-8" />
           </div>
-
-          <!-- 上一個、下一個按鈕 -->
-          <div class="flex items-center gap-4">
-            <img
-              src="/images/arrow-circle-left-solid.svg"
-              alt="上一個"
-              class="h-8 w-8 cursor-pointer"
-              @click="changeSound('prev')"
-            />
-            <img
-              src="/images/arrow-circle-right-solid.svg"
-              alt="下一個"
-              class="h-8 w-8 cursor-pointer"
-              @click="changeSound('next')"
-            />
-          </div>
         </div>
 
         <!-- 手寫區 -->
@@ -100,6 +84,7 @@
           :current-type="activeTab"
           :show-example="true"
           :learning-module="'writing'"
+          @changeSound="changeSound"
         />
       </el-card>
     </div>
