@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-full flex-col gap-4 px-4 py-4 md:flex-row">
     <!-- 左側50音列表 -->
-    <div class="flex w-full flex-col gap-4">
+    <div class="flex w-full flex-col gap-2 md:gap-4">
       <div class="flex items-center gap-4">
         <audio
           ref="audioPlayer"
@@ -136,7 +136,7 @@
         {{ showCurrentWord ? t("hide_answer") : t("show_answer") }}
       </el-tag>
 
-      <div v-if="showCurrentWord" class="mt-4 rounded-lg bg-gray-100 p-4">
+      <div v-if="showCurrentWord" class="rounded-lg bg-gray-100 p-4">
         <div class="flex justify-between md:flex-col">
           <p>
             <strong>{{ t("japanese") }}：</strong>{{ selectedSound.kana }}
