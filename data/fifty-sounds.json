@@ -60,7 +60,7 @@
     { "kana": "", "romaji": "", "evo": "" },
     { "kana": "を", "romaji": "o", "evo": "遠" },
 
-    { "kana": "ん", "romaji": "n", "evo": "無" },
+    { "kana": "ん", "romaji": "n", "evo": "无" },
     { "kana": "", "romaji": "", "evo": "" },
     { "kana": "", "romaji": "", "evo": "" },
     { "kana": "", "romaji": "", "evo": "" },
@@ -89,7 +89,7 @@
     { "kana": "チ", "romaji": "chi", "evo": "千" },
     { "kana": "ツ", "romaji": "tsu", "evo": "川" },
     { "kana": "テ", "romaji": "te", "evo": "天" },
-    { "kana": "ト", "romaji": "to", "evo": "卜" },
+    { "kana": "ト", "romaji": "to", "evo": "止" },
 
     { "kana": "ナ", "romaji": "na", "evo": "奈" },
     { "kana": "ニ", "romaji": "ni", "evo": "仁" },
