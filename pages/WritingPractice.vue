@@ -39,19 +39,28 @@
         <!-- 功能列 -->
         <div class="flex w-full items-center justify-between">
           <!-- 日文 -->
-          <div class="text-3xl font-bold sm:text-5xl" :title="t('japanese')">
-            {{ selectedSound.kana }}
+          <div
+            class="inline-flex flex-col items-center text-3xl font-bold sm:text-5xl"
+            :title="t('japanese')"
+          >
+            <span class="text-[12px] text-gray-600">日文字</span>
+            <span>{{ selectedSound.kana }}</span>
           </div>
           <!-- 羅馬字 -->
-          <div class="text-3xl font-bold sm:text-4xl" :title="t('romaji')">
-            {{ selectedSound.romaji }}
+          <div
+            class="inline-flex flex-col items-center text-3xl font-bold sm:text-4xl"
+            :title="t('romaji')"
+          >
+            <span class="text-[12px] text-gray-600">羅馬拼音</span>
+            <span>{{ selectedSound.romaji }}</span>
           </div>
           <!-- 漢字來源 -->
           <div
-            class="text-3xl font-bold sm:text-4xl"
+            class="inline-flex flex-col items-center text-3xl font-bold sm:text-4xl"
             :title="t('kanji_source')"
           >
-            {{ selectedSound.evo }}
+            <span class="text-[12px] text-gray-600">漢字來源</span>
+            <span>{{ selectedSound.evo }}</span>
           </div>
 
           <!-- 自動撥放 -->
