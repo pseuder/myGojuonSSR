@@ -87,9 +87,7 @@ const TEXT_COUNT = 100; // 下落文字數量
 const textContainer = ref(null);
 const textArray = fiftySoundsData.hiragana
   .map((item) => item.kana)
-  .concat(fiftySoundsData.katakana.map((item) => item.kana))
-  .concat(fiftySoundsData.dakuon.map((item) => item.kana))
-  .concat(fiftySoundsData.handakuon.map((item) => item.kana));
+  .concat(fiftySoundsData.katakana.map((item) => item.kana));
 
 const recordActivity = (lang) => {
   const dataToSend = {
