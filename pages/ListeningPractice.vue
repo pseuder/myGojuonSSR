@@ -38,6 +38,7 @@
             key="special"
             :label="t('special_sounds')"
             value="special"
+            :disabled="specialLearningList.length === 0"
           />
         </el-select>
 
@@ -123,22 +124,17 @@
         class="flex items-center"
         :class="isRightAligned ? 'justify-end' : 'justify-start'"
       >
-        <el-button @click="specialLearningListDialogVisible = true" type="text">
-          <el-icon :size="30"><List /></el-icon>
-          <!-- <img
-            src="/images/student_list.png"
-            alt="特別學習列表"
-            class="inline-block h-8 w-10"
-          /> -->
-        </el-button>
+        <el-badge :value="specialLearningList.length" class="mr-2">
+          <el-button
+            @click="specialLearningListDialogVisible = true"
+            type="text"
+          >
+            <el-icon :size="30"><List /></el-icon>
+          </el-button>
+        </el-badge>
 
         <el-button @click="addSpecialLearning" type="text">
           <el-icon :size="30"><CirclePlusFilled /></el-icon>
-          <!-- <img
-            src="/images/student_add.png"
-            alt="加入特別學習"
-            class="inline-block h-8 w-10"
-          /> -->
         </el-button>
 
         <el-button
