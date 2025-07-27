@@ -226,7 +226,7 @@
       <div v-if="specialLearningList.length === 0">
         {{ t("no_special_learning_words") }}
       </div>
-      <div class="h-[70vh] overflow-auto" v-else>
+      <div class="max-h-[70vh] overflow-auto" v-else>
         <div
           v-for="(item, index) in specialLearningList"
           :key="index"
@@ -586,6 +586,8 @@ const handleClearSpecialLearningList = () => {
       specialLearningList.value = [];
       saveSpecialLearningList();
       ElMessage.success(t("special_learning_list_cleared"));
+
+      specialLearningListDialogVisible.value = false;
     })
     .catch(() => {
       ElMessage.info(t("cancelled"));
