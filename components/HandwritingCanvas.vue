@@ -180,7 +180,7 @@ const sendCanvasImageToBackend = async () => {
     isSending.value = true;
     const imageBlob = await generateCanvasImage();
     const formData = new FormData();
-    formData.append("char_type", props.currentType);
+    formData.append("char_type", props.selectedSound.type);
     formData.append("image", imageBlob, "handwriting.png");
     formData.append("learning_item", props.exampleKana);
 
