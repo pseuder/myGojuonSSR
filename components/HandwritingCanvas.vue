@@ -5,6 +5,12 @@
       <el-slider v-model="exampleScale" />
     </div>
     <div class="my-2 flex items-center justify-end gap-10">
+      <div class="w-full" v-if="selectedSound.type">
+        <el-tag type="info">{{
+          t(selectedSound.type ? selectedSound.type : "")
+        }}</el-tag>
+      </div>
+
       <el-button
         @click="handleClear"
         type="text"
@@ -78,6 +84,15 @@ const props = defineProps({
   showChangeSoundButtons: {
     type: Boolean,
     default: true,
+  },
+  selectedSound: {
+    type: Object,
+    default: () => ({
+      kana: "",
+      romaji: "",
+      evo: "",
+      type: "",
+    }),
   },
 });
 

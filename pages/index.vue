@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-full flex-col gap-4 px-4 py-4">
     <div class="py-10 text-center">
-      <h1 class="text-4xl font-bold text-indigo-700">
+      <h1 class="text-3xl font-bold text-indigo-700 md:text-4xl">
         <img src="/favicon.png" alt="Logo" class="mr-2 inline-block h-10" />{{
           t("site_title")
         }}

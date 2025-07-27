@@ -34,6 +34,11 @@
             value="handakuon"
           />
           <el-option key="yoon" :label="t('contracted_sounds')" value="yoon" />
+          <el-option
+            key="special"
+            :label="t('special_sounds')"
+            value="special"
+          />
         </el-select>
 
         <!-- 隨機、循序模式切換 -->
@@ -54,8 +59,20 @@
 
       <!-- 預測值/信心值/Round -->
       <div class="flex items-center gap-4">
+        <el-button @click="doSpecialLearning" type="text">
+          <img
+            src="/images/student.png"
+            alt="進行特別學習"
+            class="inline-block h-8 w-8"
+          />
+        </el-button>
+
         <div>{{ t("predicted_value") }}：{{ predictKana }}</div>
         <div>{{ t("confidence_level") }}：{{ predictConfidence }}</div>
+      </div>
+
+      <!-- 加入特別學習 -->
+      <div class="flex items-center justify-between gap-2">
         <el-popover placement="bottom" :width="300" trigger="click">
           <template #reference>
             <el-tag type="success" class="text-lg hover:cursor-pointer"
@@ -84,25 +101,45 @@
             </div>
           </div>
         </el-popover>
+
+        <div class="flex items-center gap-4 md:gap-8">
+          <img
+            src="/images/arrow-circle-left-solid.svg"
+            alt="上一個"
+            class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
+            @click="changeSound('prev')"
+          />
+          <img
+            src="/images/arrow-circle-right-solid.svg"
+            alt="下一個"
+            class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
+            @click="changeSound('next')"
+          />
+        </div>
       </div>
 
-      <!-- 上一個、下一個按鈕 -->
+      <!-- 第4列 -->
       <div
-        class="flex items-center gap-4"
+        class="flex items-center"
         :class="isRightAligned ? 'justify-end' : 'justify-start'"
       >
-        <img
-          src="/images/arrow-circle-left-solid.svg"
-          alt="上一個"
-          class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
-          @click="changeSound('prev')"
-        />
-        <img
-          src="/images/arrow-circle-right-solid.svg"
-          alt="下一個"
-          class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
-          @click="changeSound('next')"
-        />
+        <el-button @click="specialLearningListDialogVisible = true" type="text">
+          <el-icon :size="30"><List /></el-icon>
+          <!-- <img
+            src="/images/student_list.png"
+            alt="特別學習列表"
+            class="inline-block h-8 w-10"
+          /> -->
+        </el-button>
+
+        <el-button @click="addSpecialLearning" type="text">
+          <el-icon :size="30"><CirclePlusFilled /></el-icon>
+          <!-- <img
+            src="/images/student_add.png"
+            alt="加入特別學習"
+            class="inline-block h-8 w-10"
+          /> -->
+        </el-button>
 
         <el-button
           v-show="isLogin"
@@ -161,15 +198,58 @@
           :current-type="activeTab"
           :learning-module="'listening'"
           :show-change-sound-buttons="false"
+          :selected-sound="selectedSound"
         />
       </el-card>
     </div>
+
+    <!-- Special Learning List Dialog -->
+    <el-dialog
+      v-model="specialLearningListDialogVisible"
+      :title="t('special_learning_list')"
+      class="w-[90vw] max-w-[500px]"
+    >
+      <template #title>
+        <div class="items center flex justify-between">
+          <span>{{ t("special_learning_list") }}</span>
+          <el-button
+            @click="handleClearSpecialLearningList"
+            type="text"
+            style="font-size: 35px; padding: 0; margin: 0; line-height: 1"
+          >
+            <img
+              src="/images/broom.png"
+              alt=""
+              class="h-10 w-10 cursor-pointer"
+              :class="{ 'rotate-animation': isRotating }"
+            />
+          </el-button>
+        </div>
+      </template>
+
+      <div v-if="specialLearningList.length === 0">
+        {{ t("no_special_learning_words") }}
+      </div>
+      <div class="h-[70vh] overflow-auto" v-else>
+        <div
+          v-for="(item, index) in specialLearningList"
+          :key="index"
+          class="mt-2 flex items-center justify-between"
+        >
+          <span>{{ t(item.type) }} - {{ item.kana }}</span>
+          <el-button type="danger" @click="removeSpecialLearning(index)"
+            ><el-icon><Delete /></el-icon
+          ></el-button>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, reactive, watch, nextTick } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
+import { Delete, List, CirclePlusFilled } from "@element-plus/icons-vue";
 import HandwritingCanvas from "@/components/HandwritingCanvas.vue";
 import fiftySoundsData from "@/data/fifty-sounds.json";
 import { useI18n } from "vue-i18n";
@@ -182,13 +262,21 @@ const MYAPI = useApi();
 
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
-const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
+const selectedSound = ref({
+  kana: "あ",
+  romaji: "a",
+  evo: "安",
+  type: "hiragana",
+});
 const handwritingCanvas = ref(null);
 const audioPlayer = ref(null);
 const isPlaying = ref(false);
 const isRandomMode = ref(false);
 const isRightAligned = ref(true);
 const showCurrentWord = ref(false);
+
+const specialLearningList = ref([]);
+const specialLearningListDialogVisible = ref(false);
 
 const predictKana = ref("");
 const predictConfidence = ref(0);
@@ -198,9 +286,12 @@ const round = ref(1);
 
 const isLogin = computed(() => !!user.value);
 
-const currentSounds = computed(() =>
-  fiftySounds.value ? fiftySounds.value[activeTab.value] : [],
-);
+const currentSounds = computed(() => {
+  if (activeTab.value === "special") {
+    return specialLearningList.value;
+  }
+  return fiftySounds.value ? fiftySounds.value[activeTab.value] : [];
+});
 
 const totalInRound = computed(
   () => currentSounds.value.filter((sound) => sound.kana).length,
@@ -441,10 +532,75 @@ const handleIncorrectPrediction = (predictedKana) => {
   ElMessage.error(t("incorrect") + `！: ${predictedKana}`);
 };
 
+// Special Learning Functions
+const loadSpecialLearningList = () => {
+  const list = localStorage.getItem("specialLearningList");
+  if (list) {
+    specialLearningList.value = JSON.parse(list);
+  }
+};
+
+const saveSpecialLearningList = () => {
+  localStorage.setItem(
+    "specialLearningList",
+    JSON.stringify(specialLearningList.value),
+  );
+};
+
+const addSpecialLearning = () => {
+  if (!selectedSound.value) return;
+  const isExist = specialLearningList.value.some(
+    (item) => item.kana === selectedSound.value.kana,
+  );
+  if (isExist) {
+    ElMessage.info(t("already_in_special_learning"));
+    return;
+  }
+  specialLearningList.value.push(selectedSound.value);
+  saveSpecialLearningList();
+  ElMessage.success(t("add_to_special_learning_success"));
+};
+
+const doSpecialLearning = () => {
+  if (specialLearningList.value.length === 0) {
+    ElMessage.warning(t("special_learning_list_empty"));
+    return;
+  }
+  activeTab.value = "special";
+  ElMessage.success(t("start_special_learning"));
+};
+
+const removeSpecialLearning = (index) => {
+  specialLearningList.value.splice(index, 1);
+  saveSpecialLearningList();
+
+  // if current mode is special, and list is empty, switch to hiragana
+  if (activeTab.value === "special" && specialLearningList.value.length === 0) {
+    activeTab.value = "hiragana";
+  }
+};
+
+const handleClearSpecialLearningList = () => {
+  ElMessageBox.confirm(t("clear_special_learning_list_confirm"), t("warning"), {
+    confirmButtonText: t("confirm"),
+    cancelButtonText: t("cancel"),
+    type: "warning",
+  })
+    .then(() => {
+      specialLearningList.value = [];
+      saveSpecialLearningList();
+      ElMessage.success(t("special_learning_list_cleared"));
+    })
+    .catch(() => {
+      ElMessage.info(t("cancelled"));
+    });
+};
+
 const isSelectedSound = (sound) =>
   selectedSound.value && selectedSound.value.kana === sound.kana;
 
 onMounted(() => {
+  loadSpecialLearningList();
   nextTick(() => {
     playSound();
   });
@@ -453,16 +609,12 @@ onMounted(() => {
 
 <style scoped>
 .tech-gradient-button {
-  background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
-  color: white;
+  background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%) !important;
+  color: white !important;
   border: none;
   transition:
     transform 0.2s ease-in-out,
     box-shadow 0.3s ease;
-}
-
-.tech-gradient-button:hover {
-  box-shadow: 0 0 15px rgba(37, 117, 252, 0.7);
 }
 
 .sound-counts-container {
