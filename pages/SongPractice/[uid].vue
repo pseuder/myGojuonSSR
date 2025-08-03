@@ -357,6 +357,7 @@ const initializePlayer = () => {
         isPlaying.value = event.data === window.YT.PlayerState.PLAYING;
         if (event.data === window.YT.PlayerState.ENDED) {
           playNextSong();
+          player.seekTo(0);
         }
       },
       onError: (event) => {
