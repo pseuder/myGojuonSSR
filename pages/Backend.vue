@@ -286,7 +286,7 @@ const songhandleAdd = () => {
 const songhandleJumpEdit = (row) => {
   const videoId = row.source_id;
   if (videoId) {
-    const url = `/SongEdit?video_id=${videoId}`;
+    const url = `/songEdit?video_id=${videoId}`;
     window.open(url, "_blank");
   }
 };
