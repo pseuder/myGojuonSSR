@@ -1,29 +1,31 @@
 <template>
-  <div class="relative h-full">
-    <nav class="navbar">
-      <el-menu
-        :default-active="activeIndex"
-        class="user-select-none w-full overflow-hidden"
-        mode="horizontal"
-        router
-      >
-        <MenuItem index="/" :label="t('home')" />
-        <MenuItem index="/WritingPractice" :label="t('handwriting_practice')" />
-        <MenuItem index="/ListeningPractice" :label="t('dictation_practice')" />
-        <MenuItem index="/SongOverview" :label="t('song_practice')" />
-        <MenuItem
-          index="/Analysis"
-          :label="t('activity_analysis')"
-          :condition="isAdmin"
-        />
-        <MenuItem
-          index="/Backend"
-          :label="t('admin_panel')"
-          :condition="isAdmin"
-        />
-      </el-menu>
-
-      <div class="flex flex-shrink-0 items-center gap-4">
+  <div class="h-full w-full">
+    <nav class="flex w-full">
+      <div class="user-select-none w-[50%] grow">
+        <el-menu :default-active="activeIndex" mode="horizontal" router>
+          <MenuItem index="/" :label="t('home')" />
+          <MenuItem
+            index="/WritingPractice"
+            :label="t('handwriting_practice')"
+          />
+          <MenuItem
+            index="/ListeningPractice"
+            :label="t('dictation_practice')"
+          />
+          <MenuItem index="/SongOverview" :label="t('song_practice')" />
+          <MenuItem
+            index="/Analysis"
+            :label="t('activity_analysis')"
+            :condition="isAdmin"
+          />
+          <MenuItem
+            index="/Backend"
+            :label="t('admin_panel')"
+            :condition="isAdmin"
+          />
+        </el-menu>
+      </div>
+      <div class="flex w-fit items-center gap-4">
         <!-- <LocaleSwitcher @update:locale="recordActivity" /> -->
         <myGoogleLogin />
       </div>
@@ -139,13 +141,6 @@ onMounted(() => {
 </script>
 
 <style>
-.navbar {
-  height: fit-content;
-  position: relative;
-  z-index: 2;
-  display: flex;
-}
-
 .content {
   height: calc(100% - 60px);
   /* height: 94%; */
