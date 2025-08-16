@@ -1,35 +1,26 @@
 <template>
-  <div class="flex h-[88vh] w-full p-2" v-loading="isLoading">
-    <div
-      class="h-full max-w-[30vw] flex-none overflow-x-hidden overflow-y-auto"
-    >
-      <el-menu
-        :default-active="selectedAuthor || 'all'"
-        class="w-fit"
-        @select="handleSelect"
-      >
-        <el-menu-item key="all" index="all">
-          <span>全部</span>
-        </el-menu-item>
-        <el-menu-item
+  <div class="flex h-[88vh] w-full flex-col p-2">
+    <div class="mb-4 flex-none">
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="w-full">
+        <el-tab-pane label="全部" name="all"> </el-tab-pane>
+        <el-tab-pane
           v-for="author in allAuthors"
           :key="author.id"
-          :index="author.id"
+          :label="author.name"
+          :name="author.id"
           :class="{ 'gradient-text-tech-animated': author.author == 'NELKE' }"
         >
-          <span>{{ author.name }}</span>
-        </el-menu-item>
-      </el-menu>
+        </el-tab-pane>
+      </el-tabs>
     </div>
 
     <div
       class="flex h-full w-full grow flex-col items-center gap-4 overflow-x-hidden"
     >
       <el-space
+        ref="scrollContainer"
         class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"
-        style="width: 100%"
         wrap
-        v-if="allVideos.length > 0"
       >
         <template v-for="video in allVideos" :key="video.source_id">
           <el-card class="w-full max-w-[380px]" shadow="hover">
@@ -73,25 +64,29 @@
         </template>
       </el-space>
 
-      <el-pagination
-        v-if="allVideos.length > 0"
-        background
-        layout="sizes, prev, pager, next, total"
-        :total="total"
-        :page-size="page_size"
-        :current-page="page_number"
-        :page-sizes="[10, 50, 100, 500]"
-        @current-change="handleCurrentChange"
-        @size-change="handleSizeChange"
-        class="mt-4 flex-none"
-      />
+      <!-- Loading indicator for infinite scroll -->
+      <div v-if="isLoading" class="flex justify-center py-4">
+        <el-icon class="is-loading">
+          <Loading />
+        </el-icon>
+        <span class="ml-2">載入影片中...</span>
+      </div>
+
+      <!-- End of data indicator -->
+      <div
+        v-if="!hasMore && allVideos.length > 0"
+        class="flex justify-center py-4 text-gray-500"
+      >
+        已載入全部影片 (共 {{ total }} 部)
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { Loading } from "@element-plus/icons-vue";
 
 const MYAPI = useApi();
 
@@ -100,42 +95,77 @@ const route = useRoute();
 const allVideos = ref([]);
 const allAuthors = ref([]);
 const selectedAuthor = ref(null);
+const activeTab = ref("all");
 
-const page_size = ref(50);
+const page_size = ref(10);
 const page_number = ref(1);
 const total = ref(0);
+const hasMore = ref(true);
 
 const isLoading = ref(true);
+
+// Ref for scrollable container
+const scrollContainer = ref(null);
+
+// Load more videos when scrolling to bottom
+const loadMoreVideos = async () => {
+  if (isLoading.value || !hasMore.value) {
+    return;
+  }
+
+  page_number.value += 1;
+  await fetchVideos(true);
+};
+
+// Scroll event handler for infinite scroll
+const handleScroll = () => {
+  if (!scrollContainer.value) return;
+
+  const element = scrollContainer.value.$el;
+  const scrollTop = element.scrollTop;
+  const scrollHeight = element.scrollHeight;
+  const clientHeight = element.clientHeight;
+
+  // Trigger load more when user scrolls to within 100px of bottom
+  const threshold = 100;
+  if (scrollTop + clientHeight >= scrollHeight - threshold) {
+    loadMoreVideos();
+  }
+};
 
 // 輔助函式: 解析路由
 const resolveVideoUrl = (source_id) => {
   return "/SongPractice/" + source_id;
 };
 
-const handleSelect = (index) => {
-  if (index === "all") {
+const handleTabChange = async (tabName) => {
+  if (tabName === "all") {
     selectedAuthor.value = null;
     router.push({ query: {} });
   } else {
-    selectedAuthor.value = index;
-    router.push({ query: { author: index } });
+    selectedAuthor.value = tabName;
+    router.push({ query: { author: tabName } });
   }
+  // Reset for new tab
   page_number.value = 1;
-  fetchVideos();
+  allVideos.value = [];
+  hasMore.value = true;
+  await fetchVideos();
+
+  // Re-add scroll event listener after tab change
+  await nextTick();
+  if (scrollContainer.value) {
+    const element = scrollContainer.value.$el;
+    // Remove existing listener first to avoid duplicates
+    element.removeEventListener("scroll", handleScroll);
+    // Add the listener again
+    element.addEventListener("scroll", handleScroll);
+  }
 };
 
-const handleCurrentChange = (val) => {
-  page_number.value = val;
-  fetchVideos();
-};
-
-const handleSizeChange = (val) => {
-  page_size.value = val;
-  fetchVideos();
-};
-
-const fetchVideos = async () => {
+const fetchVideos = async (isAppend = false) => {
   isLoading.value = true;
+
   const params = {
     page_size: page_size.value,
     page_number: page_number.value,
@@ -143,43 +173,85 @@ const fetchVideos = async () => {
   if (selectedAuthor.value) {
     params.author_id = selectedAuthor.value;
   }
-  let res = await MYAPI.get("/get_all_videos", params);
 
-  if (res["status"] == "success") {
-    allVideos.value = res.data.data;
-    total.value = res.data.total;
-  } else {
+  try {
+    let res = await MYAPI.get("/get_all_videos", params);
+
+    if (res["status"] == "success") {
+      const newVideos = res.data.data;
+      total.value = res.data.total;
+
+      if (isAppend) {
+        // Append new videos to existing list
+        allVideos.value = [...allVideos.value, ...newVideos];
+      } else {
+        // Replace videos for initial load or tab change
+        allVideos.value = newVideos;
+      }
+
+      // Check if there are more videos to load
+      hasMore.value =
+        newVideos.length === page_size.value &&
+        allVideos.value.length < total.value;
+    } else {
+      ElMessage({
+        type: res["status"],
+        message: res["message"],
+      });
+    }
+
+    // Load authors only once
+    if (allAuthors.value.length === 0) {
+      res = await MYAPI.get("/get_all_authors");
+      allAuthors.value = res.data;
+    }
+  } catch (error) {
+    console.error("Error fetching videos:", error);
     ElMessage({
-      type: res["status"],
-      message: res["message"],
+      type: "error",
+      message: "載入影片時發生錯誤",
     });
+  } finally {
+    isLoading.value = false;
   }
-
-  if (allAuthors.value.length === 0) {
-    res = await MYAPI.get("/get_all_authors");
-    allAuthors.value = res.data;
-  }
-  isLoading.value = false;
 };
 
-onMounted(() => {
+onMounted(async () => {
   const author_id = route.query.author;
   if (author_id) {
     selectedAuthor.value = author_id;
+    activeTab.value = author_id;
+  } else {
+    activeTab.value = "all";
   }
-  fetchVideos();
+  await fetchVideos();
+
+  // Add scroll event listener for infinite scroll after DOM is ready
+  await nextTick();
+  if (scrollContainer.value) {
+    const element = scrollContainer.value.$el;
+    element.addEventListener("scroll", handleScroll);
+  }
+});
+
+onUnmounted(() => {
+  // Remove scroll event listener
+  if (scrollContainer.value) {
+    const element = scrollContainer.value.$el;
+    element.removeEventListener("scroll", handleScroll);
+  }
 });
 </script>
 
 <style scoped>
-.gradient-text-tech-animated {
+.gradient-text-tech-animated :deep(.el-tabs__item) {
   background: linear-gradient(120deg, #4caf50, #2196f3, #673ab7, #4caf50);
   background-size: 300% 100%;
   -webkit-background-clip: text; /* 為了 Safari 瀏覽器 */
   background-clip: text;
-  color: black; /* 文字顏色設為透明，顯示背景漸層 */
+  color: transparent; /* 文字顏色設為透明，顯示背景漸層 */
   animation: gradient-animation 8s ease infinite;
-  background-color: #ecf5ff; /* 指定背景顏色 */
+  font-weight: bold;
 }
 
 @keyframes gradient-animation {
@@ -192,5 +264,9 @@ onMounted(() => {
   100% {
     background-position: 0% 50%;
   }
+}
+
+:deep(.el-tabs__content) {
+  display: none;
 }
 </style>
