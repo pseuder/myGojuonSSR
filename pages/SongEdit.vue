@@ -33,6 +33,7 @@
             class="w-full"
             placeholder="輸入頻道名稱"
           />
+          <el-input v-model="tag" class="w-full" placeholder="輸入標籤" />
         </div>
 
         <div class="flex gap-2">
@@ -345,6 +346,7 @@ import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { Delete, Switch, Plus } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 const MYAPI = useApi();
+const route = useRoute();
 
 const autoScroll = ref(true);
 const playbackRate = ref(1);
@@ -353,6 +355,7 @@ const playbackRate = ref(1);
 const videoId = ref("");
 const videoTitle = ref("");
 const videoChannel = ref("");
+const tag = ref("");
 
 // YouTube Player
 const playerRef = ref(null);
@@ -396,7 +399,7 @@ const formData = ref({
   source_id: "",
   name: "",
   author: "",
-  tags: "",
+  tag: "",
   is_public: true,
   original: "",
   converted: "",
@@ -1002,6 +1005,52 @@ const recordActivity = (learningMethod = "", learningItem = "") => {
   });
 };
 
+// 自動載入影片資料
+const loadVideoFromApi = async (videoIdParam) => {
+  if (!videoIdParam) return;
+
+  lyricsLoading.value = true;
+  try {
+    const response = await MYAPI.get(`/get_video/${videoIdParam}`);
+
+    if (response.status === "success" && response.data) {
+      const data = response.data;
+
+      // 映射 API 回應到元件變數
+      videoId.value = data.source_id || "";
+      videoTitle.value = data.name || "";
+      videoChannel.value = data.author || "";
+      tag.value = data.tags || "";
+      originalLyrics.value = data.original || "";
+
+      // 解析轉換後的歌詞
+      if (data.converted && data.converted.trim() !== "") {
+        try {
+          allLyrics.value = JSON.parse(data.converted);
+        } catch (parseError) {
+          console.error("解析歌詞資料時發生錯誤：", parseError);
+          ElMessage.warning("歌詞資料格式錯誤，無法載入歌詞");
+        }
+      }
+
+      // 自動載入 YouTube 影片
+      if (videoId.value) {
+        handleReloadYT();
+      }
+
+      ElMessage.success("影片資料載入成功");
+      recordActivity("auto_load_video", videoTitle.value);
+    } else {
+      ElMessage.warning("找不到指定的影片資料");
+    }
+  } catch (error) {
+    console.error("載入影片資料時發生錯誤：", error);
+    ElMessage.error("載入影片資料時發生錯誤");
+  } finally {
+    lyricsLoading.value = false;
+  }
+};
+
 // 發布歌曲
 const handlePublishSong = async () => {
   if (!videoId.value) {
@@ -1026,6 +1075,7 @@ const handlePublishSong = async () => {
     formData.value.source_id = videoId.value;
     formData.value.name = videoTitle.value;
     formData.value.author = videoChannel.value;
+    formData.value.tag = tag.value;
     formData.value.original = originalLyrics.value;
 
     // 將歌詞轉換為JSON格式
@@ -1077,6 +1127,12 @@ onMounted(async () => {
   await getApiKey();
   window.addEventListener("keypress", handleKeyPress, true);
   recordActivity("enter_page", "");
+
+  // 檢查 URL 參數中是否有 video_id
+  const urlVideoId = route.query.video_id;
+  if (urlVideoId) {
+    await loadVideoFromApi(urlVideoId);
+  }
 });
 
 onUnmounted(() => {

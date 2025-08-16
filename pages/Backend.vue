@@ -100,6 +100,12 @@
 
                   <td class="operations">
                     <el-button
+                      type="success"
+                      size="small"
+                      @click="songhandleJumpEdit(song)"
+                      >跳轉編輯</el-button
+                    >
+                    <el-button
                       type="primary"
                       size="small"
                       @click="songhandleEdit(song)"
@@ -274,6 +280,15 @@ const songhandleAdd = () => {
   songresetForm();
   songIsEdit.value = false;
   songDialogVisible.value = true;
+};
+
+// 跳轉至新視窗 /songEdit?video_id=<video_id>
+const songhandleJumpEdit = (row) => {
+  const videoId = row.source_id;
+  if (videoId) {
+    const url = `/SongEdit?video_id=${videoId}`;
+    window.open(url, "_blank");
+  }
 };
 
 const songhandleEdit = (row) => {
