@@ -355,7 +355,7 @@ const playbackRate = ref(1);
 const videoId = ref("");
 const videoTitle = ref("");
 const videoChannel = ref("");
-const tag = ref("");
+const tags = ref("");
 
 // YouTube Player
 const playerRef = ref(null);
@@ -1075,7 +1075,7 @@ const handlePublishSong = async () => {
     formData.value.source_id = videoId.value;
     formData.value.name = videoTitle.value;
     formData.value.author = videoChannel.value;
-    formData.value.tag = tag.value;
+    formData.value.tags = tag.value;
     formData.value.original = originalLyrics.value;
 
     // 將歌詞轉換為JSON格式
