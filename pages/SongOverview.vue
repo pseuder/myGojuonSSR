@@ -218,9 +218,10 @@ const fetchVideos = async (isAppend = false) => {
 
 onMounted(async () => {
   const author_id = route.query.author;
+  console.log("Author ID:", author_id);
   if (author_id) {
     selectedAuthor.value = author_id;
-    activeTab.value = author_id;
+    activeTab.value = Number(author_id);
   } else {
     activeTab.value = "all";
   }
