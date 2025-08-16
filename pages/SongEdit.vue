@@ -355,7 +355,7 @@ const playbackRate = ref(1);
 const videoId = ref("");
 const videoTitle = ref("");
 const videoChannel = ref("");
-const tags = ref("");
+const tag = ref("");
 
 // YouTube Player
 const playerRef = ref(null);
@@ -399,7 +399,7 @@ const formData = ref({
   source_id: "",
   name: "",
   author: "",
-  tag: "",
+  tags: "",
   is_public: true,
   original: "",
   converted: "",
