@@ -555,6 +555,17 @@ const addSpecialLearning = () => {
   specialLearningList.value.push(selectedSound.value);
   saveSpecialLearningList();
   ElMessage.success(t("add_to_special_learning_success"));
+
+  const dataToSend = {
+    learningModule: "listening",
+    learningMethod: "addSpecialLearning",
+    learningItem: selectedSound.value.kana,
+  };
+
+  // 發送數據到後端
+  MYAPI.post("/record_activity", dataToSend).catch((error) => {
+    console.error("Error recording activity:", error);
+  });
 };
 
 const doSpecialLearning = () => {
