@@ -23,7 +23,7 @@
         wrap
       >
         <template v-for="video in allVideos" :key="video.source_id">
-          <el-card class="w-full max-w-[380px]" shadow="hover">
+          <el-card class="aspect-10/9 h-auto w-80 md:w-96" shadow="hover">
             <div class="p-4">
               <a
                 :href="resolveVideoUrl(video.source_id)"
