@@ -103,7 +103,7 @@
                 @click="handleStartVideoClick(line.timestamp)"
               >
                 <el-icon :size="25" title="跳轉到此">
-                  <VideoPlay />
+                  <Right />
                 </el-icon>
               </el-button>
 
@@ -139,12 +139,22 @@
     <div v-else class="flex h-full items-center justify-center">
       <p>Loading song...</p>
     </div>
+
+    <!-- 浮動播放/暫停按鈕 (只在小於lg螢幕時顯示) -->
+    <div v-if="currentVideo" class="fixed right-4 bottom-4 z-50 lg:hidden">
+      <el-button type="primary" size="large" circle @click="togglePlayPause">
+        <el-icon :size="24">
+          <VideoPause v-if="isPlaying" />
+          <VideoPlay v-else />
+        </el-icon>
+      </el-button>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import { VideoPause, VideoPlay, Switch } from "@element-plus/icons-vue";
+import { VideoPause, VideoPlay, Right } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
