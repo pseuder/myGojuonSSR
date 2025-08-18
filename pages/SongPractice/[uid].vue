@@ -6,89 +6,85 @@
       class="flex h-full flex-col gap-4 px-4 py-4 md:px-10 lg:flex-row"
     >
       <!-- 影片播放器+功能列 -->
-      <div class="flex flex-col lg:w-1/2">
-        <div class="gradient-text-tech-animated">
-          {{ currentVideo.name }} - {{ currentVideo.author }}
+      <div class="flex h-full flex-col lg:w-1/2">
+        <div class="shrink-0">
+          <!-- 影片標題＋作者 -->
+          <div class="gradient-text-tech-animated">
+            {{ currentVideo.name }} - {{ currentVideo.author }}
+          </div>
+          <!-- 標籤 -->
+          <div class="mb-4 flex flex-wrap items-center gap-2">
+            <template v-for="tag in currentVideo.tags?.split(',')" :key="tag">
+              <el-tag type="info">{{ tag }}</el-tag>
+            </template>
+          </div>
         </div>
-        <div class="mb-4 flex flex-wrap items-center gap-2">
-          <!-- tags -->
-          <template v-for="tag in currentVideo.tags?.split(',')" :key="tag">
-            <el-tag type="info">{{ tag }}</el-tag>
-          </template>
-        </div>
+
         <!-- 影片播放器 -->
-        <div id="player-container" ref="playerContainerRef" class="h-[70%]">
+        <div
+          id="player-container"
+          ref="playerContainerRef"
+          class="flex-1 overflow-auto"
+        >
           <div
             id="player"
             ref="playerRef"
-            style="max-height: 430px; aspect-ratio: 4/3"
+            class="aspect-video w-full lg:h-full"
           ></div>
         </div>
 
-        <!-- 功能列 (結構不變) -->
-        <div class="flex h-[10%] flex-col gap-2">
-          <div class="my-4 flex w-full flex-col items-center gap-2">
-            <div
-              class="flex w-full flex-row items-center justify-between gap-4"
-            >
-              <div
-                class="cursor-pointer hover:text-blue-500"
-                @click="goToPreviousLyric()"
-              >
-                <el-tag>A</el-tag> {{ t("jump_previous_line") }}
+        <!-- 功能列 -->
+        <div class="flex shrink-0 flex-col gap-2">
+          <div class="my-4 flex h-full w-full flex-col items-center gap-2">
+            <div class="flex w-full flex-row">
+              <div class="flex w-full flex-1 flex-col justify-between gap-4">
+                <div
+                  class="cursor-pointer hover:text-blue-500"
+                  @click="goToPreviousLyric()"
+                >
+                  <el-tag type="warning">A</el-tag>{{ t("jump_previous_line") }}
+                </div>
+                <div
+                  class="cursor-pointer hover:text-blue-500"
+                  @click="goToNextLyric()"
+                >
+                  <el-tag type="warning">D</el-tag>{{ t("jump_next_line") }}
+                </div>
+                <div
+                  class="cursor-pointer hover:text-blue-500"
+                  @click="toggleLoopCurrentLyric()"
+                >
+                  <el-tag type="warning">S</el-tag>
+                  <span v-if="isLooping" class="text-red-600">
+                    {{ t("stop_looping") }}</span
+                  >
+                  <span v-else> {{ t("loop_playback") }}</span>
+                </div>
               </div>
-              <div
-                class="cursor-pointer hover:text-blue-500"
-                @click="goToNextLyric()"
-              >
-                <el-tag>D</el-tag> {{ t("jump_next_line") }}
-              </div>
-              <div
-                class="cursor-pointer hover:text-blue-500"
-                @click="toggleLoopCurrentLyric()"
-              >
-                <el-tag>S</el-tag>
-                <span v-if="isLooping" class="text-red-600">{{
-                  t("stop_looping")
-                }}</span>
-                <span v-else>{{ t("loop_playback") }}</span>
-              </div>
-            </div>
 
-            <div class="flex w-full items-center justify-between gap-2">
-              <div class="flex flex-col gap-1">
+              <div class="flex flex-1 flex-col gap-1">
                 <el-checkbox v-model="autoScroll">{{
                   t("scrolling")
                 }}</el-checkbox>
                 <el-checkbox v-model="autoPlayNext">{{
                   t("auto_play_next_song")
                 }}</el-checkbox>
+                <el-input-number
+                  v-model="playbackRate"
+                  :precision="1"
+                  :step="0.1"
+                  :max="2"
+                  :min="0.3"
+                  @change="changePlaybackRate(playbackRate)"
+                />
               </div>
-
-              <el-radio-group v-model="display_mode" size="large">
-                <el-radio
-                  value="hira"
-                  size="large"
-                  style="margin-right: 18px"
-                  >{{ t("normal") }}</el-radio
-                >
-                <el-radio value="both" size="large">{{ t("mixed") }}</el-radio>
-              </el-radio-group>
-              <el-input-number
-                v-model="playbackRate"
-                :precision="1"
-                :step="0.1"
-                :max="2"
-                :min="0.3"
-                @change="changePlaybackRate(playbackRate)"
-              />
             </div>
           </div>
         </div>
       </div>
 
       <!-- 歌詞  -->
-      <el-scrollbar class="lyrics-container h-full overflow-x-auto lg:w-1/2">
+      <el-scrollbar class="h-full overflow-x-auto lg:w-1/2">
         <!-- <el-button type="warning" size="small" @click="handleCopyLyrics" plain>
           複製歌詞
         </el-button> -->
