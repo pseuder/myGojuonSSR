@@ -221,7 +221,7 @@ useSeoMeta({
   title: () =>
     `${currentVideo.value?.name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
   description: () =>
-    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供平假名歌詞對照、時間軸High Light、循環播放、速度調整等功能，幫助您學習日語歌曲。`,
+    `${currentVideo.value?.name} by ${currentVideo.value?.author} KTV歌詞, 平假名歌詞對照`,
   keywords: () =>
     `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 日語歌曲, 日文歌曲, 平假名歌詞對照`,
   ogTitle: () =>
