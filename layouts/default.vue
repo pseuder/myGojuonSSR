@@ -13,16 +13,6 @@
             :label="t('dictation_practice')"
           />
           <MenuItem index="/SongOverview" :label="t('song_practice')" />
-          <MenuItem
-            index="/Analysis"
-            :label="t('activity_analysis')"
-            :condition="isAdmin"
-          />
-          <MenuItem
-            index="/Backend"
-            :label="t('admin_panel')"
-            :condition="isAdmin"
-          />
         </el-menu>
       </div>
       <div class="flex w-fit items-center gap-4">
@@ -35,7 +25,7 @@
       <!-- 文字瀑布 -->
       <div ref="textContainer" class="text-fall-container"></div>
       <div
-        class="main-component relative"
+        class="main-component relative h-fit"
         :class="{
           'wide-layout':
             isInSongPractice || isInBackend || isInSongEdit || isInSongOverview,
@@ -143,7 +133,6 @@ onMounted(() => {
 <style>
 .content {
   height: calc(100% - 60px);
-  /* height: 94%; */
   overflow-y: auto;
   padding: 20px;
   background-image: url("/images/gojuon-writing.jpg");
@@ -163,6 +152,12 @@ onMounted(() => {
 
 .wide-layout {
   max-width: 90vw !important;
+}
+
+@media (min-width: 1024px) {
+  .wide-layout {
+    height: 100%;
+  }
 }
 
 /* ---------------------------
