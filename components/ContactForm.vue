@@ -80,7 +80,7 @@ const submitForm = async () => {
     };
     await MYAPI.post("/question_response", dataToSend);
     // Optionally, show a success message
-    ElMessage.success("訊息已成功送出！");
+    ElMessage.success("訊息已成功送出, 感謝你的留言！");
     closeForm();
   } catch (error) {
     console.error("Error submitting form:", error);
