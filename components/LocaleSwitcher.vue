@@ -42,7 +42,6 @@ const LOCALE_VN = "VN";
 const emit = defineEmits(["update:locale"]);
 
 const handleSelect = (lang) => {
-  console.log(`Switching locale to: ${lang}`);
   locale.value = lang;
   localStorage.setItem("myGojuon_lang", JSON.stringify({ locale: lang }));
   emit("update:locale", lang);
