@@ -1,6 +1,6 @@
 <template>
   <!-- 頁面結構基本不變 -->
-  <div class="flex flex-col lg:h-[80vh] lg:overflow-hidden">
+  <div class="flex h-full flex-col lg:overflow-hidden">
     <div
       v-if="currentVideo"
       class="flex h-full flex-col gap-4 px-4 py-4 md:px-10 lg:flex-row"
