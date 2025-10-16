@@ -342,12 +342,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { Delete, Switch, Plus } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 const MYAPI = useApi();
 const route = useRoute();
 
+const isDirty = ref(false);
 const autoScroll = ref(true);
 const playbackRate = ref(1);
 
@@ -1109,6 +1110,7 @@ const saveVideo = async () => {
         type: "success",
         message: "歌曲發布成功",
       });
+      isDirty.value = false;
     } else {
       console.error(res);
       ElMessage({
@@ -1122,10 +1124,34 @@ const saveVideo = async () => {
   }
 };
 
+const beforeUnloadHandler = (event) => {
+  if (isDirty.value) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+};
+
+watch(
+  [videoId, videoTitle, videoChannel, tag],
+  () => {
+    isDirty.value = true;
+  },
+  { deep: true },
+);
+
+watch(
+  allLyrics,
+  () => {
+    isDirty.value = true;
+  },
+  { deep: true },
+);
+
 onMounted(async () => {
   await initializePlayer();
   await getApiKey();
   window.addEventListener("keypress", handleKeyPress, true);
+  window.addEventListener("beforeunload", beforeUnloadHandler);
   recordActivity("enter_page", "");
 
   // 檢查 URL 參數中是否有 video_id
@@ -1140,6 +1166,7 @@ onUnmounted(() => {
     player.destroy();
   }
   window.removeEventListener("keypress", handleKeyPress, true);
+  window.removeEventListener("beforeunload", beforeUnloadHandler);
 });
 </script>
 
