@@ -138,7 +138,7 @@
         </el-button>
 
         <el-button
-          v-if="isLogin"
+          v-show="isLogin"
           id="ai-recognition-button"
           @click="handwritingCanvas.sendCanvasImageToBackend()"
           class="tech-gradient-button h-12 w-full text-[18px]"
@@ -154,7 +154,12 @@
             alt=""
           />
         </el-button>
-        <el-button v-else type="primary" class="h-12 w-full" disabled>
+        <el-button
+          v-show="!isLogin"
+          type="primary"
+          class="h-12 w-full"
+          disabled
+        >
           {{ t("login_to_enable_ai_recognition") }}
         </el-button>
       </div>
