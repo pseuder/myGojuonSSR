@@ -15,7 +15,7 @@ html,
   touch-action: manipulation;
   -webkit-touch-callout: none;
   overflow: hidden;
-  cursor: url("/cursors/default.gif"), auto;
+  cursor: url("/cursors/default.png"), auto;
 }
 
 a,
@@ -30,20 +30,32 @@ button,
 .el-checkbox__input,
 .el-select__wrapper,
 .el-switch__core {
-  cursor: url("/cursors/cross.gif"), pointer !important;
+  cursor: url("/cursors/cross.png"), pointer !important;
 }
 
 .cursor-pointer,
 .hover\:cursor-pointer:hover {
-  cursor: url("/cursors/cross.gif"), pointer !important;
+  cursor: url("/cursors/cross.png"), pointer !important;
 }
 
 .el-button.is-disabled {
-  cursor: url("/cursors/not-allowed.gif"), not-allowed !important;
+  cursor: url("/cursors/not-allowed.png"), not-allowed !important;
 }
 
 canvas {
-  cursor: url("/cursors/crosshair.gif"), crosshair !important;
+  cursor: url("/cursors/crosshair.png"), crosshair !important;
+}
+
+#pen-info {
+  cursor: url("/cursors/help.png"), help !important;
+  color: blueviolet;
+  font-weight: bold;
+  font-size: 22px;
+  user-select: none;
+}
+
+#ai-recognition-button {
+  cursor: url("/cursors/boom.png"), pointer !important;
 }
 
 .el-tabs,

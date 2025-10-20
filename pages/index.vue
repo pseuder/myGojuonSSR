@@ -155,9 +155,9 @@
           {{ t("feedback_and_feature_request") }}
         </h2>
 
-        <div class="flex gap-4">
+        <div class="flex flex-col gap-2">
           <!-- 線上留言 -->
-          <div class="my-4 flex flex-col gap-4">
+          <div class="my-4 flex items-center gap-4">
             <el-button
               type="warning"
               @click="showContactForm = true"
@@ -167,6 +167,7 @@
             >
               <el-icon :size="20"><ChatLineRound /></el-icon>
             </el-button>
+            <span class="mb-2">線上匿名留言</span>
           </div>
 
           <!-- gmail -->
@@ -186,6 +187,7 @@
                   class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
                 />
               </a>
+              <span>iop890520@gmail.com</span>
             </div>
           </div>
 
@@ -206,6 +208,7 @@
                   class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
                 />
               </a>
+              <span>https://www.facebook.com/Pseuder</span>
             </div>
           </div>
         </div>

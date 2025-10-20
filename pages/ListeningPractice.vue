@@ -138,12 +138,15 @@
         </el-button>
 
         <el-button
-          v-show="isLogin"
+          v-if="isLogin"
+          id="ai-recognition-button"
           @click="handwritingCanvas.sendCanvasImageToBackend()"
           class="tech-gradient-button h-12 w-full text-[18px]"
-          :disabled="handwritingCanvas?.isSending || activeTab === 'yoon'"
+          :disabled="
+            handwritingCanvas?.isSending || selectedSound.type === 'yoon'
+          "
         >
-          {{ t("ai_recognition") }}
+          {{ selectedSound.type === "yoon" ? "尚未支援" : t("ai_recognition") }}
           <img
             class="ml-2 h-6 w-6"
             :class="{ 'animate-spin': handwritingCanvas?.isSending }"
@@ -151,12 +154,7 @@
             alt=""
           />
         </el-button>
-        <el-button
-          v-show="!isLogin"
-          type="primary"
-          class="h-12 w-full"
-          :disabled="true"
-        >
+        <el-button v-else type="primary" class="h-12 w-full" disabled>
           {{ t("login_to_enable_ai_recognition") }}
         </el-button>
       </div>

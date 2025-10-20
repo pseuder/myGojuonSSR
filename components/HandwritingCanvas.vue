@@ -4,39 +4,47 @@
       <span class="flex-shrink-0">範例大小</span>
       <el-slider v-model="exampleScale" />
     </div>
-    <div class="my-2 flex items-center justify-end gap-10">
-      <div class="w-full" v-if="selectedSound.type">
+    <div class="my-2 flex items-center justify-end gap-2">
+      <div class="" v-if="selectedSound.type">
         <el-tag type="info">{{
           t(selectedSound.type ? selectedSound.type : "")
         }}</el-tag>
       </div>
 
-      <el-button
-        @click="handleClear"
-        type="text"
-        style="font-size: 35px; padding: 0; margin: 0; line-height: 1"
-      >
-        <img
-          src="/images/broom.png"
-          alt=""
-          class="h-10 w-10 cursor-pointer"
-          :class="{ 'rotate-animation': isRotating }"
-        />
-      </el-button>
-      <!-- 上一個、下一個按鈕 -->
-      <div v-if="showChangeSoundButtons" class="flex items-center gap-4">
-        <img
-          src="/images/arrow-circle-left-solid.svg"
-          alt="上一個"
-          class="h-10 w-10 cursor-pointer"
-          @click="handleChangeSound('prev')"
-        />
-        <img
-          src="/images/arrow-circle-right-solid.svg"
-          alt="下一個"
-          class="h-10 w-10 cursor-pointer"
-          @click="handleChangeSound('next')"
-        />
+      <div class="flex-grow">
+        <el-tooltip content="可以使用觸控筆直接書寫" placement="bottom">
+          <span id="pen-info" title="">？</span>
+        </el-tooltip>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <el-button
+          @click="handleClear"
+          type="text"
+          class="m-0 p-0 text-[35px] leading-none"
+        >
+          <img
+            src="/images/broom.png"
+            alt=""
+            class="h-10 w-10 cursor-pointer"
+            :class="{ 'rotate-animation': isRotating }"
+          />
+        </el-button>
+        <!-- 上一個、下一個按鈕 -->
+        <div v-if="showChangeSoundButtons" class="flex items-center gap-4">
+          <img
+            src="/images/arrow-circle-left-solid.svg"
+            alt="上一個"
+            class="h-10 w-10 cursor-pointer"
+            @click="handleChangeSound('prev')"
+          />
+          <img
+            src="/images/arrow-circle-right-solid.svg"
+            alt="下一個"
+            class="h-10 w-10 cursor-pointer"
+            @click="handleChangeSound('next')"
+          />
+        </div>
       </div>
     </div>
     <div class="canvas-wrapper" ref="canvasWrapper">
