@@ -453,6 +453,7 @@ const SPECIAL_KANA_MATCHES = {
   づ: ["づ", "ブ"],
   ん: ["ん", "は", "ひ", "ほ"],
   ヌ: ["ヌ", "又"],
+  エ: ["エ", "工", "エ"],
 };
 
 const autoDetect = (predict_res) => {
