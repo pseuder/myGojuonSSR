@@ -74,7 +74,7 @@
 
       <!-- 加入特別學習 -->
       <div class="flex items-center justify-between gap-2">
-        <el-popover placement="bottom" :width="300" trigger="click">
+        <el-popover placement="bottom" :width="fit - content" trigger="click">
           <template #reference>
             <el-tag type="success" class="text-lg hover:cursor-pointer"
               >Round {{ round }} - {{ completedInRound }} /
@@ -142,11 +142,9 @@
           id="ai-recognition-button"
           @click="handwritingCanvas.sendCanvasImageToBackend()"
           class="tech-gradient-button h-12 w-full text-[18px]"
-          :disabled="
-            handwritingCanvas?.isSending || selectedSound.type === 'yoon'
-          "
+          :disabled="handwritingCanvas?.isSending"
         >
-          {{ selectedSound.type === "yoon" ? "尚未支援" : t("ai_recognition") }}
+          {{ t("ai_recognition") }}
           <img
             class="ml-2 h-6 w-6"
             :class="{ 'animate-spin': handwritingCanvas?.isSending }"
@@ -258,6 +256,8 @@ import { useAuth } from "~/composables/useAuth";
 const { user } = useAuth();
 
 const MYAPI = useApi();
+
+const { gtag } = useGtag();
 
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
@@ -432,16 +432,10 @@ const playSound = () => {
 const selectSound = (sound) => {
   if (sound.kana) {
     selectedSound.value = sound;
-
-    const dataToSend = {
-      learningModule: "listening",
-      learningMethod: "changeSound",
-      learningItem: sound.kana,
-    };
-
-    // 發送數據到後端
-    MYAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
+    gtag("event", "學習行為", {
+      使用模組: "聽寫練習",
+      模組功能: "切換音節",
+      項目名稱: sound.kana,
     });
   }
 };
@@ -452,14 +446,13 @@ const clearSelectedSound = () => {
 
 // 特殊對應關係配置
 const SPECIAL_KANA_MATCHES = {
-  な: ["な", "お"],
-  も: ["も", "を"],
-  り: ["り", "け"],
-  ぜ: ["ぜ", "だ"],
-  ぞ: ["ぞ", "だ"],
-  ぱ: ["ぱ", "ぽ"],
-  ク: ["ク", "ワ"],
-  ワ: ["ワ", "ク"],
+  ニ: ["ニ", "二"],
+  ホ: ["ホ", "木"],
+  ヲ: ["ヲ", "ヨ", "ケ"],
+  ン: ["ン", "ソ", "ン"],
+  づ: ["づ", "ブ"],
+  ん: ["ん", "は", "ひ", "ほ"],
+  ヌ: ["ヌ", "又"],
 };
 
 const autoDetect = (predict_res) => {
@@ -492,16 +485,10 @@ const autoDetect = (predict_res) => {
   }
 
   try {
-    const dataToSend = {
-      learningModule: "listening",
-      learningMethod: "predict",
-      learningItem: currentKana,
-      correctness: isCorrect,
-    };
-
-    // 發送數據到後端
-    MYAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
+    gtag("event", "學習行為", {
+      使用模組: "聽寫練習",
+      模組功能: "影像辨識",
+      項目名稱: currentKana,
     });
   } catch (error) {
     console.error("Error recording activity:", error);
@@ -509,13 +496,22 @@ const autoDetect = (predict_res) => {
 };
 
 // 檢查假名是否匹配
+const areEqual = (strA, strB) => {
+  return (
+    strA
+      .replace(/\s/g, "")
+      .localeCompare(strB.replace(/\s/g, ""), "ja", { sensitivity: "base" }) ===
+    0
+  );
+};
+
 const checkKanaMatch = (currentKana, predictedKana) => {
   // 檢查特殊情況
   if (currentKana in SPECIAL_KANA_MATCHES) {
     return SPECIAL_KANA_MATCHES[currentKana].includes(predictedKana);
   }
   // 一般情況
-  return currentKana === predictedKana;
+  return areEqual(currentKana, predictedKana);
 };
 
 // 處理正確預測
@@ -559,15 +555,10 @@ const addSpecialLearning = () => {
   saveSpecialLearningList();
   ElMessage.success(t("add_to_special_learning_success"));
 
-  const dataToSend = {
-    learningModule: "listening",
-    learningMethod: "addSpecialLearning",
-    learningItem: selectedSound.value.kana,
-  };
-
-  // 發送數據到後端
-  MYAPI.post("/record_activity", dataToSend).catch((error) => {
-    console.error("Error recording activity:", error);
+  gtag("event", "學習行為", {
+    使用模組: "聽寫練習",
+    模組功能: "增加特別學習",
+    項目名稱: selectedSound.value.kana,
   });
 };
 
@@ -629,16 +620,6 @@ onMounted(() => {
     box-shadow 0.3s ease;
 }
 
-.sound-counts-container {
-  font-family: Arial, sans-serif;
-  width: 300px;
-  padding: 10px;
-  background-color: #f8f8f8;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 h3 {
   margin: 0 0 10px;
   text-align: center;
@@ -664,6 +645,7 @@ h3 {
 
 .sound {
   font-weight: bold;
+  width: max-content;
 }
 
 .count {

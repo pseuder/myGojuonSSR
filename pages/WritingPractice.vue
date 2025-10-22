@@ -110,6 +110,8 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { CaretLeft, CaretRight } from "@element-plus/icons-vue";
 import { ElMessageBox, ElMessage } from "element-plus";
+const { gtag } = useGtag();
+
 import HandwritingCanvas from "/components/HandwritingCanvas.vue";
 import fiftySoundsData from "/data/fifty-sounds.json";
 
@@ -216,18 +218,11 @@ const autoPlaySound = () => {
 const selectSound = (sound) => {
   if (sound.kana) {
     selectedSound.value = sound;
-
     navigator.clipboard.writeText(sound.kana);
-
-    const dataToSend = {
-      learningModule: "writing",
-      learningMethod: "selectSound",
-      learningItem: sound.kana,
-    };
-
-    // 發送數據到後端
-    myAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
+    gtag("event", "學習行為", {
+      使用模組: "手寫練習",
+      模組功能: "切換音節",
+      項目名稱: sound.kana,
     });
   }
 };

@@ -230,17 +230,15 @@ const showContactForm = ref(false);
 
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
-const MYAPI = useApi();
+
+const { gtag } = useGtag();
 
 const handleReportClick = (item) => {
-  const dataToSend = {
-    learningModule: "report",
-    learningMethod: "report_issue",
-    learningItem: item,
-  };
-
-  // 發送數據到後端
-  MYAPI.post("/record_activity", dataToSend);
+  gtag("event", "其他", {
+    使用模組: "首頁",
+    模組功能: "回報問題",
+    項目名稱: item,
+  });
 };
 
 // onMounted(updateMeta);

@@ -348,6 +348,8 @@ import { ElMessage, ElMessageBox } from "element-plus";
 const MYAPI = useApi();
 const route = useRoute();
 
+const { gtag } = useGtag();
+
 const isDirty = ref(false);
 const autoScroll = ref(true);
 const playbackRate = ref(1);
@@ -996,13 +998,10 @@ const getApiKey = async () => {
 };
 
 const recordActivity = (learningMethod = "", learningItem = "") => {
-  const dataToSend = {
-    learningModule: "song_edit",
-    learningMethod: learningMethod,
-    learningItem: learningItem,
-  };
-  MYAPI.post("/record_activity", dataToSend).catch((error) => {
-    console.error("Error recording activity:", error);
+  gtag("event", "其他", {
+    使用模組: "歌曲編輯",
+    模組功能: learningMethod,
+    項目名稱: learningItem,
   });
 };
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-[88vh] w-full flex-col p-2">
+  <div class="flex h-[88vh] w-full flex-col p-2 lg:h-full">
     <div class="mb-4 flex-none">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="w-full">
         <el-tab-pane label="全部" name="all"> </el-tab-pane>
@@ -14,9 +14,7 @@
       </el-tabs>
     </div>
 
-    <div
-      class="flex h-full w-full grow flex-col items-center gap-4 overflow-x-hidden"
-    >
+    <div class="flex w-full grow flex-col items-center gap-4 overflow-x-hidden">
       <el-space
         ref="scrollContainer"
         class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"

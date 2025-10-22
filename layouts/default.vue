@@ -81,17 +81,6 @@ const textArray = fiftySoundsData.hiragana
   .map((item) => item.kana)
   .concat(fiftySoundsData.katakana.map((item) => item.kana));
 
-const recordActivity = (lang) => {
-  const dataToSend = {
-    learningModule: "language",
-    learningMethod: "switch_language",
-    learningItem: lang,
-  };
-  // axios.post("/record_activity", dataToSend).catch((error) => {
-  //   console.error("Error recording activity:", error);
-  // });
-};
-
 onMounted(() => {
   // document.documentElement.setAttribute("lang", locale.value);
   if (!textContainer.value) return;

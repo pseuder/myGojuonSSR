@@ -163,6 +163,8 @@ const MYAPI = useApi();
 const router = useRouter();
 const route = useRoute();
 
+const { gtag } = useGtag();
+
 // 使用 Nuxt 的 useRuntimeConfig 獲取環境變數，更安全
 const config = useRuntimeConfig();
 
@@ -227,38 +229,18 @@ useSeoMeta({
   title: () =>
     `${currentVideo.value?.name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
   description: () =>
-    `${currentVideo.value?.name} by ${currentVideo.value?.author} KTV歌詞, 平假名歌詞對照`,
+    `${currentVideo.value?.name} by ${currentVideo.value?.author} 平假名歌詞對照`,
   keywords: () =>
-    `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 日語歌曲, 日文歌曲, 平假名歌詞對照`,
+    `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 歌曲, 歌詞`,
   ogTitle: () =>
-    `${currentVideo.value?.name} - ${currentVideo.value?.author} | 日語歌曲練習`,
+    `${currentVideo.value?.name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
   ogDescription: () =>
-    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供平假名歌詞對照、時間軸High Light、循環播放、速度調整等功能，幫助您學習日語歌曲。`,
+    `${currentVideo.value?.name} by ${currentVideo.value?.author} 平假名歌詞對照`,
   twitterCard: "summary",
 });
 
 // 使用 useHead 處理 JSON-LD 結構化數據
 useHead({
-  script: [
-    {
-      type: "application/ld+json",
-      // 使用 getter 函數使其響應式
-      children: () =>
-        JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          name: `${currentVideo.value?.name} - ${currentVideo.value?.author} | 日語歌曲練習`,
-          description: `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。`,
-          url: `http://localhost:3000${route.fullPath}`, // 正式環境請換成你的網域
-          mainEntity: {
-            "@type": "MusicRecording",
-            name: currentVideo.value?.name,
-            byArtist: { "@type": "Person", name: currentVideo.value?.author },
-            inLanguage: "ja",
-          },
-        }),
-    },
-  ],
   // 處理 YouTube API script 的載入
   script: [
     { src: "https://www.youtube.com/iframe_api", async: true, defer: true },
@@ -603,15 +585,10 @@ onMounted(() => {
       initializePlayer();
     }
 
-    const dataToSend = {
-      learningModule: "song",
-      learningMethod: "get_video",
-      learningItem: videoId.value,
-    };
-
-    // 發送數據到後端
-    MYAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
+    gtag("event", "歌曲推廣", {
+      使用模組: "歌曲練習",
+      模組功能: "獲取歌曲",
+      項目名稱: currentVideo.value?.name,
     });
 
     window.addEventListener("keypress", handleKeyPress, true);
