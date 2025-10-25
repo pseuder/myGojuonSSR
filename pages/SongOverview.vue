@@ -100,14 +100,6 @@
         </el-icon>
         <span class="ml-2">載入影片中...</span>
       </div>
-
-      <!-- End of data indicator -->
-      <div
-        v-if="!hasMore && allVideos.length > 0 && activeTab !== 'all'"
-        class="flex justify-center py-4 text-gray-500"
-      >
-        已載入全部影片 (共 {{ total }} 部)
-      </div>
     </div>
   </div>
 </template>
@@ -207,10 +199,13 @@ const handleTabChange = async (tabName) => {
 const fetchVideos = async (isAppend = false) => {
   isLoading.value = true;
 
-  const params = {
-    page_size: page_size.value,
-    page_number: page_number.value,
-  };
+  // const params = {
+  //   page_size: page_size.value,
+  //   page_number: page_number.value,
+  // };
+
+  const params = {};
+
   if (selectedAuthor.value) {
     params.author_id = selectedAuthor.value;
   }
