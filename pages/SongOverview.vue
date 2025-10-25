@@ -7,7 +7,7 @@
           v-for="author in allAuthors"
           :key="author.id"
           :label="author.name"
-          :name="author.id"
+          :name="String(author.id)"
           :class="{ 'gradient-text-tech-animated': author.author == 'NELKE' }"
         >
         </el-tab-pane>
@@ -15,7 +15,35 @@
     </div>
 
     <div class="flex w-full grow flex-col items-center gap-4 overflow-x-hidden">
+      <!-- Author selection view -->
+      <div
+        v-if="activeTab === 'all'"
+        class="flex w-full flex-1 flex-wrap content-start justify-center gap-4 overflow-y-auto p-2"
+      >
+        <template v-for="author in allAuthors" :key="author.id">
+          <div
+            class="flex cursor-pointer flex-col hover:scale-105"
+            @click="handleAuthorSelect(author.id)"
+          >
+            <el-card
+              class="h-42 w-80 md:w-96"
+              shadow="hover"
+              style="background-size: cover; background-position: top"
+              :style="{
+                backgroundImage: `url('/thumbnails/${author.name}.jpg')`,
+              }"
+            >
+            </el-card>
+            <div class="text-lg font-bold">
+              {{ author.name }} - {{ author.song_count }} 首
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Video list view -->
       <el-space
+        v-else
         ref="scrollContainer"
         class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"
         wrap
@@ -63,7 +91,10 @@
       </el-space>
 
       <!-- Loading indicator for infinite scroll -->
-      <div v-if="isLoading" class="flex justify-center py-4">
+      <div
+        v-if="isLoading && activeTab !== 'all'"
+        class="flex justify-center py-4"
+      >
         <el-icon class="is-loading">
           <Loading />
         </el-icon>
@@ -72,7 +103,7 @@
 
       <!-- End of data indicator -->
       <div
-        v-if="!hasMore && allVideos.length > 0"
+        v-if="!hasMore && allVideos.length > 0 && activeTab !== 'all'"
         class="flex justify-center py-4 text-gray-500"
       >
         已載入全部影片 (共 {{ total }} 部)
@@ -136,13 +167,25 @@ const resolveVideoUrl = (source_id) => {
   return "/SongPractice/" + source_id;
 };
 
+const handleAuthorSelect = (authorId) => {
+  const authorIdStr = String(authorId);
+  activeTab.value = authorIdStr;
+  handleTabChange(authorIdStr);
+};
+
 const handleTabChange = async (tabName) => {
   if (tabName === "all") {
     selectedAuthor.value = null;
-    router.push({ query: {} });
+    router.push({
+      query: {},
+    });
   } else {
     selectedAuthor.value = tabName;
-    router.push({ query: { author: tabName } });
+    router.push({
+      query: {
+        author: tabName,
+      },
+    });
   }
   // Reset for new tab
   page_number.value = 1;
@@ -173,41 +216,45 @@ const fetchVideos = async (isAppend = false) => {
   }
 
   try {
-    let res = await MYAPI.get("/get_all_videos", params);
-
-    if (res["status"] == "success") {
-      const newVideos = res.data.data;
-      total.value = res.data.total;
-
-      if (isAppend) {
-        // Append new videos to existing list
-        allVideos.value = [...allVideos.value, ...newVideos];
-      } else {
-        // Replace videos for initial load or tab change
-        allVideos.value = newVideos;
-      }
-
-      // Check if there are more videos to load
-      hasMore.value =
-        newVideos.length === page_size.value &&
-        allVideos.value.length < total.value;
-    } else {
-      ElMessage({
-        type: res["status"],
-        message: res["message"],
-      });
+    // Fetch authors first if not already loaded
+    if (allAuthors.value.length === 0) {
+      const authorRes = await MYAPI.get("//get_all_authors");
+      allAuthors.value = authorRes.data;
     }
 
-    // Load authors only once
-    if (allAuthors.value.length === 0) {
-      res = await MYAPI.get("/get_all_authors");
-      allAuthors.value = res.data;
+    // If a specific author is selected, fetch their videos
+    if (selectedAuthor.value) {
+      const videoRes = await MYAPI.get("//get_all_videos", params);
+      if (videoRes["status"] == "success") {
+        const newVideos = videoRes.data.data;
+        total.value = videoRes.data.total;
+
+        if (isAppend) {
+          allVideos.value = [...allVideos.value, ...newVideos];
+        } else {
+          allVideos.value = newVideos;
+        }
+
+        hasMore.value =
+          newVideos.length === page_size.value &&
+          allVideos.value.length < total.value;
+      } else {
+        ElMessage({
+          type: videoRes["status"],
+          message: videoRes["message"],
+        });
+      }
+    } else {
+      // When 'all' is selected, we don't fetch videos, just clear the list
+      allVideos.value = [];
+      total.value = 0;
+      hasMore.value = false;
     }
   } catch (error) {
-    console.error("Error fetching videos:", error);
+    console.error("Error fetching data:", error);
     ElMessage({
       type: "error",
-      message: "載入影片時發生錯誤",
+      message: "載入資料時發生錯誤",
     });
   } finally {
     isLoading.value = false;
@@ -218,7 +265,7 @@ onMounted(async () => {
   const author_id = route.query.author;
   if (author_id) {
     selectedAuthor.value = author_id;
-    activeTab.value = Number(author_id);
+    activeTab.value = author_id;
   } else {
     activeTab.value = "all";
   }
@@ -245,9 +292,11 @@ onUnmounted(() => {
 .gradient-text-tech-animated :deep(.el-tabs__item) {
   background: linear-gradient(120deg, #4caf50, #2196f3, #673ab7, #4caf50);
   background-size: 300% 100%;
-  -webkit-background-clip: text; /* 為了 Safari 瀏覽器 */
+  -webkit-background-clip: text;
+  /* 為了 Safari 瀏覽器 */
   background-clip: text;
-  color: transparent; /* 文字顏色設為透明，顯示背景漸層 */
+  color: transparent;
+  /* 文字顏色設為透明，顯示背景漸層 */
   animation: gradient-animation 8s ease infinite;
   font-weight: bold;
 }
@@ -256,9 +305,11 @@ onUnmounted(() => {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -266,5 +317,38 @@ onUnmounted(() => {
 
 :deep(.el-tabs__content) {
   display: none;
+}
+
+.thumbnail-background::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* 变淡效果：50% 透明度的白色叠加层 */
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.thumbnail-text {
+  position: relative;
+  z-index: 2;
+  /* 确保文字在半透明层之上 */
+
+  color: white;
+  /* 文字颜色设置为白色 */
+
+  /* 使用 text-shadow 模拟黑框 (描边) */
+  /* 设置四个方向的黑色阴影，偏移量和模糊半径为 0 */
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+:deep(.el-card__body) {
+  height: 100%;
+  width: 100%;
 }
 </style>
