@@ -25,14 +25,14 @@
             class="flex cursor-pointer flex-col hover:scale-105"
             @click="handleAuthorSelect(author.id)"
           >
-            <el-card
-              class="h-42 w-80 md:w-96"
-              shadow="hover"
-              style="background-size: cover; background-position: top"
-              :style="{
-                backgroundImage: `url('/thumbnails/${author.name}.jpg')`,
-              }"
-            >
+            <el-card class="h-52 w-80 p-0 md:w-96" shadow="hover">
+              <NuxtImg
+                :src="`/thumbnails/${author.name}.jpg`"
+                class="h-full w-full"
+                :alt="author.name"
+                position="top"
+                style="object-fit: cover; object-position: top"
+              />
             </el-card>
             <div class="text-lg font-bold">
               {{ author.name }} - {{ author.song_count }} 首
@@ -345,5 +345,6 @@ onUnmounted(() => {
 :deep(.el-card__body) {
   height: 100%;
   width: 100%;
+  padding: 0px;
 }
 </style>

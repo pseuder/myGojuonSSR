@@ -18,6 +18,7 @@ export default defineNuxtConfig({
     "@nuxtjs/i18n",
     "@nuxtjs/tailwindcss",
     "nuxt-gtag",
+    "@nuxt/image",
   ],
   site: {
     url: process.env.NUXT_PUBLIC_SITE_BASE,
