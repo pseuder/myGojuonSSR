@@ -218,13 +218,13 @@ const fetchVideos = async (isAppend = false) => {
   try {
     // Fetch authors first if not already loaded
     if (allAuthors.value.length === 0) {
-      const authorRes = await MYAPI.get("//get_all_authors");
+      const authorRes = await MYAPI.get("/get_all_authors");
       allAuthors.value = authorRes.data;
     }
 
     // If a specific author is selected, fetch their videos
     if (selectedAuthor.value) {
-      const videoRes = await MYAPI.get("//get_all_videos", params);
+      const videoRes = await MYAPI.get("/get_all_videos", params);
       if (videoRes["status"] == "success") {
         const newVideos = videoRes.data.data;
         total.value = videoRes.data.total;
