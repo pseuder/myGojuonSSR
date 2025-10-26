@@ -486,6 +486,18 @@ const autoDetect = (predict_res) => {
   }
 
   try {
+    const dataToSend = {
+      learningModule: "listening",
+      learningMethod: "predict",
+      learningItem: currentKana,
+      correctness: isCorrect,
+    };
+
+    // 發送數據到後端
+    MYAPI.post("/record_activity", dataToSend).catch((error) => {
+      console.error("Error recording activity:", error);
+    });
+
     gtag("event", "學習行為", {
       使用模組: "聽寫練習",
       模組功能: "影像辨識",

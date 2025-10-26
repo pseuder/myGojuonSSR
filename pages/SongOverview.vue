@@ -56,6 +56,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="mb-2 block w-full"
+                @click="handleVideoClick(video.source_id)"
               >
                 <img
                   :src="
@@ -163,6 +164,19 @@ const handleAuthorSelect = (authorId) => {
   const authorIdStr = String(authorId);
   activeTab.value = authorIdStr;
   handleTabChange(authorIdStr);
+};
+
+const handleVideoClick = (source_id) => {
+  const dataToSend = {
+    learningModule: "song",
+    learningMethod: "get_video",
+    learningItem: source_id,
+  };
+
+  // 發送數據到後端
+  MYAPI.post("/record_activity", dataToSend).catch((error) => {
+    console.error("Error recording activity:", error);
+  });
 };
 
 const handleTabChange = async (tabName) => {
