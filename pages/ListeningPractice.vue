@@ -509,12 +509,24 @@ const autoDetect = (predict_res) => {
 
 // 檢查假名是否匹配
 const areEqual = (strA, strB) => {
-  return (
-    strA
-      .replace(/\s/g, "")
-      .localeCompare(strB.replace(/\s/g, ""), "ja", { sensitivity: "base" }) ===
-    0
-  );
+  // 1. 先對字串進行規範化 (去除空格)
+  const normalizedA = strA.replace(/\s/g, "");
+  const normalizedB = strB.replace(/\s/g, "");
+
+  // 2. 嚴格比較 (您的原始邏輯 - 不考慮大小寫/重音)
+  const isStrictlyEqual =
+    normalizedA.localeCompare(normalizedB, "ja", {
+      sensitivity: "base",
+    }) === 0;
+
+  if (isStrictlyEqual) {
+    return true; // 如果嚴格相等，直接返回 true
+  }
+
+  // 3. 部分包含檢查 (新的機制)
+  const isPartialMatch = normalizedB.includes(normalizedA);
+
+  return isPartialMatch;
 };
 
 const checkKanaMatch = (currentKana, predictedKana) => {
