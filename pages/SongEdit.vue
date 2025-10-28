@@ -647,8 +647,10 @@ const startVideoOn = (time2) => {
 // 重新載入 YouTube
 const handleReloadYT = () => {
   if (!videoId.value) return;
+
   if (player) {
     player.loadVideoById(videoId.value);
+    player.playVideo();
   }
 };
 
@@ -747,6 +749,11 @@ const initializePlayer = async () => {
         setInterval(updateCurrentLyric, 100); // Check every 100ms
         event.target.setPlaybackRate(playbackRate.value);
         window.player = event.target;
+
+        // 自動載入 YouTube 影片
+        if (videoId.value) {
+          handleReloadYT();
+        }
       },
       onStateChange: (event) => {
         isPlaying.value = event.data === YT.PlayerState.PLAYING;
@@ -1033,11 +1040,6 @@ const loadVideoFromApi = async (videoIdParam) => {
         }
       }
 
-      // 自動載入 YouTube 影片
-      if (videoId.value) {
-        handleReloadYT();
-      }
-
       ElMessage.success("影片資料載入成功");
       recordActivity("auto_load_video", videoTitle.value);
     } else {
@@ -1102,7 +1104,13 @@ const handlePublishSong = async () => {
 // 保存歌曲
 const saveVideo = async () => {
   try {
-    const res = await MYAPI.post("/upsert_video", formData.value);
+    // 複製一份 formData 以避免直接修改響應式對象
+    const formDataCopy = JSON.parse(JSON.stringify(formData.value));
+
+    // 將id轉為int
+    formDataCopy.id = parseInt(formDataCopy.id) || 0;
+
+    const res = await MYAPI.post("/upsert_video", formDataCopy);
 
     if (res["status"] === "success") {
       ElMessage({

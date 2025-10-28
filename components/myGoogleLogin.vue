@@ -66,15 +66,15 @@ const handleLoginCallback = async (response) => {
     // 更新全局狀態和 localStorage
     setLoginInfo(res.data.token, { email, name, picture, sub });
 
-    ElMessage.success("Login Success!");
+    ElMessage.success("登入成功!");
   } catch (error) {
     console.error("登入時發生錯誤:", error);
-    ElMessage.error("Login Failed!");
+    ElMessage.error("登入失敗!");
   }
 };
 
 const handleLogout = () => {
   logout();
-  ElMessage.info(t("logout_success"));
+  ElMessage.info("已登出");
 };
 </script>

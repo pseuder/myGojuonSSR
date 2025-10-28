@@ -197,6 +197,7 @@ const sendCanvasImageToBackend = async () => {
         "Content-Type": "multipart/form-data",
       },
     });
+    console.log("Auto-detect response:", response);
     emit("autoDetect", response);
   } catch (error) {
     console.error(error);

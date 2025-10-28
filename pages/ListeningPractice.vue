@@ -470,6 +470,7 @@ const autoDetect = (predict_res) => {
 
   if (predict_res.status == "error") {
     ElMessage.error(predict_res["message"] ?? "伺服器錯誤");
+    return;
   }
 
   const { predicted_hiragana, confidence } = predict_res.data;
@@ -495,11 +496,6 @@ const autoDetect = (predict_res) => {
       learningItem: currentKana,
       correctness: isCorrect,
     };
-
-    // 發送數據到後端
-    MYAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
-    });
 
     gtag("event", "學習行為", {
       使用模組: "聽寫練習",

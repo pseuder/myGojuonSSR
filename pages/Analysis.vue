@@ -32,23 +32,18 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="username" label="使用者名稱" min-width="100" />
-      <el-table-column prop="learningModule" label="學習模組" />
-      <el-table-column prop="learningMethod" label="學習方式" min-width="120" />
-      <el-table-column prop="learningItem" label="學習項目" min-width="120" />
-      <el-table-column prop="ip_address" label="IP" min-width="140" />
-      <el-table-column prop="country" label="國家" min-width="100" />
-      <el-table-column prop="city" label="城市" min-width="150" />
-      <el-table-column label="首次建立" min-width="200">
-        <template #default="scope">
-          {{ formatDate(scope.row.min_created_at) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="建立時間" min-width="200">
-        <template #default="scope">
-          {{ formatDate(scope.row.created_at) }}
-        </template>
-      </el-table-column>
+      <el-table-column prop="user_name" label="使用者名稱" min-width="100" />
+      <el-table-column
+        prop="user_email"
+        label="使用者電子郵件"
+        min-width="150"
+      />
+      <el-table-column prop="country" label="國家" min-width="80" />
+      <el-table-column prop="city" label="城市" min-width="80" />
+      <el-table-column prop="source_char" label="來源字元" min-width="50" />
+      <el-table-column prop="recognized_char" label="辨識字元" min-width="50" />
+      <el-table-column prop="correctness" label="正確率" min-width="50" />
+      <el-table-column prop="created_at" label="建立時間" min-width="150" />
 
       <!-- 根據首次建立和建立計算使用天數 -->
       <el-table-column label="使用天數" min-width="100">
@@ -168,10 +163,9 @@ const formatDate = (dateString) => {
 const showUserDetail = async (row) => {
   try {
     // 使用user_id+ip_address查詢使用者詳情
-    const response = await MYAPI.get("/fetch_user_activity", {
+    const response = await MYAPI.get("/get_recognition_activity", {
       user_id: row.user_id,
       ip_address: row.ip_address,
-      isSpecialSearch: isSpecialSearch.value,
     });
     userDetailData.value = response.data;
     dialogVisible.value = true;
@@ -201,14 +195,11 @@ const fetchData = async () => {
       isSpecialSearch: isSpecialSearch.value,
     };
 
-    const response = await MYAPI.get("/fetch_all_user_activity", params);
+    const response = await MYAPI.get("/get_recognition_activity", params);
     tableData.value = response.data;
 
     // 僅在初始化或搜尋時獲取總數
-    if (totalCount.value === 0) {
-      const res = await MYAPI.get("/fetch_all_user_activity_count", params);
-      totalCount.value = res.data;
-    }
+    totalCount.value = 0;
 
     loading.value = false;
   } catch (error) {
