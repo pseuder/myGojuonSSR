@@ -38,5 +38,8 @@ const handleSelect = (lang) => {
   setLocale(lang);
   localStorage.setItem("myGojuon_lang", JSON.stringify({ locale: lang }));
   emit("update:locale", lang);
+
+  // 重整頁面避免因為長度變成跑版
+  setTimeout(() => location.reload(), 500);
 };
 </script>
