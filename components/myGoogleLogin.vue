@@ -11,11 +11,14 @@
           popper-class="logout-popover"
         >
           <template #reference>
-            <div class="w-20 cursor-pointer text-blue-400 hover:text-blue-600">
+            <div
+              class="w-20 cursor-pointer truncate text-blue-400 hover:text-blue-600"
+            >
               {{ user.name }}
             </div>
           </template>
-          <div class="flex flex-col items-center">
+          <div class="flex flex-col items-center gap-2">
+            <div>{{ t("left_points") }}: ∞</div>
             <el-button
               @click="handleLogout"
               type="danger"
@@ -66,15 +69,15 @@ const handleLoginCallback = async (response) => {
     // 更新全局狀態和 localStorage
     setLoginInfo(res.data.token, { email, name, picture, sub });
 
-    ElMessage.success("登入成功!");
+    ElMessage.success(t("login_success"));
   } catch (error) {
     console.error("登入時發生錯誤:", error);
-    ElMessage.error("登入失敗!");
+    ElMessage.error(t("login_fail"));
   }
 };
 
 const handleLogout = () => {
   logout();
-  ElMessage.info("已登出");
+  ElMessage.success(t("logout_success"));
 };
 </script>

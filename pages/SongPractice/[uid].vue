@@ -371,11 +371,11 @@ const playNextSong = () => {
   const nextIndex = currentVideoIndexInAuthorList.value + 1;
   if (nextIndex < authorFilteredVideos.value.length) {
     const nextSong = authorFilteredVideos.value[nextIndex];
-    ElMessage.info(`即將播放下一首: ${nextSong.name}`);
+    ElMessage.info(`${t("play_next_song")}: ${nextSong.name}`);
     // [變更] 使用 Nuxt router 導航
     router.push(`/SongPractice/${nextSong.source_id}`);
   } else {
-    ElMessage.info("已是此歌手的最後一首歌，將從頭播放目前歌曲。");
+    ElMessage.info(t("last_song_and_replay"));
     if (player && player.seekTo) player.seekTo(0);
   }
 };

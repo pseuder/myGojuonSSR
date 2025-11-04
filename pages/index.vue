@@ -59,6 +59,71 @@
         </el-button>
       </div>
 
+      <!-- 聯絡方式 -->
+
+      <section class="my-10 flex flex-col">
+        <h2 class="mb-4 text-2xl font-bold text-indigo-700">
+          {{ t("feedback_and_feature_request") }}
+        </h2>
+
+        <div class="flex flex-col gap-2">
+          <!-- 線上留言 -->
+          <div
+            class="my-4 flex w-fit items-center gap-4"
+            @click="showContactForm = true"
+          >
+            <el-button type="warning" class="" plain circle>
+              <el-icon :size="20"><ChatLineRound /></el-icon>
+            </el-button>
+            <span class="pointer-cursor mb-2 text-[#e6a23c]">{{
+              t("anonymous_feedback")
+            }}</span>
+          </div>
+
+          <!-- gmail -->
+          <div
+            class="my-4 flex flex-col gap-4"
+            @click="handleReportClick('gmail')"
+          >
+            <div class="flex items-center gap-4">
+              <a
+                href="mailto:iop890520@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="/images/gmail.png"
+                  alt="gmail"
+                  class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
+                />
+              </a>
+              <span>iop890520@gmail.com</span>
+            </div>
+          </div>
+
+          <!-- fb -->
+          <div
+            class="my-4 flex flex-col gap-4"
+            @click="handleReportClick('facebook')"
+          >
+            <div class="flex items-center gap-4">
+              <a
+                href="https://www.facebook.com/Pseuder/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="/images/facebook.png"
+                  alt="facebook"
+                  class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
+                />
+              </a>
+              <span>https://www.facebook.com/Pseuder</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Powered by -->
       <section class="my-10">
         <div class="flex flex-col gap-4">
@@ -147,72 +212,6 @@
           </div>
         </div>
       </section>
-
-      <!-- 聯絡方式 -->
-
-      <section class="my-10 flex flex-col">
-        <h2 class="mb-4 text-2xl font-bold text-indigo-700">
-          {{ t("feedback_and_feature_request") }}
-        </h2>
-
-        <div class="flex flex-col gap-2">
-          <!-- 線上留言 -->
-          <div class="my-4 flex items-center gap-4">
-            <el-button
-              type="warning"
-              @click="showContactForm = true"
-              class=""
-              plain
-              circle
-            >
-              <el-icon :size="20"><ChatLineRound /></el-icon>
-            </el-button>
-            <span class="mb-2">線上匿名留言</span>
-          </div>
-
-          <!-- gmail -->
-          <div
-            class="my-4 flex flex-col gap-4"
-            @click="handleReportClick('gmail')"
-          >
-            <div class="flex items-center gap-4">
-              <a
-                href="mailto:iop890520@gmail.com"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="/images/gmail.png"
-                  alt="gmail"
-                  class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
-                />
-              </a>
-              <span>iop890520@gmail.com</span>
-            </div>
-          </div>
-
-          <!-- fb -->
-          <div
-            class="my-4 flex flex-col gap-4"
-            @click="handleReportClick('facebook')"
-          >
-            <div class="flex items-center gap-4">
-              <a
-                href="https://www.facebook.com/Pseuder/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="/images/facebook.png"
-                  alt="facebook"
-                  class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
-                />
-              </a>
-              <span>https://www.facebook.com/Pseuder</span>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
     <ContactForm :visible="showContactForm" @close="showContactForm = false" />
   </div>
@@ -292,5 +291,11 @@ const handleReportClick = (item) => {
   100% {
     background-position: 0% 50%;
   }
+}
+
+pre {
+  white-space: pre-wrap; /* 保留空白,但允許換行 */
+  word-wrap: break-word; /* 單詞過長時強制斷行 */
+  overflow-wrap: break-word; /* 更現代的屬性 */
 }
 </style>

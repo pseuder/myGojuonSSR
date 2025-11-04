@@ -48,6 +48,7 @@
   "kanji": "漢字",
   "kanji_source": "漢字來源",
   "auto_play": "自動播放",
+  "example_size": "範例大小",
   "sequential": "循序",
   "random": "隨機",
   "switch_to_sequential": "已切換到循序模式",
@@ -86,5 +87,15 @@
   "special_learning_list_empty_switch_hiragana": "特別學習清單已空，切換回平假名",
   "clear_special_learning_list_confirm": "確定清空特別學習清單？",
   "special_learning_list_cleared": "特別學習清單已清空",
-  "special_learning": "特別學習"
+  "special_learning": "特別學習",
+  "anonymous_feedback": "匿名回饋",
+  "login_success": "登入成功",
+  "login_fail": "登入失敗",
+  "logout_success": "登出成功",
+  "logout_fail": "登出失敗",
+  "songs": "首",
+  "supports_stylus": "支援使用觸控筆直接書寫",
+  "left_points": "剩餘點數",
+  "play_next_song": "即將播放下一首",
+  "last_song_and_replay": "已是此歌手的最後一首歌，將從頭播放目前歌曲"
 }

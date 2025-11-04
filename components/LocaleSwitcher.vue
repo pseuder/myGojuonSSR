@@ -25,16 +25,17 @@
 import { computed, defineEmits } from "vue";
 import { useI18n } from "vue-i18n";
 
-const { locale } = useI18n();
+const { locale, setLocale } = useI18n();
 const currentLocale = computed(() => locale.value);
 
 const LOCALE_TW = "zh-TW";
-const LOCALE_EN = "en-US";
+const LOCALE_EN = "en";
 
 const emit = defineEmits(["update:locale"]);
 
 const handleSelect = (lang) => {
-  locale.value = lang;
+  // locale.value = lang;
+  setLocale(lang);
   localStorage.setItem("myGojuon_lang", JSON.stringify({ locale: lang }));
   emit("update:locale", lang);
 };

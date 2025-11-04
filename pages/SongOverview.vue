@@ -2,7 +2,7 @@
   <div class="flex h-[88vh] w-full flex-col p-2 lg:h-full">
     <div class="mb-4 flex-none">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="w-full">
-        <el-tab-pane label="全部" name="all"> </el-tab-pane>
+        <el-tab-pane label="ALL" name="all"> </el-tab-pane>
         <el-tab-pane
           v-for="author in allAuthors"
           :key="author.id"
@@ -35,7 +35,7 @@
               />
             </el-card>
             <div class="text-lg font-bold">
-              {{ author.name }} - {{ author.song_count }} 首
+              {{ author.name }} - {{ author.song_count }} {{ t("songs") }}
             </div>
           </div>
         </template>
@@ -109,6 +109,9 @@
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { Loading } from "@element-plus/icons-vue";
+
+import { useI18n } from "vue-i18n";
+const { t, locale } = useI18n();
 
 const MYAPI = useApi();
 

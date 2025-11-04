@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full flex-col gap-4 px-4 py-4 md:flex-row">
+  <div class="flex h-full flex-col gap-4 px-4 py-4 lg:flex-row">
     <!-- 50音列表 -->
     <div class="w-full" :key="activeTab">
       <h2 class="mb-3 text-xl font-semibold">
@@ -43,7 +43,7 @@
             class="inline-flex flex-col items-center text-3xl font-bold sm:text-5xl"
             :title="t('japanese')"
           >
-            <span class="text-[12px] text-gray-600">日文字</span>
+            <span class="text-[12px] text-gray-600"> {{ t("japanese") }}</span>
             <span>{{ selectedSound.kana }}</span>
           </div>
           <!-- 羅馬字 -->
@@ -51,7 +51,7 @@
             class="inline-flex flex-col items-center text-3xl font-bold sm:text-4xl"
             :title="t('romaji')"
           >
-            <span class="text-[12px] text-gray-600">羅馬拼音</span>
+            <span class="text-[12px] text-gray-600"> {{ t("romaji") }}</span>
             <span>{{ selectedSound.romaji }}</span>
           </div>
           <!-- 漢字來源 -->
@@ -59,7 +59,9 @@
             class="inline-flex flex-col items-center text-3xl font-bold sm:text-4xl"
             :title="t('kanji_source')"
           >
-            <span class="text-[12px] text-gray-600">漢字來源</span>
+            <span class="text-[12px] text-gray-600">
+              {{ t("kanji_source") }}</span
+            >
             <span>{{ selectedSound.evo }}</span>
           </div>
 
@@ -130,9 +132,9 @@ const autoPlay = ref(false);
 const tabs = [
   { name: "hiragana", label: "hiragana" },
   { name: "katakana", label: "katakana" },
-  { name: "dakuon", label: "voiced_sounds" },
-  { name: "handakuon", label: "semi_voiced_sounds" },
-  { name: "yoon", label: "contracted_sounds" },
+  { name: "dakuon", label: "dakuon" },
+  { name: "handakuon", label: "handakuon" },
+  { name: "yoon", label: "yoon" },
 ];
 
 const currentSounds = computed(() =>

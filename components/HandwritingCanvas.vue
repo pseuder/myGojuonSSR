@@ -1,7 +1,7 @@
 <template>
   <div class="select-none" ref="canvasContainer">
     <div class="flex grow gap-2" v-if="showExample">
-      <span class="flex-shrink-0">範例大小</span>
+      <span class="flex-shrink-0">{{ t("example_size") }}</span>
       <el-slider v-model="exampleScale" />
     </div>
     <div class="my-2 flex items-center justify-end gap-2">
@@ -12,7 +12,10 @@
       </div>
 
       <div class="flex-grow">
-        <el-tooltip content="可以使用觸控筆直接書寫" placement="bottom">
+        <el-tooltip placement="bottom">
+          <template #content>
+            {{ t("supports_stylus") }}
+          </template>
           <span id="pen-info" title="">？</span>
         </el-tooltip>
       </div>

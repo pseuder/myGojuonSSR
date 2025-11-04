@@ -31,13 +31,19 @@ export default defineNuxtConfig({
   },
   i18n: {
     langDir: "locales",
-    strategy: "prefix_except_default",
+    strategy: "no_prefix",
     locales: [
       {
         code: "zh-TW",
         iso: "zh-TW",
         name: "繁體中文",
         file: "TW.json",
+      },
+      {
+        code: "en",
+        iso: "en",
+        name: "English",
+        file: "EN.json",
       },
     ],
     defaultLocale: "zh-TW",
