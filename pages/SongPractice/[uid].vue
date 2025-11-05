@@ -162,6 +162,7 @@ const { t } = useI18n();
 const MYAPI = useApi();
 const router = useRouter();
 const route = useRoute();
+const localePath = useLocalePath();
 
 const { gtag } = useGtag();
 
@@ -410,7 +411,7 @@ const playNextSong = () => {
     const nextSong = authorFilteredVideos.value[nextIndex];
     ElMessage.info(`${t("play_next_song")}: ${nextSong.name}`);
     // [變更] 使用 Nuxt router 導航
-    router.push(`/SongPractice/${nextSong.source_id}`);
+    router.push(localePath(`/SongPractice/${nextSong.source_id}`));
   } else {
     ElMessage.info(t("last_song_and_replay"));
     if (player && player.seekTo) player.seekTo(0);

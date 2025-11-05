@@ -4,12 +4,9 @@
     <div class="w-full" :key="activeTab">
       <h2 class="mb-3 text-xl font-semibold">
         <el-tabs v-model="activeTab" class="w-fill mb-4 lg:max-w-md">
-          <el-tab-pane
-            v-for="tab in tabs"
-            :key="tab.name"
-            :label="t(tab.label)"
-            :name="tab.name"
-          />
+          <template v-for="tab in tabs" :key="tab.name">
+            <el-tab-pane :label="t(tab.label)" :name="tab.name" />
+          </template>
         </el-tabs>
       </h2>
       <div
@@ -131,7 +128,8 @@ useSeoMeta({
   ogTitle: () => t("page_meta.writing_practice.title"),
   ogDescription: () => t("page_meta.writing_practice.description"),
   ogImage: `${siteUrl}/favicon.png`,
-  ogUrl: () => `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/WritingPractice`,
+  ogUrl: () =>
+    `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/WritingPractice`,
   twitterTitle: () => t("page_meta.writing_practice.title"),
   twitterDescription: () => t("page_meta.writing_practice.description"),
   twitterImage: `${siteUrl}/favicon.png`,
@@ -148,8 +146,8 @@ useHead({
         getCourseSchema(
           t("page_meta.writing_practice.title"),
           t("page_meta.writing_practice.description"),
-          pageUrl
-        )
+          pageUrl,
+        ),
       ),
     },
     {
@@ -158,7 +156,7 @@ useHead({
         getBreadcrumbSchema([
           { name: t("home"), url: siteUrl },
           { name: t("handwriting_practice"), url: pageUrl },
-        ])
+        ]),
       ),
     },
   ],

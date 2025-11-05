@@ -37,13 +37,13 @@
         class="my-10 flex flex-col justify-center gap-4 text-center md:flex-row"
       >
         <el-button
-          @click="router.push('/WritingPractice')"
+          @click="router.push(localePath('/WritingPractice'))"
           class="rounded-lg bg-indigo-600 px-6 py-6 text-xl text-white transition duration-300 hover:bg-indigo-700"
         >
           {{ t("start_handwriting_practice") }}
         </el-button>
         <el-button
-          @click="router.push('/ListeningPractice')"
+          @click="router.push(localePath('/ListeningPractice'))"
           style="margin-left: 0px"
           class="rounded-lg bg-indigo-600 px-6 py-6 text-xl text-white transition duration-300 hover:bg-indigo-700"
         >
@@ -51,7 +51,7 @@
         </el-button>
 
         <el-button
-          @click="router.push('/SongOverview')"
+          @click="router.push(localePath('/SongOverview'))"
           style="margin-left: 0px"
           class="rounded-lg bg-indigo-600 px-6 py-6 text-xl text-white transition duration-300 hover:bg-indigo-700"
         >
@@ -207,7 +207,7 @@
             <el-button
               :icon="VideoCameraFilled"
               circle
-              @click="router.push('/songEdit')"
+              @click="router.push(localePath('/songEdit'))"
             />
           </div>
         </div>
@@ -225,6 +225,7 @@ import ContactForm from "~/components/ContactForm.vue";
 import { VideoCameraFilled, ChatLineRound } from "@element-plus/icons-vue";
 
 const router = useRouter();
+const localePath = useLocalePath();
 const showContactForm = ref(false);
 
 import { useI18n } from "vue-i18n";

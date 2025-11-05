@@ -3,16 +3,16 @@
     <nav class="flex w-full">
       <div class="user-select-none w-[50%] grow">
         <el-menu :default-active="activeIndex" mode="horizontal" router>
-          <MenuItem index="/" :label="t('home')" />
+          <MenuItem :index="localePath('/')" :label="t('home')" />
           <MenuItem
-            index="/WritingPractice"
+            :index="localePath('/WritingPractice')"
             :label="t('handwriting_practice')"
           />
           <MenuItem
-            index="/ListeningPractice"
+            :index="localePath('/ListeningPractice')"
             :label="t('dictation_practice')"
           />
-          <MenuItem index="/SongOverview" :label="t('song_practice')" />
+          <MenuItem :index="localePath('/SongOverview')" :label="t('song_practice')" />
         </el-menu>
       </div>
       <div class="flex w-fit items-center gap-4">
@@ -52,6 +52,7 @@ const { initializeAuth, user } = useAuth();
 initializeAuth();
 
 const { t, locale } = useI18n();
+const localePath = useLocalePath();
 const route = useRoute();
 const activeIndex = ref("/");
 
@@ -60,7 +61,9 @@ const isAdmin = computed(() => user.value?.email === "iop890520@gmail.com");
 watch(
   () => route.path,
   (newPath) => {
-    activeIndex.value = newPath;
+    // 使用 localePath 確保 activeIndex 包含正確的語言前綴
+    const basePath = newPath.replace(/^\/(en|zh-TW)/, "") || "/";
+    activeIndex.value = localePath(basePath);
   },
   { immediate: true },
 );

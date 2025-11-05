@@ -112,6 +112,7 @@ import { Loading } from "@element-plus/icons-vue";
 
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
+const localePath = useLocalePath();
 
 const MYAPI = useApi();
 const config = useRuntimeConfig();
@@ -203,7 +204,7 @@ const handleScroll = () => {
 
 // 輔助函式: 解析路由
 const resolveVideoUrl = (source_id) => {
-  return "/SongPractice/" + source_id;
+  return localePath("/SongPractice/" + source_id);
 };
 
 const handleAuthorSelect = (authorId) => {
