@@ -162,6 +162,16 @@
                     <Plus />
                   </el-icon>
                 </el-button>
+
+                <el-button
+                  type="text"
+                  class="text-sm text-blue-500"
+                  @click="handleDuplicateLyricLine(index)"
+                >
+                  <el-icon :size="25" color="blue">
+                    <CopyDocument />
+                  </el-icon>
+                </el-button>
               </div>
 
               <input
@@ -343,7 +353,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { Delete, Switch, Plus } from "@element-plus/icons-vue";
+import { Delete, Switch, Plus, CopyDocument } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 const MYAPI = useApi();
 const route = useRoute();
@@ -541,6 +551,12 @@ const handleAddNewLyricLine = (lyricIndex) => {
     timestamp: "",
     lyrics: [{ cvt: "", ori: "" }],
   });
+};
+
+const handleDuplicateLyricLine = (lyricIndex) => {
+  const lineToDuplicate = allLyrics.value[lyricIndex];
+  const duplicatedLine = JSON.parse(JSON.stringify(lineToDuplicate));
+  allLyrics.value.splice(lyricIndex + 1, 0, duplicatedLine);
 };
 
 //-- 複製歌詞 --//
