@@ -40,6 +40,13 @@ const handleSelect = (lang) => {
   emit("update:locale", lang);
 
   // 重整頁面避免因為長度變成跑版
-  setTimeout(() => location.reload(), 500);
+  const isMobile = /mobile|android|iphone|ipad|ipod|phone|tablet/i.test(
+    navigator.userAgent.toLowerCase(),
+  );
+  const isNarrow = window.innerWidth < 800;
+
+  if (isMobile && isNarrow) {
+    setTimeout(() => location.reload(), 500);
+  }
 };
 </script>
