@@ -114,6 +114,49 @@ import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 
 const MYAPI = useApi();
+const config = useRuntimeConfig();
+const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+
+// 歌曲總覽頁面專屬 SEO Meta
+useSeoMeta({
+  title: () => t("page_meta.song_overview.title"),
+  description: () => t("page_meta.song_overview.description"),
+  keywords: () => t("meta.keywords"),
+  ogTitle: () => t("page_meta.song_overview.title"),
+  ogDescription: () => t("page_meta.song_overview.description"),
+  ogImage: `${siteUrl}/favicon.png`,
+  ogUrl: () => `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/SongOverview`,
+  twitterTitle: () => t("page_meta.song_overview.title"),
+  twitterDescription: () => t("page_meta.song_overview.description"),
+  twitterImage: `${siteUrl}/favicon.png`,
+});
+
+// 添加結構化資料
+const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
+const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/SongOverview`;
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getCourseSchema(
+          t("page_meta.song_overview.title"),
+          t("page_meta.song_overview.description"),
+          pageUrl
+        )
+      ),
+    },
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getBreadcrumbSchema([
+          { name: t("home"), url: siteUrl },
+          { name: t("song_practice"), url: pageUrl },
+        ])
+      ),
+    },
+  ],
+});
 
 const router = useRouter();
 const route = useRoute();

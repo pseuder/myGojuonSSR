@@ -259,6 +259,50 @@ const MYAPI = useApi();
 
 const { gtag } = useGtag();
 
+const config = useRuntimeConfig();
+const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+
+// 聽寫練習頁面專屬 SEO Meta
+useSeoMeta({
+  title: () => t("page_meta.listening_practice.title"),
+  description: () => t("page_meta.listening_practice.description"),
+  keywords: () => t("meta.keywords"),
+  ogTitle: () => t("page_meta.listening_practice.title"),
+  ogDescription: () => t("page_meta.listening_practice.description"),
+  ogImage: `${siteUrl}/favicon.png`,
+  ogUrl: () => `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/ListeningPractice`,
+  twitterTitle: () => t("page_meta.listening_practice.title"),
+  twitterDescription: () => t("page_meta.listening_practice.description"),
+  twitterImage: `${siteUrl}/favicon.png`,
+});
+
+// 添加結構化資料
+const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
+const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/ListeningPractice`;
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getCourseSchema(
+          t("page_meta.listening_practice.title"),
+          t("page_meta.listening_practice.description"),
+          pageUrl
+        )
+      ),
+    },
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getBreadcrumbSchema([
+          { name: t("home"), url: siteUrl },
+          { name: t("dictation_practice"), url: pageUrl },
+        ])
+      ),
+    },
+  ],
+});
+
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
 const selectedSound = ref({

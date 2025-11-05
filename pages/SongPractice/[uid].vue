@@ -225,25 +225,62 @@ const lyrics = computed(() => {
 });
 
 // 當 currentVideo 變化時，meta 標籤會自動更新
+const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+const songImageUrl = computed(() =>
+  currentVideo.value?.source_id
+    ? `https://i.ytimg.com/vi/${currentVideo.value.source_id}/hqdefault.jpg`
+    : `${siteUrl}/favicon.png`,
+);
+
 useSeoMeta({
   title: () =>
-    `${currentVideo.value?.name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
+    `日語50音學習網站 ${currentVideo.value?.name} - ${currentVideo.value?.author}`,
   description: () =>
-    `${currentVideo.value?.name} by ${currentVideo.value?.author} 平假名歌詞對照`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`,
   keywords: () =>
-    `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 歌曲, 歌詞`,
+    `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 歌曲, 歌詞, KTV`,
   ogTitle: () =>
-    `${currentVideo.value?.name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
+    `日語50音學習網站 ${currentVideo.value?.name} - ${currentVideo.value?.author}`,
   ogDescription: () =>
-    `${currentVideo.value?.name} by ${currentVideo.value?.author} 平假名歌詞對照`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`,
   twitterCard: "summary",
 });
 
 // 使用 useHead 處理 JSON-LD 結構化數據
+const { getVideoSchema, getBreadcrumbSchema } = useStructuredData();
 useHead({
   // 處理 YouTube API script 的載入
   script: [
     { src: "https://www.youtube.com/iframe_api", async: true, defer: true },
+    // 添加 VideoObject 結構化資料
+    {
+      type: "application/ld+json",
+      children: () => {
+        if (currentVideo.value) {
+          return JSON.stringify(getVideoSchema(currentVideo.value));
+        }
+        return "";
+      },
+    },
+    // 添加麵包屑結構化資料
+    {
+      type: "application/ld+json",
+      children: () => {
+        if (currentVideo.value) {
+          return JSON.stringify(
+            getBreadcrumbSchema([
+              { name: t("home"), url: siteUrl },
+              { name: t("song_practice"), url: `${siteUrl}/SongOverview` },
+              {
+                name: `${currentVideo.value.name} - ${currentVideo.value.author}`,
+                url: `${siteUrl}/SongPractice/${route.params.uid}`,
+              },
+            ]),
+          );
+        }
+        return "";
+      },
+    },
   ],
 });
 

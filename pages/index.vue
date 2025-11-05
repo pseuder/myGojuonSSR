@@ -93,7 +93,7 @@
               >
                 <img
                   src="/images/gmail.png"
-                  alt="gmail"
+                  :alt="t('feedback_and_feature_request') + ' - Gmail'"
                   class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
                 />
               </a>
@@ -114,7 +114,7 @@
               >
                 <img
                   src="/images/facebook.png"
-                  alt="facebook"
+                  :alt="t('feedback_and_feature_request') + ' - Facebook'"
                   class="h-8 w-8 text-red-400 transition-opacity hover:opacity-80"
                 />
               </a>
@@ -137,7 +137,7 @@
             >
               <img
                 src="/images/vuejs.svg"
-                alt="vuejs"
+                alt="Vue.js Framework - Powered by Vue.js"
                 class="h-10 w-10 text-red-400 transition-opacity hover:opacity-80"
               />
             </a>
@@ -163,7 +163,7 @@
             >
               <img
                 src="/images/tailwindcss.svg"
-                alt="tailwindcss"
+                alt="Tailwind CSS Framework - Styled with Tailwind"
                 class="h-10 w-10 transition-opacity hover:opacity-80"
               />
             </a>
@@ -231,6 +231,8 @@ import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 
 const { gtag } = useGtag();
+const config = useRuntimeConfig();
+const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
 const handleReportClick = (item) => {
   gtag("event", "其他", {
@@ -240,8 +242,38 @@ const handleReportClick = (item) => {
   });
 };
 
-// onMounted(updateMeta);
-// watch(locale, updateMeta);
+// 首頁專屬 SEO Meta
+useSeoMeta({
+  title: () => t("page_meta.home.title"),
+  description: () => t("page_meta.home.description"),
+  keywords: () => t("meta.keywords"),
+  ogTitle: () => t("page_meta.home.title"),
+  ogDescription: () => t("page_meta.home.description"),
+  ogImage: `${siteUrl}/favicon.png`,
+  ogUrl: () => `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}`,
+  twitterTitle: () => t("page_meta.home.title"),
+  twitterDescription: () => t("page_meta.home.description"),
+  twitterImage: `${siteUrl}/favicon.png`,
+});
+
+// 添加結構化資料
+const { getWebsiteSchema, getBreadcrumbSchema } = useStructuredData();
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(getWebsiteSchema()),
+    },
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getBreadcrumbSchema([
+          { name: t("home"), url: siteUrl },
+        ])
+      ),
+    },
+  ],
+});
 </script>
 
 <style scoped>
