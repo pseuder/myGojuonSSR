@@ -3,6 +3,13 @@
     <div class="flex h-full flex-col gap-2 px-4 py-4 sm:flex-row sm:px-10">
       <!-- 影片播放器+功能列 -->
       <div class="flex flex-col gap-2 sm:w-1/3">
+        <!-- 發布歌曲按鈕 -->
+        <div class="flex w-full items-center gap-2">
+          <el-button class="w-full" type="success" @click="handlePublishSong">
+            發布歌曲
+          </el-button>
+        </div>
+
         <!-- 載入影片 -->
         <div class="flex">
           <el-input v-model="videoId" class="w-full" placeholder="輸入YT ID" />
@@ -12,14 +19,6 @@
           <el-button type="primary" @click="openSearchDialog">
             搜尋影片
           </el-button>
-        </div>
-        <!-- 影片播放器 -->
-        <div id="player-container" ref="playerContainerRef" class="h-fit">
-          <div
-            id="player"
-            ref="playerRef"
-            style="max-height: 430px; aspect-ratio: 4/3"
-          ></div>
         </div>
 
         <div class="flex flex-col gap-2">
@@ -101,12 +100,13 @@
         <!-- 功能列 -->
         <div class="flex h-[10%] flex-col gap-2">
           <!-- 第一列 -->
-
-          <!-- 發布歌曲按鈕 -->
-          <div class="flex w-full items-center gap-2">
-            <el-button class="w-full" type="success" @click="handlePublishSong">
-              發布歌曲
-            </el-button>
+          <!-- 影片播放器 -->
+          <div id="player-container" ref="playerContainerRef" class="h-fit">
+            <div
+              id="player"
+              ref="playerRef"
+              style="max-height: 430px; aspect-ratio: 4/3"
+            ></div>
           </div>
 
           <!-- 第二列 -->
@@ -228,6 +228,9 @@
                     v-model="ly.cvt"
                     class="lyric-cvt h-6 w-full rounded border border-gray-300 px-1"
                     placeholder=""
+                    :style="
+                      ly.color ? { color: ly.color, fontWeight: 'bold' } : {}
+                    "
                   />
 
                   <el-popover
@@ -242,6 +245,11 @@
                         v-model="ly.ori"
                         class="lyric-ori h-6 w-full cursor-pointer rounded border border-gray-300 p-2"
                         placeholder=""
+                        :style="
+                          ly.color
+                            ? { color: ly.color, fontWeight: 'bold' }
+                            : {}
+                        "
                       />
                     </template>
 
@@ -259,6 +267,33 @@
                       </template>
                     </div>
                   </el-popover>
+
+                  <!-- Color indicator button -->
+                  <div class="mt-1 flex items-center gap-1">
+                    <el-button
+                      size="small"
+                      @click="openColorPicker(index, lyIndex)"
+                      :style="
+                        ly.color
+                          ? { backgroundColor: ly.color, borderColor: ly.color }
+                          : {}
+                      "
+                      class="h-6 w-8 p-0"
+                      :class="ly.color ? '' : 'bg-gray-200'"
+                      title="設定顏色"
+                    >
+                      <span v-if="!ly.color" class="text-xs">色</span>
+                    </el-button>
+                    <el-button
+                      v-if="ly.color"
+                      type="text"
+                      size="small"
+                      class="text-xs text-gray-500"
+                      @click="ly.color = ''"
+                    >
+                      清除
+                    </el-button>
+                  </div>
                 </div>
               </template>
             </div>
@@ -348,6 +383,26 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 共用的顏色選擇 Dialog -->
+    <el-dialog title="選擇顏色" v-model="colorPickerVisible" width="300px">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-center">
+          <input
+            type="color"
+            v-model="selectedColor"
+            class="h-32 w-32 cursor-pointer rounded border border-gray-300"
+          />
+        </div>
+        <div class="text-center text-gray-600">
+          當前顏色: {{ selectedColor || "未設定" }}
+        </div>
+        <div class="flex justify-end gap-2">
+          <el-button @click="colorPickerVisible = false">取消</el-button>
+          <el-button type="primary" @click="applyColor">確定</el-button>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -399,6 +454,12 @@ const nextPageToken = ref(false);
 const recommendQuery = ref("");
 const recommendLoading = ref(false);
 const recommendHiraganas = ref([]);
+
+// 顏色選擇 Dialog
+const colorPickerVisible = ref(false);
+const selectedColor = ref("");
+const currentColorLyricIndex = ref(-1);
+const currentColorLyricLineIndex = ref(-1);
 
 // YouTube API 金鑰
 const apiKey = ref("");
@@ -542,6 +603,7 @@ const handleAddLyric = (lyricIndex, lyricLineIndex) => {
   allLyrics.value[lyricIndex].lyrics.splice(lyricLineIndex + 1, 0, {
     cvt: "",
     ori: "",
+    color: "",
   });
 };
 
@@ -549,7 +611,7 @@ const handleAddNewLyricLine = (lyricIndex) => {
   // 在指定位置增加一個空的 lyric line
   allLyrics.value.splice(lyricIndex + 1, 0, {
     timestamp: "",
-    lyrics: [{ cvt: "", ori: "" }],
+    lyrics: [{ cvt: "", ori: "", color: "" }],
   });
 };
 
@@ -582,7 +644,12 @@ const handleCopy = () => {
 function customStringify(obj) {
   return (
     JSON.stringify(obj, null, 2)
-      // 處理 lyrics 內部的物件格式
+      // 處理 lyrics 內部的物件格式（含顏色）
+      .replace(
+        /{\s*"cvt":\s*"([^"]*)",\s*"ori":\s*"([^"]*)",\s*"color":\s*"([^"]*)"\s*}/g,
+        '{"cvt": "$1","ori": "$2","color": "$3"}',
+      )
+      // 處理 lyrics 內部的物件格式（不含顏色）
       .replace(
         /{\s*"cvt":\s*"([^"]*)",\s*"ori":\s*"([^"]*)"\s*}/g,
         '{"cvt": "$1","ori": "$2"}',
@@ -598,7 +665,12 @@ const handleCopyHiragana = () => {
     if (line.lyrics.length === 0) continue;
     let combinedLyric = "[";
     for (const lyric of line.lyrics) {
-      combinedLyric += `{"cvt": "${lyric.cvt}","ori": "${lyric.ori}"},`;
+      // 如果有顏色，就包含顏色信息
+      if (lyric.color) {
+        combinedLyric += `{"cvt": "${lyric.cvt}","ori": "${lyric.ori}","color": "${lyric.color}"},`;
+      } else {
+        combinedLyric += `{"cvt": "${lyric.cvt}","ori": "${lyric.ori}"},`;
+      }
     }
     combinedLyric = combinedLyric.slice(0, -1);
     combinedLyric += "]";
@@ -630,6 +702,32 @@ const handleRecommendHiragana = async (text) => {
   } finally {
     recommendLoading.value = false;
   }
+};
+
+//-- 顏色選擇相關 --//
+const openColorPicker = (lyricIndex, lyricLineIndex) => {
+  currentColorLyricIndex.value = lyricIndex;
+  currentColorLyricLineIndex.value = lyricLineIndex;
+  // 設定當前顏色到選擇器
+  const currentLyric = allLyrics.value[lyricIndex]?.lyrics[lyricLineIndex];
+  selectedColor.value = currentLyric?.color || "#000000";
+  colorPickerVisible.value = true;
+};
+
+const applyColor = () => {
+  if (
+    currentColorLyricIndex.value >= 0 &&
+    currentColorLyricLineIndex.value >= 0 &&
+    allLyrics.value[currentColorLyricIndex.value]?.lyrics[
+      currentColorLyricLineIndex.value
+    ]
+  ) {
+    allLyrics.value[currentColorLyricIndex.value].lyrics[
+      currentColorLyricLineIndex.value
+    ].color = selectedColor.value;
+    ElMessage.success("顏色設定成功");
+  }
+  colorPickerVisible.value = false;
 };
 
 //-- 處理按鍵事件 --//
