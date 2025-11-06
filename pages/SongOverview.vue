@@ -20,7 +20,30 @@
         v-if="activeTab === 'all'"
         class="flex w-full flex-1 flex-wrap content-start justify-center gap-4 overflow-y-auto p-2"
       >
-        <template v-for="author in allAuthors" :key="author.id">
+        <!-- Skeleton loading for authors -->
+        <template v-if="isLoading && allAuthors.length === 0">
+          <div
+            v-for="i in 6"
+            :key="`skeleton-author-${i}`"
+            class="flex flex-col"
+          >
+            <el-card class="h-52 w-80 p-0 md:w-96" shadow="hover">
+              <el-skeleton animated>
+                <template #template>
+                  <el-skeleton-item variant="image" class="h-52 w-full" />
+                </template>
+              </el-skeleton>
+            </el-card>
+            <el-skeleton animated class="mt-2">
+              <template #template>
+                <el-skeleton-item variant="text" class="w-48" />
+              </template>
+            </el-skeleton>
+          </div>
+        </template>
+
+        <!-- Actual author cards -->
+        <template v-else v-for="author in allAuthors" :key="author.id">
           <div
             class="flex cursor-pointer flex-col hover:scale-105"
             @click="handleAuthorSelect(author.id)"
@@ -48,7 +71,33 @@
         class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"
         wrap
       >
-        <template v-for="video in allVideos" :key="video.source_id">
+        <!-- Skeleton loading for videos -->
+        <template v-if="isLoading && allVideos.length === 0">
+          <el-card
+            v-for="i in 8"
+            :key="`skeleton-video-${i}`"
+            class="h-fit w-80 md:w-96"
+            shadow="hover"
+          >
+            <div class="p-4">
+              <el-skeleton animated>
+                <template #template>
+                  <el-skeleton-item variant="image" class="h-48 w-full" />
+                  <div class="mt-4">
+                    <el-skeleton-item variant="text" class="w-full" />
+                  </div>
+                  <div class="mt-2 flex gap-2">
+                    <el-skeleton-item variant="text" class="w-16" />
+                    <el-skeleton-item variant="text" class="w-20" />
+                  </div>
+                </template>
+              </el-skeleton>
+            </div>
+          </el-card>
+        </template>
+
+        <!-- Actual video cards -->
+        <template v-else v-for="video in allVideos" :key="video.source_id">
           <el-card class="h-fit w-80 md:w-96" shadow="hover">
             <div class="p-4">
               <a
@@ -91,15 +140,15 @@
         </template>
       </el-space>
 
-      <!-- Loading indicator for infinite scroll -->
+      <!-- Loading indicator for infinite scroll (only when loading more, not initial load) -->
       <div
-        v-if="isLoading && activeTab !== 'all'"
+        v-if="isLoading && activeTab !== 'all' && allVideos.length > 0"
         class="flex justify-center py-4"
       >
         <el-icon class="is-loading">
           <Loading />
         </el-icon>
-        <span class="ml-2">載入影片中...</span>
+        <span class="ml-2">載入更多影片中...</span>
       </div>
     </div>
   </div>
