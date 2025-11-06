@@ -13,7 +13,10 @@
             {{ currentVideo.name }} - {{ currentVideo.author }}
           </div>
           <!-- 標籤 -->
-          <div class="mb-4 flex flex-wrap items-center gap-2">
+          <div
+            v-if="currentVideo.tags"
+            class="mb-4 flex flex-wrap items-center gap-2"
+          >
             <template v-for="tag in currentVideo.tags?.split(',')" :key="tag">
               <el-tag type="info">{{ tag }}</el-tag>
             </template>

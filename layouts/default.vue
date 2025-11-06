@@ -12,7 +12,10 @@
             :index="localePath('/ListeningPractice')"
             :label="t('dictation_practice')"
           />
-          <MenuItem :index="localePath('/SongOverview')" :label="t('song_practice')" />
+          <MenuItem
+            :index="localePath('/SongOverview')"
+            :label="t('song_practice')"
+          />
         </el-menu>
       </div>
       <div class="flex w-fit items-center gap-4">
@@ -75,7 +78,7 @@ watch(
 const isInSongPractice = computed(() => route.path.includes("/SongPractice"));
 const isInSongOverview = computed(() => route.path.includes("/SongOverview"));
 const isInBackend = computed(() => route.path.includes("/Backend"));
-const isInSongEdit = computed(() => route.path.includes("/songEdit"));
+const isInSongEdit = computed(() => route.path.includes("/SongEdit"));
 
 // ===== 文字瀑布 =====
 const TEXT_COUNT = 100; // 下落文字數量

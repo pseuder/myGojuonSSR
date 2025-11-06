@@ -20,11 +20,7 @@
         </div>
 
         <!-- 選擇字符集 -->
-        <el-select
-          v-model="activeTab"
-          placeholder="選擇字符集"
-          style="width: 130px"
-        >
+        <el-select v-model="activeTab" placeholder="選擇字符集">
           <el-option key="hiragana" :label="t('hiragana')" value="hiragana" />
           <el-option key="katakana" :label="t('katakana')" value="katakana" />
           <el-option key="dakuon" :label="t('dakuon')" value="dakuon" />
@@ -39,16 +35,18 @@
             :label="t('special_sounds')"
             value="special"
             :disabled="specialLearningList.length === 0"
+            style="color: #00d4d4"
           />
         </el-select>
 
-        <!-- 隨機、循序模式切換 -->
-        <el-switch
-          v-model="isRandomMode"
-          :active-text="t('random')"
-          :inactive-text="t('sequential')"
-          @change="handleModeChange"
-        />
+        <el-button @click="doSpecialLearning" type="text">
+          <img
+            src="/images/student.png"
+            alt="進行特別學習"
+            class="inline-block h-8 w-10"
+            title="進行特別學習"
+          />
+        </el-button>
 
         <!-- 靠左/靠右 -->
         <!-- <el-switch
@@ -60,16 +58,16 @@
 
       <!-- 預測值/信心值/Round -->
       <div class="flex items-center gap-4">
-        <el-button @click="doSpecialLearning" type="text">
-          <img
-            src="/images/student.png"
-            alt="進行特別學習"
-            class="inline-block h-8 w-8"
-          />
-        </el-button>
+        <!-- 隨機、循序模式切換 -->
+        <el-switch
+          v-model="isRandomMode"
+          :active-text="t('random')"
+          :inactive-text="t('sequential')"
+          @change="handleModeChange"
+        />
 
         <div>{{ t("predicted_value") }}：{{ predictKana }}</div>
-        <div>{{ t("confidence_level") }}：{{ predictConfidence }}</div>
+        <!-- <div>{{ t("confidence_level") }}：{{ predictConfidence }}</div> -->
       </div>
 
       <!-- 加入特別學習 -->
@@ -128,12 +126,13 @@
           <el-button
             @click="specialLearningListDialogVisible = true"
             type="text"
+            title="特別學習列表"
           >
             <el-icon :size="30"><List /></el-icon>
           </el-button>
         </el-badge>
 
-        <el-button @click="addSpecialLearning" type="text">
+        <el-button @click="addSpecialLearning" type="text" title="加入特別學習">
           <el-icon :size="30"><CirclePlusFilled /></el-icon>
         </el-button>
 
@@ -270,7 +269,8 @@ useSeoMeta({
   ogTitle: () => t("page_meta.listening_practice.title"),
   ogDescription: () => t("page_meta.listening_practice.description"),
   ogImage: `${siteUrl}/favicon.png`,
-  ogUrl: () => `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/ListeningPractice`,
+  ogUrl: () =>
+    `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/ListeningPractice`,
   twitterTitle: () => t("page_meta.listening_practice.title"),
   twitterDescription: () => t("page_meta.listening_practice.description"),
   twitterImage: `${siteUrl}/favicon.png`,
@@ -287,8 +287,8 @@ useHead({
         getCourseSchema(
           t("page_meta.listening_practice.title"),
           t("page_meta.listening_practice.description"),
-          pageUrl
-        )
+          pageUrl,
+        ),
       ),
     },
     {
@@ -297,7 +297,7 @@ useHead({
         getBreadcrumbSchema([
           { name: t("home"), url: siteUrl },
           { name: t("dictation_practice"), url: pageUrl },
-        ])
+        ]),
       ),
     },
   ],
@@ -452,12 +452,10 @@ const changeSound = (type) => {
 
 const togglePlay = () => {
   if (audioPlayer.value) {
-    if (isPlaying.value) {
-      audioPlayer.value.pause();
-    } else {
-      audioPlayer.value.play();
-    }
-    isPlaying.value = !isPlaying.value;
+    // 每次點擊都重置到開始並播放
+    audioPlayer.value.currentTime = 0;
+    audioPlayer.value.play();
+    isPlaying.value = true;
   }
 };
 

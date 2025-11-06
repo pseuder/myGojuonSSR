@@ -231,12 +231,10 @@ const changeSound = (type) => {
 
 const togglePlay = () => {
   if (audioPlayer.value) {
-    if (isPlaying.value) {
-      audioPlayer.value.pause();
-    } else {
-      audioPlayer.value.play();
-    }
-    isPlaying.value = !isPlaying.value;
+    // 每次點擊都重置到開始並播放
+    audioPlayer.value.currentTime = 0;
+    audioPlayer.value.play();
+    isPlaying.value = true;
   }
 };
 
