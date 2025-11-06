@@ -124,7 +124,7 @@
                 rel="noopener noreferrer"
                 class="mb-2 block w-full truncate text-lg text-blue-400 no-underline hover:text-blue-600 hover:underline"
               >
-                {{ video.name }} - {{ video.author }}
+                {{ video.name }}
               </a>
 
               <div class="flex gap-2" v-if="video.tags">
@@ -175,7 +175,8 @@ useSeoMeta({
   ogTitle: () => t("page_meta.song_overview.title"),
   ogDescription: () => t("page_meta.song_overview.description"),
   ogImage: `${siteUrl}/favicon.png`,
-  ogUrl: () => `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/SongOverview`,
+  ogUrl: () =>
+    `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/SongOverview`,
   twitterTitle: () => t("page_meta.song_overview.title"),
   twitterDescription: () => t("page_meta.song_overview.description"),
   twitterImage: `${siteUrl}/favicon.png`,
@@ -192,8 +193,8 @@ useHead({
         getCourseSchema(
           t("page_meta.song_overview.title"),
           t("page_meta.song_overview.description"),
-          pageUrl
-        )
+          pageUrl,
+        ),
       ),
     },
     {
@@ -202,7 +203,7 @@ useHead({
         getBreadcrumbSchema([
           { name: t("home"), url: siteUrl },
           { name: t("song_practice"), url: pageUrl },
-        ])
+        ]),
       ),
     },
   ],
