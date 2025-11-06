@@ -67,6 +67,7 @@
             :min="0.3"
             @change="changePlaybackRate(playbackRate)"
           />
+          <el-checkbox v-model="formData.is_public">publish</el-checkbox>
         </div>
 
         <div class="flex gap-2">
