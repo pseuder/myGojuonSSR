@@ -34,9 +34,9 @@
     </template>
     <template v-else>
       <ClientOnly>
-        <GoogleLogin :callback="handleLoginCallback" prompt />
+        <GoogleLogin :callback="handleLoginCallback" prompt> </GoogleLogin>
         <template #fallback>
-          <el-button loading>{{ t("loading_login") }}</el-button>
+          <el-button loading></el-button>
         </template>
       </ClientOnly>
     </template>
