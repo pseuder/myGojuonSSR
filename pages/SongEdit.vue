@@ -292,6 +292,15 @@
                       <span v-if="!ly.color" class="text-xs">色</span>
                     </el-button>
                     <el-button
+                      size="small"
+                      class="h-6 w-8 p-0 text-white"
+                      style="background-color: #9b59b6; border-color: #9b59b6"
+                      title="套用紫色"
+                      @click="ly.color = '#9B59B6'"
+                    >
+                      <span class="text-xs">紫</span>
+                    </el-button>
+                    <el-button
                       v-if="ly.color"
                       type="text"
                       size="small"
