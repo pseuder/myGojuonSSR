@@ -3,10 +3,13 @@
   <div class="flex h-full flex-col lg:overflow-hidden">
     <div
       v-if="currentVideo"
-      class="flex h-full flex-col gap-4 px-4 py-4 md:px-10 lg:flex-row"
+      class="flex h-full flex-col gap-4 px-4 py-4 md:px-10 lg:flex-row lg:gap-0"
     >
       <!-- 影片播放器+功能列 -->
-      <div class="flex h-full flex-col lg:w-1/2">
+      <div
+        class="flex h-full flex-col"
+        :style="{ width: isMobile ? '100%' : `${leftWidth}%` }"
+      >
         <div class="shrink-0">
           <!-- 影片標題＋作者 -->
           <div class="gradient-text-tech-animated">
@@ -86,8 +89,20 @@
         </div>
       </div>
 
+      <!-- 可拖動分隔線 (只在寬螢幕顯示) -->
+      <div
+        v-if="!isMobile"
+        class="mr-1 ml-1 hidden w-1 flex-shrink-0 cursor-col-resize items-center justify-center bg-gray-200 transition-colors hover:bg-blue-500 lg:flex"
+        @mousedown="startResize"
+      ></div>
+
       <!-- 歌詞  -->
-      <el-scrollbar class="h-full overflow-x-auto lg:w-1/2">
+      <el-scrollbar
+        class="h-full overflow-x-auto"
+        :style="{
+          width: isMobile ? '100%' : `calc(${100 - leftWidth}% - 4px)`,
+        }"
+      >
         <!-- <el-button type="warning" size="small" @click="handleCopyLyrics" plain>
           複製歌詞
         </el-button> -->
@@ -308,6 +323,16 @@ const isPlaying = ref(false);
 const isLooping = ref(false);
 const loopStart = ref(0);
 const loopEnd = ref(0);
+
+// 可調整寬度相關
+const leftWidth = ref(50); // 左側寬度百分比
+const isResizing = ref(false);
+const isMobile = computed(() => {
+  if (process.client) {
+    return window.innerWidth < 1024; // lg breakpoint
+  }
+  return false;
+});
 
 const allVideos = ref([]);
 const fetchAllVideos = async () => {
@@ -601,6 +626,42 @@ const handleKeyPress = (event) => {
   }
 };
 
+// 調整寬度功能
+const startResize = (event) => {
+  if (!process.client) return;
+  isResizing.value = true;
+  document.addEventListener("mousemove", onResize);
+  document.addEventListener("mouseup", stopResize);
+  // 防止文字選取
+  event.preventDefault();
+};
+
+const onResize = (event) => {
+  if (!isResizing.value || !process.client) return;
+
+  const container = document.querySelector(".lg\\:flex-row");
+  if (!container) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const newLeftWidth =
+    ((event.clientX - containerRect.left) / containerRect.width) * 100;
+
+  // 限制寬度在 20% 到 80% 之間
+  if (newLeftWidth >= 20 && newLeftWidth <= 80) {
+    leftWidth.value = newLeftWidth;
+  }
+};
+
+const stopResize = () => {
+  if (!process.client) return;
+  isResizing.value = false;
+  document.removeEventListener("mousemove", onResize);
+  document.removeEventListener("mouseup", stopResize);
+
+  // 保存到 localStorage
+  localStorage.setItem("myGojuon_leftWidth", JSON.stringify(leftWidth.value));
+};
+
 // onMounted 只在客戶端執行，是放置客戶端專用邏輯的最佳位置
 onMounted(() => {
   // 確保在客戶端環境下執行
@@ -609,6 +670,7 @@ onMounted(() => {
     const savedAutoPlayNext = localStorage.getItem("myGojuon_autoPlayNext");
     const savedPlaybackRate = localStorage.getItem("myGojuon_playbackRate");
     const savedAutoScroll = localStorage.getItem("myGojuon_autoScroll");
+    const savedLeftWidth = localStorage.getItem("myGojuon_leftWidth");
 
     if (savedAutoPlayNext !== null) {
       autoPlayNext.value = JSON.parse(savedAutoPlayNext);
@@ -618,6 +680,9 @@ onMounted(() => {
     }
     if (savedAutoScroll !== null) {
       autoScroll.value = JSON.parse(savedAutoScroll);
+    }
+    if (savedLeftWidth !== null) {
+      leftWidth.value = JSON.parse(savedLeftWidth);
     }
 
     fetchAllVideos();
@@ -649,6 +714,9 @@ onUnmounted(() => {
       player = null;
     }
     window.removeEventListener("keypress", handleKeyPress);
+    // 清理拖動事件監聽器
+    document.removeEventListener("mousemove", onResize);
+    document.removeEventListener("mouseup", stopResize);
     // onYouTubeIframeAPIReady 設為 null，避免組件卸載後觸發
     window.onYouTubeIframeAPIReady = null;
   }
@@ -680,5 +748,13 @@ onUnmounted(() => {
   100% {
     background-position: 0% 50%;
   }
+}
+
+/* 防止拖動時選取文字 */
+.cursor-col-resize {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 </style>
