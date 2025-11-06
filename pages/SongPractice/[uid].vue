@@ -327,12 +327,8 @@ const loopEnd = ref(0);
 // 可調整寬度相關
 const leftWidth = ref(50); // 左側寬度百分比
 const isResizing = ref(false);
-const isMobile = computed(() => {
-  if (process.client) {
-    return window.innerWidth < 1024; // lg breakpoint
-  }
-  return false;
-});
+const windowWidth = ref(0);
+const isMobile = computed(() => windowWidth.value < 1024);
 
 const allVideos = ref([]);
 const fetchAllVideos = async () => {
@@ -626,6 +622,13 @@ const handleKeyPress = (event) => {
   }
 };
 
+// 更新窗口寬度
+const updateWindowWidth = () => {
+  if (process.client) {
+    windowWidth.value = window.innerWidth;
+  }
+};
+
 // 調整寬度功能
 const startResize = (event) => {
   if (!process.client) return;
@@ -666,6 +669,11 @@ const stopResize = () => {
 onMounted(() => {
   // 確保在客戶端環境下執行
   if (process.client) {
+    // 初始化窗口寬度
+    updateWindowWidth();
+    // 監聽窗口大小變化
+    window.addEventListener("resize", updateWindowWidth);
+
     // 載入本地存儲的設定
     const savedAutoPlayNext = localStorage.getItem("myGojuon_autoPlayNext");
     const savedPlaybackRate = localStorage.getItem("myGojuon_playbackRate");
@@ -714,6 +722,7 @@ onUnmounted(() => {
       player = null;
     }
     window.removeEventListener("keypress", handleKeyPress);
+    window.removeEventListener("resize", updateWindowWidth);
     // 清理拖動事件監聽器
     document.removeEventListener("mousemove", onResize);
     document.removeEventListener("mouseup", stopResize);
