@@ -269,6 +269,12 @@
                     </div>
                   </el-popover>
 
+                  <input
+                    v-model="ly.color"
+                    class="lyric-cvt h-6 w-full rounded border border-gray-300 px-1"
+                    placeholder=""
+                  />
+
                   <!-- Color indicator button -->
                   <div class="mt-1 flex items-center gap-1">
                     <el-button

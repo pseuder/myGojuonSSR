@@ -207,7 +207,7 @@
             <el-button
               :icon="VideoCameraFilled"
               circle
-              @click="router.push(localePath('/songEdit'))"
+              @click="router.push(localePath('/SongEdit'))"
             />
           </div>
         </div>
@@ -251,7 +251,8 @@ useSeoMeta({
   ogTitle: () => t("page_meta.home.title"),
   ogDescription: () => t("page_meta.home.description"),
   ogImage: `${siteUrl}/favicon.png`,
-  ogUrl: () => `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}`,
+  ogUrl: () =>
+    `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}`,
   twitterTitle: () => t("page_meta.home.title"),
   twitterDescription: () => t("page_meta.home.description"),
   twitterImage: `${siteUrl}/favicon.png`,
@@ -268,9 +269,7 @@ useHead({
     {
       type: "application/ld+json",
       children: JSON.stringify(
-        getBreadcrumbSchema([
-          { name: t("home"), url: siteUrl },
-        ])
+        getBreadcrumbSchema([{ name: t("home"), url: siteUrl }]),
       ),
     },
   ],
