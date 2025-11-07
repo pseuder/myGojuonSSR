@@ -86,7 +86,10 @@
               </div>
             </div>
           </div>
-          {{ currentVideo.remark }}
+
+          <el-tag v-if="currentVideo.remark" type="success">{{
+            currentVideo.remark
+          }}</el-tag>
         </div>
       </div>
 
