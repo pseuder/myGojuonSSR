@@ -229,9 +229,6 @@
                     v-model="ly.cvt"
                     class="lyric-cvt h-6 w-full rounded border border-gray-300 px-1"
                     placeholder=""
-                    :style="
-                      ly.color ? { color: ly.color, fontWeight: 'bold' } : {}
-                    "
                   />
 
                   <el-popover
@@ -246,11 +243,6 @@
                         v-model="ly.ori"
                         class="lyric-ori h-6 w-full cursor-pointer rounded border border-gray-300 p-2"
                         placeholder=""
-                        :style="
-                          ly.color
-                            ? { color: ly.color, fontWeight: 'bold' }
-                            : {}
-                        "
                       />
                     </template>
 
@@ -299,6 +291,15 @@
                       @click="ly.color = '#9B59B6'"
                     >
                       <span class="text-xs">紫</span>
+                    </el-button>
+                    <el-button
+                      size="small"
+                      class="h-6 w-8 p-0 text-white"
+                      style="background-color: #fa8072; border-color: #fa8072"
+                      title="套用鮭魚色"
+                      @click="ly.color = '#FA8072'"
+                    >
+                      <span class="text-xs">鮭</span>
                     </el-button>
                     <el-button
                       v-if="ly.color"
