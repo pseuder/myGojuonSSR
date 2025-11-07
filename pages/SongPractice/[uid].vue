@@ -86,6 +86,7 @@
               </div>
             </div>
           </div>
+          {{ currentVideo.remark }}
         </div>
       </div>
 
