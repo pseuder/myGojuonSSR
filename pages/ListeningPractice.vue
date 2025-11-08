@@ -474,11 +474,8 @@ const playSound = () => {
 const selectSound = (sound) => {
   if (sound.kana) {
     selectedSound.value = sound;
-    gtag("event", "學習行為", {
-      使用模組: "聽寫練習",
-      模組功能: "切換音節",
-      項目名稱: sound.kana,
-    });
+
+    gtag("event", `聽寫練習`);
   }
 };
 
@@ -547,11 +544,7 @@ const autoDetect = (predict_res) => {
       correctness: isCorrect,
     };
 
-    gtag("event", "學習行為", {
-      使用模組: "聽寫練習",
-      模組功能: "影像辨識",
-      項目名稱: currentKana,
-    });
+    gtag("event", `AI辨識`);
   } catch (error) {
     console.error("Error recording activity:", error);
   }
@@ -629,11 +622,7 @@ const addSpecialLearning = () => {
   saveSpecialLearningList();
   ElMessage.success(t("add_to_special_learning_success"));
 
-  gtag("event", "學習行為", {
-    使用模組: "聽寫練習",
-    模組功能: "增加特別學習",
-    項目名稱: selectedSound.value.kana,
-  });
+  gtag("event", `增加特別學習`);
 };
 
 const doSpecialLearning = () => {

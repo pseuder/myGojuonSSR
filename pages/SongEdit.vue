@@ -235,12 +235,14 @@
                     placement="bottom"
                     title="推薦假名"
                     :width="200"
-                    trigger="click"
-                    @show="handleRecommendHiragana(ly.ori)"
+                    trigger="manual"
+                    :visible="isPopoverVisible(index, lyIndex)"
+                    @update:visible="(val) => !val && closePopover()"
                   >
                     <template #reference>
                       <input
                         v-model="ly.ori"
+                        @dblclick="handleDoubleClick(index, lyIndex, ly.ori)"
                         class="lyric-ori h-6 w-full cursor-pointer rounded border border-gray-300 p-2"
                         placeholder=""
                       />
@@ -252,7 +254,10 @@
                         :key="hIndex"
                       >
                         <div
-                          @click="ly.cvt = hiragana"
+                          @click="
+                            ly.cvt = hiragana;
+                            closePopover();
+                          "
                           class="w-full cursor-pointer p-1 text-center text-blue-400 hover:text-blue-600"
                         >
                           {{ hiragana }}
@@ -471,6 +476,7 @@ const nextPageToken = ref(false);
 const recommendQuery = ref("");
 const recommendLoading = ref(false);
 const recommendHiraganas = ref([]);
+const currentOpenPopover = ref({ lineIndex: -1, lyricIndex: -1 });
 
 // 顏色選擇 Dialog
 const colorPickerVisible = ref(false);
@@ -719,6 +725,25 @@ const handleRecommendHiragana = async (text) => {
   } finally {
     recommendLoading.value = false;
   }
+};
+
+// 處理雙擊事件開啟推薦假名
+const handleDoubleClick = (lineIndex, lyricIndex, text) => {
+  currentOpenPopover.value = { lineIndex, lyricIndex };
+  handleRecommendHiragana(text);
+};
+
+// 檢查特定 popover 是否應該顯示
+const isPopoverVisible = (lineIndex, lyricIndex) => {
+  return (
+    currentOpenPopover.value.lineIndex === lineIndex &&
+    currentOpenPopover.value.lyricIndex === lyricIndex
+  );
+};
+
+// 關閉 popover
+const closePopover = () => {
+  currentOpenPopover.value = { lineIndex: -1, lyricIndex: -1 };
 };
 
 //-- 顏色選擇相關 --//
@@ -1136,11 +1161,7 @@ const getApiKey = async () => {
 };
 
 const recordActivity = (learningMethod = "", learningItem = "") => {
-  gtag("event", "其他", {
-    使用模組: "歌曲編輯",
-    模組功能: learningMethod,
-    項目名稱: learningItem,
-  });
+  gtag("event", `歌曲編輯`);
 };
 
 // 自動載入影片資料

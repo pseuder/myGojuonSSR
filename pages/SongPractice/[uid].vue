@@ -709,11 +709,7 @@ onMounted(() => {
       initializePlayer();
     }
 
-    gtag("event", "歌曲推廣", {
-      使用模組: "歌曲練習",
-      模組功能: "獲取歌曲",
-      項目名稱: currentVideo.value?.name,
-    });
+    gtag("event", currentVideo.value?.name);
 
     window.addEventListener("keypress", handleKeyPress, true);
   }

@@ -260,11 +260,7 @@ const selectSound = (sound) => {
   if (sound.kana) {
     selectedSound.value = sound;
     navigator.clipboard.writeText(sound.kana);
-    gtag("event", "學習行為", {
-      使用模組: "手寫練習",
-      模組功能: "切換音節",
-      項目名稱: sound.kana,
-    });
+    gtag("event", `手寫練習`);
   }
 };
 

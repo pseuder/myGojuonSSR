@@ -70,7 +70,7 @@
           <!-- 線上留言 -->
           <div
             class="my-4 flex w-fit items-center gap-4"
-            @click="showContactForm = true"
+            @click="handleReportClick('online')"
           >
             <el-button type="warning" class="" plain circle>
               <el-icon :size="20"><ChatLineRound /></el-icon>
@@ -236,11 +236,10 @@ const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
 const handleReportClick = (item) => {
-  gtag("event", "其他", {
-    使用模組: "首頁",
-    模組功能: "回報問題",
-    項目名稱: item,
-  });
+  if (item == "online") {
+    showContactForm = true;
+  }
+  gtag("event", `回報問題: ${item}`);
 };
 
 // 首頁專屬 SEO Meta
