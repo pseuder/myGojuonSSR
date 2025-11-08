@@ -237,7 +237,7 @@ const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
 const handleReportClick = (item) => {
   if (item == "online") {
-    showContactForm = true;
+    showContactForm.value = true;
   }
   gtag("event", `回報問題: ${item}`);
 };
