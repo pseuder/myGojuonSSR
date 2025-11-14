@@ -1,16 +1,15 @@
 <template>
   <div class="flex flex-col sm:h-[85vh] sm:overflow-hidden">
-    <div class="flex h-full flex-col gap-2 px-4 py-4 sm:flex-row sm:px-10">
-      <!-- 影片播放器+功能列 -->
-      <div class="flex flex-col gap-2 sm:w-1/3">
-        <!-- 發布歌曲按鈕 -->
-        <div class="flex w-full items-center gap-2">
-          <el-button class="w-full" type="success" @click="handlePublishSong">
-            發布歌曲
-          </el-button>
-        </div>
-
-        <!-- 載入影片 -->
+    <div
+      class="flex h-full flex-col gap-2 px-4 py-4 sm:flex-row sm:px-10"
+      ref="containerRef"
+    >
+      <!-- 左側面板: 影片播放器+功能列 -->
+      <div
+        class="flex flex-col gap-2"
+        :style="{ width: isMobile ? '100%' : `${leftPanelWidth}%` }"
+      >
+        <!-- 第二列 -->
         <div class="flex">
           <el-input v-model="videoId" class="w-full" placeholder="輸入YT ID" />
           <el-button type="primary" plain @click="handleReloadYT">
@@ -21,23 +20,25 @@
           </el-button>
         </div>
 
-        <div class="flex flex-col gap-2">
+        <!-- 第三列 -->
+        <div class="flex gap-2">
           <el-input
             v-model="videoTitle"
             class="w-full"
-            placeholder="輸入標題"
+            placeholder="輸入音樂標題"
           />
           <el-input
             v-model="videoChannel"
             class="w-full"
-            placeholder="輸入頻道名稱"
+            placeholder="輸入歌手名稱"
           />
           <el-input v-model="tag" class="w-full" placeholder="輸入標籤" />
         </div>
 
+        <!-- 第四列 -->
         <div class="flex gap-2">
           <el-button type="info" plain @click="handleClearLyrics" class="flex-1"
-            >清空歌詞</el-button
+            >清空</el-button
           >
 
           <el-button
@@ -57,19 +58,22 @@
             貼上轉換歌詞
           </el-button>
         </div>
+
         <div class="flex gap-2">
-          <el-checkbox v-model="autoScroll">scrolling</el-checkbox>
-          <el-input-number
-            v-model="playbackRate"
-            :precision="1"
-            :step="0.1"
-            :max="2"
-            :min="0.3"
-            @change="changePlaybackRate(playbackRate)"
-          />
-          <el-checkbox v-model="formData.is_public">publish</el-checkbox>
+          <el-button class="flex-1" type="warning" plain @click="handleCopy">
+            複製歌詞
+          </el-button>
+          <el-button
+            class="flex-1"
+            type="warning"
+            plain
+            @click="handleCopyHiragana"
+          >
+            複製轉換歌詞
+          </el-button>
         </div>
 
+        <!-- 第五列 -->
         <div class="flex gap-2">
           <el-input
             v-model="timeDiff"
@@ -84,17 +88,21 @@
           >
         </div>
 
-        <div class="flex gap-2">
-          <el-button class="flex-1" type="warning" plain @click="handleCopy">
-            複製歌詞
-          </el-button>
-          <el-button
-            class="flex-1"
-            type="warning"
-            plain
-            @click="handleCopyHiragana"
-          >
-            複製轉換歌詞
+        <!-- 第一列 -->
+        <div class="flex w-full items-center gap-2">
+          <el-checkbox v-model="autoScroll">scrolling</el-checkbox>
+          <el-input-number
+            v-model="playbackRate"
+            :precision="1"
+            :step="0.1"
+            :max="2"
+            :min="0.3"
+            @change="changePlaybackRate(playbackRate)"
+          />
+          <el-checkbox v-model="formData.is_public">publish</el-checkbox>
+
+          <el-button class="grow" type="success" @click="handlePublishSong">
+            發布歌曲
           </el-button>
         </div>
 
@@ -122,9 +130,18 @@
         </div>
       </div>
 
-      <!-- 歌詞 -->
+      <!-- 可拖動的分隔線 -->
+      <div
+        v-if="!isMobile"
+        class="resizer"
+        :class="{ 'resizer-dragging': isDragging }"
+        @mousedown="handleMouseDown"
+      ></div>
+
+      <!-- 右側面板: 歌詞 -->
       <el-scrollbar
-        class="lyrics-container h-full overflow-x-auto sm:w-2/3"
+        class="lyrics-container h-full overflow-x-auto"
+        :style="{ width: isMobile ? '100%' : `${100 - leftPanelWidth}%` }"
         v-loading="lyricsLoading"
       >
         <div class="">
@@ -488,7 +505,13 @@ const currentColorLyricLineIndex = ref(-1);
 const apiKey = ref("");
 
 // 時間差
-const timeDiff = ref("00:00.20");
+const timeDiff = ref("00:00.10");
+
+// Resizer相關
+const containerRef = ref(null);
+const leftPanelWidth = ref(33); // 左側面板寬度百分比
+const isDragging = ref(false);
+const isMobile = ref(false);
 
 // 發布歌曲相關
 const formData = ref({
@@ -1164,6 +1187,38 @@ const recordActivity = (learningMethod = "", learningItem = "") => {
   gtag("event", `歌曲編輯`);
 };
 
+//-- Resizer 相關 --//
+// 檢測是否為移動設備
+const checkIfMobile = () => {
+  isMobile.value = window.innerWidth < 640; // sm breakpoint
+};
+
+// 開始拖動
+const handleMouseDown = (e) => {
+  isDragging.value = true;
+  e.preventDefault();
+};
+
+// 拖動中
+const handleMouseMove = (e) => {
+  if (!isDragging.value || !containerRef.value) return;
+
+  const container = containerRef.value;
+  const containerRect = container.getBoundingClientRect();
+  const mouseX = e.clientX - containerRect.left;
+  const newWidth = (mouseX / containerRect.width) * 100;
+
+  // 限制寬度範圍 20% ~ 80%
+  if (newWidth >= 20 && newWidth <= 80) {
+    leftPanelWidth.value = newWidth;
+  }
+};
+
+// 停止拖動
+const handleMouseUp = () => {
+  isDragging.value = false;
+};
+
 // 自動載入影片資料
 const loadVideoFromApi = async (videoIdParam) => {
   if (!videoIdParam) return;
@@ -1311,6 +1366,13 @@ onMounted(async () => {
   await getApiKey();
   window.addEventListener("keypress", handleKeyPress, true);
   window.addEventListener("beforeunload", beforeUnloadHandler);
+
+  // Resizer 事件監聽
+  checkIfMobile();
+  window.addEventListener("resize", checkIfMobile);
+  window.addEventListener("mousemove", handleMouseMove);
+  window.addEventListener("mouseup", handleMouseUp);
+
   recordActivity("enter_page", "");
 
   // 檢查 URL 參數中是否有 video_id
@@ -1326,6 +1388,11 @@ onUnmounted(() => {
   }
   window.removeEventListener("keypress", handleKeyPress, true);
   window.removeEventListener("beforeunload", beforeUnloadHandler);
+
+  // 清理 Resizer 事件監聽
+  window.removeEventListener("resize", checkIfMobile);
+  window.removeEventListener("mousemove", handleMouseMove);
+  window.removeEventListener("mouseup", handleMouseUp);
 });
 </script>
 
@@ -1356,5 +1423,32 @@ input {
 
 input {
   color: black;
+}
+
+/* Resizer 樣式 */
+.resizer {
+  width: 6px;
+  background-color: #e5e7eb;
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.resizer:hover {
+  background-color: #9ca3af;
+}
+
+.resizer:active,
+.resizer-dragging {
+  background-color: #6b7280;
+}
+
+/* 防止拖動時選中文字 */
+.resizer-dragging * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 </style>
