@@ -199,17 +199,17 @@
               />
 
               <div class="flex">
+                <el-button type="text" @click="handleDecreaseTime(index, 5)">
+                  -5
+                </el-button>
                 <el-button type="text" @click="handleDecreaseTime(index, 10)">
                   -10
                 </el-button>
-                <el-button type="text" @click="handleDecreaseTime(index, 20)">
-                  -20
+                <el-button type="text" @click="handleIncreaseTime(index, 5)">
+                  +5
                 </el-button>
                 <el-button type="text" @click="handleIncreaseTime(index, 10)">
                   +10
-                </el-button>
-                <el-button type="text" @click="handleIncreaseTime(index, 20)">
-                  +20
                 </el-button>
               </div>
             </div>

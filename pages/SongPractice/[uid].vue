@@ -565,6 +565,21 @@ const goToNextLyric = () => {
   }
 };
 
+const skipBackward = () => {
+  if (player && player.getCurrentTime && player.seekTo) {
+    const currentTime = player.getCurrentTime();
+    player.seekTo(Math.max(0, currentTime - 3));
+  }
+};
+
+const skipForward = () => {
+  if (player && player.getCurrentTime && player.seekTo) {
+    const currentTime = player.getCurrentTime();
+    const duration = player.getDuration ? player.getDuration() : Infinity;
+    player.seekTo(Math.min(duration, currentTime + 3));
+  }
+};
+
 const toggleLoopCurrentLyric = () => {
   if (lyrics.value.length === 0 || currentLyricIndex.value < 0) {
     ElMessage.warning("沒有可循環的歌詞行");
@@ -622,6 +637,12 @@ const handleKeyPress = (event) => {
       break;
     case "s":
       toggleLoopCurrentLyric();
+      break;
+    case "z":
+      skipBackward();
+      break;
+    case "c":
+      skipForward();
       break;
   }
 };
