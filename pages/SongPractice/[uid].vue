@@ -641,6 +641,9 @@ const handleKeyPress = (event) => {
     case "z":
       skipBackward();
       break;
+    case "x":
+      togglePlayPause();
+      break;
     case "c":
       skipForward();
       break;
