@@ -14,6 +14,7 @@
       <table ref="authorTableRef" class="native-table">
         <thead>
           <tr>
+            <th class="drag-handle-header"></th>
             <th class="sortable">顯示順序</th>
             <th class="sortable">作者</th>
             <th class="sortable">歌曲數量</th>
@@ -35,6 +36,11 @@
             :data-id="row.id"
             class="table-row"
           >
+            <td class="drag-handle">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M5 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm6 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM5 7a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm6 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-6 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm6 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+              </svg>
+            </td>
             <td>{{ row.display_order }}</td>
             <td>{{ row.name }}</td>
             <td>{{ row.song_count }}</td>
@@ -82,6 +88,7 @@
             <table class="native-table" ref="songTableRef">
               <thead>
                 <tr>
+                  <th class="drag-handle-header"></th>
                   <th>顯示順序</th>
                   <th>歌曲名稱</th>
                   <th>影片ID</th>
@@ -91,7 +98,12 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="song in authorformData.songs" :key="song.id">
+                <tr v-for="song in authorformData.songs" :key="song.id" class="song-row">
+                  <td class="drag-handle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M5 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm6 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM5 7a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm6 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-6 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm6 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </svg>
+                  </td>
                   <td>{{ song.display_order }}</td>
                   <td>{{ song.name }}</td>
                   <td>{{ song.source_id }}</td>
@@ -353,6 +365,7 @@ const songinitSortable = () => {
 
   Sortable.create(tbody, {
     animation: 150, // 拖曳動畫時間
+    handle: ".drag-handle", // 只能通過這個 class 的元素來拖動
     // 拖曳結束後觸發的事件
     onEnd: async (evt) => {
       ElMessage.info("拖曳結束，正在更新順序...");
@@ -507,6 +520,7 @@ const authorinitSortable = () => {
 
   Sortable.create(tbody, {
     animation: 150, // 拖曳動畫時間
+    handle: ".drag-handle", // 只能通過這個 class 的元素來拖動
     // 拖曳結束後觸發的事件
     onEnd: async (evt) => {
       ElMessage.info("拖曳結束，正在更新順序...");
@@ -627,7 +641,7 @@ onMounted(() => {
 }
 
 .native-table tbody tr.table-row {
-  cursor: move;
+  cursor: default;
 }
 
 .native-table .operations {
@@ -637,6 +651,29 @@ onMounted(() => {
 
 .native-table .operations .el-button {
   margin: 0 2px;
+}
+
+/* 拖動手柄樣式 */
+.drag-handle-header {
+  width: 30px;
+  padding: 8px 4px !important;
+}
+
+.drag-handle {
+  width: 30px;
+  text-align: center;
+  cursor: move;
+  color: #909399;
+  padding: 12px 4px !important;
+}
+
+.drag-handle:hover {
+  color: #409eff;
+}
+
+.drag-handle svg {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .sortable-drag {
