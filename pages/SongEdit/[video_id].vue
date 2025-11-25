@@ -1376,7 +1376,7 @@ onMounted(async () => {
   recordActivity("enter_page", "");
 
   // 檢查 URL 參數中是否有 video_id
-  const urlVideoId = route.query.video_id;
+  const urlVideoId = route.params.video_id;
   if (urlVideoId) {
     await loadVideoFromApi(urlVideoId);
   }

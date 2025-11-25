@@ -294,11 +294,11 @@ const songhandleAdd = () => {
   songDialogVisible.value = true;
 };
 
-// 跳轉至新視窗 /SongEdit?video_id=<video_id>
+// 跳轉至新視窗 /SongEdit/<video_id>
 const songhandleJumpEdit = (row) => {
   const videoId = row.source_id;
   if (videoId) {
-    const url = `/SongEdit?video_id=${videoId}`;
+    const url = `/SongEdit/${videoId}`;
     window.open(url, "_blank");
   }
 };
