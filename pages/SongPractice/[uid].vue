@@ -263,13 +263,15 @@ const songImageUrl = computed(() =>
 
 useSeoMeta({
   title: () =>
-    `日語50音學習網站 ${currentVideo.value?.name} - ${currentVideo.value?.author}`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author}｜${t(
+      "meta.title",
+    )}`,
   description: () =>
     `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`,
   keywords: () =>
     `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 歌曲, 歌詞, KTV`,
   ogTitle: () =>
-    `日語50音學習網站 ${currentVideo.value?.name} - ${currentVideo.value?.author}`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author}｜日語50音學習網站`,
   ogDescription: () =>
     `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`,
   twitterCard: "summary",
