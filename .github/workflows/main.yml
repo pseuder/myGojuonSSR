@@ -1,0 +1,47 @@
+name: Deploy Web
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "Web/**" # <--- 關鍵：只有當 Web 資料夾內有變動時才觸發
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    # 設定預設工作目錄，這樣下面所有 run 指令都會在 Web 資料夾內執行
+    defaults:
+      run:
+        working-directory: ./Web_v1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "./Web_v1/package-lock.json" # <--- 這裡也要指定路徑
+
+      - name: Install Dependencies
+        run: npm install
+        # 因為上面設了 defaults，這裡其實等於 cd Web && npm install
+
+      - name: Build Project
+        run: npm run build
+        # 產出的檔案會在 Web_v1/dist/
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT || 22 }}
+          # 這裡的 source 要寫完整路徑
+          source: "Web_v1/dist/*"
+          target: "/home/iop890520/Web/activity-system/"
+          strip_components: 2
