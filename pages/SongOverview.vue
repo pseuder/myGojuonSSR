@@ -89,10 +89,16 @@
       <!-- Video list view -->
       <div v-else class="flex w-full flex-1 flex-col overflow-hidden">
         <!-- Sorting controls -->
-        <div class="mb-2 flex justify-end gap-4 px-6">
+        <div class="mb-2 flex gap-4">
+          <el-input
+            v-model="queryInput"
+            calss="grow"
+            placeholder="搜尋歌名、備註"
+          />
+
           <button
             @click="toggleSort('views')"
-            class="flex items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+            class="flex shrink-0 items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
             :class="{ 'bg-gray-100 dark:bg-gray-700': sortBy === 'views' }"
           >
             <span>觀看數</span>
@@ -114,7 +120,7 @@
 
           <button
             @click="toggleSort('publish_date')"
-            class="flex items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+            class="flex shrink-0 items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
             :class="{
               'bg-gray-100 dark:bg-gray-700': sortBy === 'publish_date',
             }"
@@ -316,6 +322,7 @@ const page_size = ref(10);
 const page_number = ref(1);
 const total = ref(0);
 const hasMore = ref(true);
+const queryInput = ref("");
 
 const isLoading = ref(true);
 
