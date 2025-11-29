@@ -94,6 +94,7 @@
             v-model="queryInput"
             calss="grow"
             placeholder="搜尋歌名、備註"
+            clearable
           />
 
           <button
@@ -341,13 +342,32 @@ const currentAuthor = computed(() => {
   );
 });
 
-// Computed property for sorted videos
-const sortedVideos = computed(() => {
-  if (!sortBy.value) {
+// Computed property for filtered videos based on search query
+const filteredVideos = computed(() => {
+  if (!queryInput.value.trim()) {
     return allVideos.value;
   }
 
-  const videos = [...allVideos.value];
+  const searchTerm = queryInput.value.toLowerCase().trim();
+
+  return allVideos.value.filter((video) => {
+    // Search in video name
+    const nameMatch = video.name?.toLowerCase().includes(searchTerm);
+
+    // Search in tags (備註)
+    const tagsMatch = video.tags?.toLowerCase().includes(searchTerm);
+
+    return nameMatch || tagsMatch;
+  });
+});
+
+// Computed property for sorted videos
+const sortedVideos = computed(() => {
+  const videos = [...filteredVideos.value];
+
+  if (!sortBy.value) {
+    return videos;
+  }
 
   if (sortBy.value === "views") {
     videos.sort((a, b) => {
@@ -656,5 +676,9 @@ onUnmounted(() => {
   height: 100%;
   width: 100%;
   padding: 0px;
+}
+
+:deep(.el-tabs__header) {
+  display: none;
 }
 </style>
