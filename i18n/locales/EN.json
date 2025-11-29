@@ -119,5 +119,10 @@
   "supports_stylus": "Supports direct writing with a stylus",
   "left_points": "Credits",
   "play_next_song": "Playing next",
-  "last_song_and_replay": "This is the last song by this artist. Will replay from the beginning"
+  "last_song_and_replay": "This is the last song by this artist. Will replay from the beginning",
+  "search_placeholder": "Search song name or notes",
+  "views": "Views",
+  "publish_date": "Publish Date",
+  "loading_more_videos": "Loading more videos...",
+  "error_loading_data": "Error loading data"
 }

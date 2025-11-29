@@ -93,7 +93,7 @@
           <el-input
             v-model="queryInput"
             calss="grow"
-            placeholder="搜尋歌名、備註"
+            :placeholder="t('search_placeholder')"
             clearable
           />
 
@@ -102,7 +102,7 @@
             class="flex shrink-0 items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
             :class="{ 'bg-gray-100 dark:bg-gray-700': sortBy === 'views' }"
           >
-            <span>觀看數</span>
+            <span>{{ t('views') }}</span>
             <span class="flex flex-col text-xs leading-none">
               <span
                 :class="{
@@ -126,7 +126,7 @@
               'bg-gray-100 dark:bg-gray-700': sortBy === 'publish_date',
             }"
           >
-            <span>發布日期</span>
+            <span>{{ t('publish_date') }}</span>
             <span class="flex flex-col text-xs leading-none">
               <span
                 :class="{
@@ -214,7 +214,7 @@
                 >
                   <span v-if="video.views" class="flex items-center gap-1">
                     <el-tag type="info" effect="light" round>
-                      觀看數
+                      {{ t('views') }}
                       {{ formatViews(video.views) }}
                     </el-tag>
                   </span>
@@ -223,7 +223,7 @@
                     class="flex items-center gap-1"
                   >
                     <el-tag type="info" effect="light" round>
-                      發布日期
+                      {{ t('publish_date') }}
                       {{ formatDate(video.publish_date) }}
                     </el-tag>
                   </span>
@@ -251,7 +251,7 @@
         <el-icon class="is-loading">
           <Loading />
         </el-icon>
-        <span class="ml-2">載入更多影片中...</span>
+        <span class="ml-2">{{ t('loading_more_videos') }}</span>
       </div>
     </div>
   </div>
@@ -569,7 +569,7 @@ const fetchVideos = async (isAppend = false) => {
     console.error("Error fetching data:", error);
     ElMessage({
       type: "error",
-      message: "載入資料時發生錯誤",
+      message: t("error_loading_data"),
     });
   } finally {
     isLoading.value = false;
