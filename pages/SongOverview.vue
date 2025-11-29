@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-[88vh] w-full flex-col p-2 lg:h-full">
-    <div class="mb-4 flex-none">
+    <div class="flex-none">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="w-full">
         <el-tab-pane label="ALL" name="all"> </el-tab-pane>
         <el-tab-pane
@@ -65,80 +65,154 @@
       </div>
 
       <!-- Video list view -->
-      <el-space
-        v-else
-        ref="scrollContainer"
-        class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"
-        wrap
-      >
-        <!-- Skeleton loading for videos -->
-        <template v-if="isLoading && allVideos.length === 0">
-          <el-card
-            v-for="i in 8"
-            :key="`skeleton-video-${i}`"
-            class="h-fit w-80 md:w-96"
-            shadow="hover"
+      <div v-else class="flex w-full flex-1 flex-col overflow-hidden">
+        <!-- Sorting controls -->
+        <div class="mb-2 flex flex-none gap-4 px-2">
+          <button
+            @click="toggleSort('views')"
+            class="flex items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+            :class="{ 'bg-gray-100 dark:bg-gray-700': sortBy === 'views' }"
           >
-            <div class="p-4">
-              <el-skeleton animated>
-                <template #template>
-                  <el-skeleton-item variant="image" class="h-48 w-full" />
-                  <div class="mt-4">
-                    <el-skeleton-item variant="text" class="w-full" />
-                  </div>
-                  <div class="mt-2 flex gap-2">
-                    <el-skeleton-item variant="text" class="w-16" />
-                    <el-skeleton-item variant="text" class="w-20" />
-                  </div>
-                </template>
-              </el-skeleton>
-            </div>
-          </el-card>
-        </template>
-
-        <!-- Actual video cards -->
-        <template v-else v-for="video in allVideos" :key="video.source_id">
-          <el-card class="h-fit w-80 md:w-96" shadow="hover">
-            <div class="p-4">
-              <a
-                :href="resolveVideoUrl(video.source_id)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="mb-2 block w-full"
-                @click="handleVideoClick(video.source_id)"
+            <span>觀看數</span>
+            <span class="flex flex-col text-xs leading-none">
+              <span
+                :class="{
+                  'text-blue-500': sortBy === 'views' && sortOrder === 'desc',
+                }"
+                >▲</span
               >
-                <img
-                  :src="
-                    'https://i.ytimg.com/vi/' +
-                    video.source_id +
-                    '/hqdefault.jpg'
-                  "
-                  class="h-48 w-full cursor-pointer object-cover"
-                  alt="video thumbnail"
-                />
-              </a>
-
-              <a
-                :href="resolveVideoUrl(video.source_id)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="mb-2 block w-full truncate text-lg text-blue-400 no-underline hover:text-blue-600 hover:underline"
+              <span
+                :class="{
+                  'text-blue-500': sortBy === 'views' && sortOrder === 'asc',
+                }"
+                >▼</span
               >
-                {{ video.name }}
-              </a>
+            </span>
+          </button>
 
-              <div class="flex gap-2" v-if="video.tags">
-                <el-tag
-                  v-for="tag in video.tags?.split(',')"
-                  :key="tag"
-                  type="success"
-                  >{{ tag }}</el-tag
-                >
+          <button
+            @click="toggleSort('publish_date')"
+            class="flex items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+            :class="{
+              'bg-gray-100 dark:bg-gray-700': sortBy === 'publish_date',
+            }"
+          >
+            <span>發布日期</span>
+            <span class="flex flex-col text-xs leading-none">
+              <span
+                :class="{
+                  'text-blue-500':
+                    sortBy === 'publish_date' && sortOrder === 'desc',
+                }"
+                >▲</span
+              >
+              <span
+                :class="{
+                  'text-blue-500':
+                    sortBy === 'publish_date' && sortOrder === 'asc',
+                }"
+                >▼</span
+              >
+            </span>
+          </button>
+        </div>
+
+        <!-- Video cards container -->
+        <el-space
+          ref="scrollContainer"
+          class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"
+          wrap
+        >
+          <!-- Skeleton loading for videos -->
+          <template v-if="isLoading && allVideos.length === 0">
+            <el-card
+              v-for="i in 8"
+              :key="`skeleton-video-${i}`"
+              class="h-fit w-80 md:w-96"
+              shadow="hover"
+            >
+              <div class="p-4">
+                <el-skeleton animated>
+                  <template #template>
+                    <el-skeleton-item variant="image" class="h-48 w-full" />
+                    <div class="mt-4">
+                      <el-skeleton-item variant="text" class="w-full" />
+                    </div>
+                    <div class="mt-2 flex gap-2">
+                      <el-skeleton-item variant="text" class="w-16" />
+                      <el-skeleton-item variant="text" class="w-20" />
+                    </div>
+                  </template>
+                </el-skeleton>
               </div>
-            </div>
-          </el-card>
-        </template>
-      </el-space>
+            </el-card>
+          </template>
+
+          <!-- Actual video cards -->
+          <template v-else v-for="video in sortedVideos" :key="video.source_id">
+            <el-card class="h-fit w-80 md:w-96" shadow="hover">
+              <div class="p-4">
+                <a
+                  :href="resolveVideoUrl(video.source_id)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="mb-2 block w-full"
+                  @click="handleVideoClick(video.source_id)"
+                >
+                  <img
+                    :src="
+                      'https://i.ytimg.com/vi/' +
+                      video.source_id +
+                      '/hqdefault.jpg'
+                    "
+                    class="h-48 w-full cursor-pointer object-cover"
+                    alt="video thumbnail"
+                  />
+                </a>
+
+                <a
+                  :href="resolveVideoUrl(video.source_id)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="mb-2 block w-full truncate text-lg text-blue-400 no-underline hover:text-blue-600 hover:underline"
+                >
+                  {{ video.name }}
+                </a>
+
+                <!-- Video metadata: views and publish date -->
+                <div
+                  class="mb-2 flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400"
+                >
+                  <span v-if="video.views" class="flex items-center gap-1">
+                    <el-tag type="info" effect="light" round>
+                      觀看數
+                      {{ formatViews(video.views) }}
+                    </el-tag>
+                  </span>
+                  <span
+                    v-if="video.publish_date"
+                    class="flex items-center gap-1"
+                  >
+                    <el-tag type="info" effect="light" round>
+                      發布日期
+                      {{ formatDate(video.publish_date) }}
+                    </el-tag>
+                  </span>
+                </div>
+
+                <div class="flex gap-2" v-if="video.tags">
+                  <el-tag
+                    v-for="tag in video.tags?.split(',')"
+                    :key="tag"
+                    type="success"
+                    >{{ tag }}</el-tag
+                  >
+                </div>
+              </div>
+            </el-card>
+          </template>
+        </el-space>
+      </div>
 
       <!-- Loading indicator for infinite scroll (only when loading more, not initial load) -->
       <div
@@ -223,8 +297,55 @@ const hasMore = ref(true);
 
 const isLoading = ref(true);
 
+// Sorting state
+const sortBy = ref(null); // 'views' or 'publish_date'
+const sortOrder = ref("desc"); // 'asc' or 'desc'
+
 // Ref for scrollable container
 const scrollContainer = ref(null);
+
+// Computed property for sorted videos
+const sortedVideos = computed(() => {
+  if (!sortBy.value) {
+    return allVideos.value;
+  }
+
+  const videos = [...allVideos.value];
+
+  if (sortBy.value === "views") {
+    videos.sort((a, b) => {
+      const viewsA = parseInt(a.views) || 0;
+      const viewsB = parseInt(b.views) || 0;
+      return sortOrder.value === "desc" ? viewsB - viewsA : viewsA - viewsB;
+    });
+  } else if (sortBy.value === "publish_date") {
+    videos.sort((a, b) => {
+      const dateA = new Date(a.publish_date || 0);
+      const dateB = new Date(b.publish_date || 0);
+      return sortOrder.value === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  }
+
+  return videos;
+});
+
+// Toggle sort function
+const toggleSort = (field) => {
+  if (sortBy.value === field) {
+    // If clicking the same field, cycle through: desc -> asc -> null (original order)
+    if (sortOrder.value === "desc") {
+      sortOrder.value = "asc";
+    } else {
+      // Third click: reset to original order
+      sortBy.value = null;
+      sortOrder.value = "desc";
+    }
+  } else {
+    // If clicking a different field, set it as sortBy and default to desc
+    sortBy.value = field;
+    sortOrder.value = "desc";
+  }
+};
 
 // Load more videos when scrolling to bottom
 const loadMoreVideos = async () => {
@@ -255,6 +376,34 @@ const handleScroll = () => {
 // 輔助函式: 解析路由
 const resolveVideoUrl = (source_id) => {
   return localePath("/SongPractice/" + source_id);
+};
+
+// 輔助函式: 格式化觀看數
+const formatViews = (views) => {
+  const num = parseInt(views);
+  if (isNaN(num)) return "0";
+
+  if (num >= 100000000) {
+    // 1億以上
+    return (num / 100000000).toFixed(1) + "億";
+  } else if (num >= 10000) {
+    // 1萬以上
+    return (num / 10000).toFixed(1) + "萬";
+  }
+  return num.toLocaleString();
+};
+
+// 輔助函式: 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 };
 
 const handleAuthorSelect = (authorId) => {
