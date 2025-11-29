@@ -1,7 +1,29 @@
 <template>
   <div class="flex h-[88vh] w-full flex-col p-2 lg:h-full">
-    <div class="flex-none">
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="w-full">
+    <div class="mb-4 flex-none">
+      <!-- Navigation header when viewing specific author -->
+      <div
+        v-if="activeTab !== 'all'"
+        class="flex items-center gap-4 border-b border-gray-200 py-2 dark:border-gray-700"
+      >
+        <el-button @click="handleBackToAll" type="primary" plain>
+          <el-icon class=""><Back /></el-icon>
+        </el-button>
+        <h2 class="gradient-text-tech mx-auto text-2xl font-bold">
+          {{ currentAuthor?.name || "" }}
+        </h2>
+        <el-button class="invisible">
+          <el-icon class=""><ArrowLeft /></el-icon>
+        </el-button>
+      </div>
+
+      <!-- Tabs only shown when on ALL view -->
+      <el-tabs
+        v-else
+        v-model="activeTab"
+        @tab-change="handleTabChange"
+        class="w-full"
+      >
         <el-tab-pane label="ALL" name="all"> </el-tab-pane>
         <el-tab-pane
           v-for="author in allAuthors"
@@ -67,7 +89,7 @@
       <!-- Video list view -->
       <div v-else class="flex w-full flex-1 flex-col overflow-hidden">
         <!-- Sorting controls -->
-        <div class="mb-2 flex flex-none gap-4 px-2">
+        <div class="mb-2 flex justify-end gap-4 px-6">
           <button
             @click="toggleSort('views')"
             class="flex items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -231,7 +253,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { Loading } from "@element-plus/icons-vue";
+import { Loading, ArrowLeft, Back } from "@element-plus/icons-vue";
 
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
@@ -303,6 +325,14 @@ const sortOrder = ref("desc"); // 'asc' or 'desc'
 
 // Ref for scrollable container
 const scrollContainer = ref(null);
+
+// Computed property for current author
+const currentAuthor = computed(() => {
+  if (!activeTab.value || activeTab.value === "all") return null;
+  return allAuthors.value.find(
+    (author) => String(author.id) === String(activeTab.value),
+  );
+});
 
 // Computed property for sorted videos
 const sortedVideos = computed(() => {
@@ -410,6 +440,11 @@ const handleAuthorSelect = (authorId) => {
   const authorIdStr = String(authorId);
   activeTab.value = authorIdStr;
   handleTabChange(authorIdStr);
+};
+
+const handleBackToAll = () => {
+  activeTab.value = "all";
+  handleTabChange("all");
 };
 
 const handleVideoClick = (source_id) => {
@@ -542,6 +577,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.gradient-text-tech {
+  background: linear-gradient(120deg, #4caf50, #2196f3, #673ab7, #4caf50);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-animation 8s ease infinite;
+  font-weight: bold;
+}
+
 .gradient-text-tech-animated :deep(.el-tabs__item) {
   background: linear-gradient(120deg, #4caf50, #2196f3, #673ab7, #4caf50);
   background-size: 300% 100%;
