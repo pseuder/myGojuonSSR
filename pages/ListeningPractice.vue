@@ -3,15 +3,9 @@
     <!-- 左側50音列表 -->
     <div class="flex w-full flex-col gap-2 md:gap-4">
       <div class="flex items-center gap-4">
-        <audio
-          ref="audioPlayer"
-          :src="`/sounds/${selectedSound.romaji}.mp3`"
-          @ended="audioEnded"
-        ></audio>
-
         <div class="hover:cursor-pointer" @click="togglePlay">
           <img
-            v-if="isPlaying"
+            v-if="audioPreloader.isPlaying.value"
             src="/images/volume2.png"
             alt="暫停"
             class="h-8 w-8"
@@ -258,6 +252,9 @@ const MYAPI = useApi();
 
 const { gtag } = useGtag();
 
+// 使用音檔預載系統
+const audioPreloader = useAudioPreloader();
+
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
@@ -312,8 +309,6 @@ const selectedSound = ref({
   type: "hiragana",
 });
 const handwritingCanvas = ref(null);
-const audioPlayer = ref(null);
-const isPlaying = ref(false);
 const isRandomMode = ref(false);
 const isRightAligned = ref(true);
 const showCurrentWord = ref(false);
@@ -366,26 +361,47 @@ const initializeCounts = () => {
 
 initializeCounts();
 
+// 監聽 selectedSound 變化，自動播放音檔
 watch(
   selectedSound,
-  (newSound, oldSound) => {
-    if (newSound !== oldSound) {
-      if (audioPlayer.value) {
-        audioPlayer.value.load();
-        nextTick(() => {
-          playSound();
-        });
-      }
+  async (newSound, oldSound) => {
+    if (newSound !== oldSound && newSound?.romaji) {
+      await audioPreloader.playSound(newSound.romaji);
     }
   },
   { deep: true },
 );
 
-watch(activeTab, () => {
+// 監聽 activeTab 變化，預載新 tab 的音檔
+watch(activeTab, async (newTab) => {
   selectedSound.value = currentSounds.value[0];
 
   // 重置soundCounts
   initializeCounts();
+
+  // 預載當前 tab 的所有音檔（排除 special，因為它可能沒有完整的 romaji）
+  if (newTab !== "special") {
+    const romajiList = fiftySounds.value[newTab]
+      .filter((sound) => sound.romaji)
+      .map((sound) => sound.romaji);
+    await audioPreloader.preloadSounds(romajiList);
+
+    // 在背景預載其他 tab 的音檔
+    const tabs = ["hiragana", "katakana", "dakuon", "handakuon", "yoon"];
+    const otherTabs = tabs.filter((tab) => tab !== newTab);
+    otherTabs.forEach((tab) => {
+      const otherRomajiList = fiftySounds.value[tab]
+        .filter((sound) => sound.romaji)
+        .map((sound) => sound.romaji);
+      audioPreloader.preloadInBackground(otherRomajiList);
+    });
+  } else {
+    // special tab - 只預載特別學習列表的音檔
+    const romajiList = specialLearningList.value
+      .filter((sound) => sound.romaji)
+      .map((sound) => sound.romaji);
+    await audioPreloader.preloadSounds(romajiList);
+  }
 });
 
 const findNextValidKana = (currentIndex, direction) => {
@@ -450,24 +466,9 @@ const changeSound = (type) => {
   }
 };
 
-const togglePlay = () => {
-  if (audioPlayer.value) {
-    // 每次點擊都重置到開始並播放
-    audioPlayer.value.currentTime = 0;
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
-};
-
-const audioEnded = () => {
-  isPlaying.value = false;
-};
-
-const playSound = () => {
-  if (audioPlayer.value) {
-    audioPlayer.value.currentTime = 0; // 重置音频到开始位置
-    audioPlayer.value.play();
-    isPlaying.value = true;
+const togglePlay = async () => {
+  if (selectedSound.value && selectedSound.value.romaji) {
+    await audioPreloader.playSound(selectedSound.value.romaji);
   }
 };
 
@@ -667,11 +668,29 @@ const handleClearSpecialLearningList = () => {
 const isSelectedSound = (sound) =>
   selectedSound.value && selectedSound.value.kana === sound.kana;
 
-onMounted(() => {
+onMounted(async () => {
   loadSpecialLearningList();
-  nextTick(() => {
-    playSound();
+
+  // 預載當前 tab 的所有音檔
+  const romajiList = fiftySounds.value[activeTab.value]
+    .filter((sound) => sound.romaji)
+    .map((sound) => sound.romaji);
+  await audioPreloader.preloadSounds(romajiList);
+
+  // 在背景預載其他 tab 的音檔
+  const tabs = ["hiragana", "katakana", "dakuon", "handakuon", "yoon"];
+  const otherTabs = tabs.filter((tab) => tab !== activeTab.value);
+  otherTabs.forEach((tab) => {
+    const otherRomajiList = fiftySounds.value[tab]
+      .filter((sound) => sound.romaji)
+      .map((sound) => sound.romaji);
+    audioPreloader.preloadInBackground(otherRomajiList);
   });
+
+  // 播放第一個音檔
+  if (selectedSound.value?.romaji) {
+    await audioPreloader.playSound(selectedSound.value.romaji);
+  }
 });
 </script>
 
