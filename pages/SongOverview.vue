@@ -381,8 +381,6 @@ const sortedVideos = computed(() => {
       const dateB = new Date(b.publish_date || 0);
       return sortOrder.value === "desc" ? dateB - dateA : dateA - dateB;
     });
-  } finally {
-    isLoading.value = false;
   }
 
   return videos;
