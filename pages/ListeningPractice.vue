@@ -314,6 +314,8 @@ const selectedSound = ref({
 const handwritingCanvas = ref(null);
 const audioPlayer = ref(null);
 const isPlaying = ref(false);
+
+// 從 localStorage 讀取 isRandomMode 設定，預設為 false
 const isRandomMode = ref(false);
 const isRightAligned = ref(true);
 const showCurrentWord = ref(false);
@@ -669,9 +671,41 @@ const isSelectedSound = (sound) =>
 
 onMounted(() => {
   loadSpecialLearningList();
+
+  // 從 localStorage 讀取 isRandomMode 設定
+  const savedIsRandomMode = localStorage.getItem("listeningPractice_isRandomMode");
+  if (savedIsRandomMode !== null) {
+    isRandomMode.value = savedIsRandomMode === "true";
+  }
+
+  // 從 localStorage 讀取 activeTab 設定
+  const savedActiveTab = localStorage.getItem("listeningPractice_activeTab");
+  if (savedActiveTab !== null) {
+    // 驗證 savedActiveTab 是否為有效值
+    const validTabs = ["hiragana", "katakana", "dakuon", "handakuon", "yoon", "special"];
+    if (validTabs.includes(savedActiveTab)) {
+      // 如果是 special，需要確保 specialLearningList 不為空
+      if (savedActiveTab === "special" && specialLearningList.value.length === 0) {
+        activeTab.value = "hiragana";
+      } else {
+        activeTab.value = savedActiveTab;
+      }
+    }
+  }
+
   nextTick(() => {
     playSound();
   });
+});
+
+// 監聽 isRandomMode 變化並保存到 localStorage
+watch(isRandomMode, (newValue) => {
+  localStorage.setItem("listeningPractice_isRandomMode", newValue.toString());
+});
+
+// 監聽 activeTab 變化並保存到 localStorage
+watch(activeTab, (newValue) => {
+  localStorage.setItem("listeningPractice_activeTab", newValue);
 });
 </script>
 

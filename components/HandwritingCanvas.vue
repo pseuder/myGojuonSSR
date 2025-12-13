@@ -109,7 +109,11 @@ const props = defineProps({
 
 const emit = defineEmits(["autoDetect", "changeSound"]);
 
-const exampleScale = ref(80);
+// 從 localStorage 讀取範例大小設定，預設為 80
+const savedExampleScale = process.client
+  ? localStorage.getItem("handwriting_exampleScale")
+  : null;
+const exampleScale = ref(savedExampleScale ? parseInt(savedExampleScale) : 80);
 
 const handleChangeSound = (direction) => {
   emit("changeSound", direction);
@@ -256,7 +260,16 @@ watch(
   },
 );
 watch(() => props.showExample, redrawCanvas);
-watch(exampleScale, redrawCanvas);
+
+// 監聽 exampleScale 變化
+watch(exampleScale, (newValue) => {
+  // 保存到 localStorage
+  if (process.client) {
+    localStorage.setItem("handwriting_exampleScale", newValue.toString());
+  }
+  // 重繪 canvas
+  redrawCanvas();
+});
 
 // 確保在每次繪製後重新繪製用戶路徑
 watch(

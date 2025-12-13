@@ -107,8 +107,6 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
-import { CaretLeft, CaretRight } from "@element-plus/icons-vue";
-import { ElMessageBox, ElMessage } from "element-plus";
 const { gtag } = useGtag();
 
 import HandwritingCanvas from "/components/HandwritingCanvas.vue";
@@ -116,7 +114,6 @@ import fiftySoundsData from "/data/fifty-sounds.json";
 
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
-const myAPI = useApi();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
@@ -165,9 +162,10 @@ useHead({
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
 const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
-const handwritingCanvas = ref(null);
 const audioPlayer = ref(null);
 const isPlaying = ref(false);
+
+// 從 localStorage 讀取 autoPlay 設定，預設為 false
 const autoPlay = ref(false);
 
 const tabs = [
@@ -277,10 +275,17 @@ const handleKeydown = (event) => {
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
-  // 初始加载时播放第一个音频
-  // nextTick(() => {
-  //   playSound();
-  // });
+
+  // 從 localStorage 讀取 autoPlay 設定
+  const savedAutoPlay = localStorage.getItem("writingPractice_autoPlay");
+  if (savedAutoPlay !== null) {
+    autoPlay.value = savedAutoPlay === "true";
+  }
+});
+
+// 監聽 autoPlay 變化並保存到 localStorage
+watch(autoPlay, (newValue) => {
+  localStorage.setItem("writingPractice_autoPlay", newValue.toString());
 });
 
 onUnmounted(() => {
