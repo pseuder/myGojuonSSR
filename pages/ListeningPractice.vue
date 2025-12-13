@@ -505,6 +505,7 @@ const SPECIAL_KANA_MATCHES = {
   カ: ["カ", "力"],
   く: ["く", "ㄑ"],
   ろ: ["ろ", "3"],
+  い: ["い", "り"],
 };
 
 const autoDetect = (predict_res) => {

@@ -14,7 +14,7 @@
       <div class="flex-grow">
         <el-tooltip placement="bottom">
           <template #content>
-            {{ t("supports_stylus") }}
+            <p style="white-space: pre-line">{{ t("supports_stylus") }}</p>
           </template>
           <span id="pen-info" title="">？</span>
         </el-tooltip>
