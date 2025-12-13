@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-full flex-col gap-4 px-4 py-4 md:flex-row">
     <!-- 左側50音列表 -->
-    <div class="flex w-full flex-col gap-4">
+    <div class="flex w-full flex-col gap-2 md:gap-4">
       <div class="flex items-center gap-4">
         <audio
           ref="audioPlayer"
@@ -20,22 +20,44 @@
         </div>
 
         <!-- 選擇字符集 -->
-        <el-select
-          v-model="activeTab"
-          placeholder="選擇字符集"
-          style="width: 130px"
-        >
+        <el-select v-model="activeTab" placeholder="選擇字符集">
           <el-option key="hiragana" :label="t('hiragana')" value="hiragana" />
           <el-option key="katakana" :label="t('katakana')" value="katakana" />
-          <el-option key="dakuon" :label="t('voiced_sounds')" value="dakuon" />
+          <el-option key="dakuon" :label="t('dakuon')" value="dakuon" />
           <el-option
             key="handakuon"
-            :label="t('semi_voiced_sounds')"
+            :label="t('handakuon')"
             value="handakuon"
           />
-          <el-option key="yoon" :label="t('contracted_sounds')" value="yoon" />
+          <el-option key="yoon" :label="t('yoon')" value="yoon" />
+          <el-option
+            key="special"
+            :label="t('special_sounds')"
+            value="special"
+            :disabled="specialLearningList.length === 0"
+            style="color: #00d4d4"
+          />
         </el-select>
 
+        <el-button @click="doSpecialLearning" type="text">
+          <img
+            src="/images/student.png"
+            alt="進行特別學習"
+            class="inline-block h-8 w-10"
+            title="進行特別學習"
+          />
+        </el-button>
+
+        <!-- 靠左/靠右 -->
+        <!-- <el-switch
+          v-model="isRightAligned"
+          active-text="靠右"
+          inactive-text="靠左"
+        /> -->
+      </div>
+
+      <!-- 預測值/信心值/Round -->
+      <div class="flex items-center gap-4">
         <!-- 隨機、循序模式切換 -->
         <el-switch
           v-model="isRandomMode"
@@ -44,53 +66,17 @@
           @change="handleModeChange"
         />
 
-        <!-- 上一個、下一個按鈕 -->
-        <div class="flex items-center gap-4">
-          <img
-            src="/images/arrow-circle-left-solid.svg"
-            alt="上一個"
-            class="h-8 w-8 cursor-pointer"
-            @click="changeSound('prev')"
-          />
-          <img
-            src="/images/arrow-circle-right-solid.svg"
-            alt="下一個"
-            class="h-8 w-8 cursor-pointer"
-            @click="changeSound('next')"
-          />
-        </div>
+        <div>{{ t("predicted_value") }}：{{ predictKana }}</div>
+        <!-- <div>{{ t("confidence_level") }}：{{ predictConfidence }}</div> -->
       </div>
 
-      <el-button
-        v-show="isLogin"
-        @click="handwritingCanvas.sendCanvasImageToBackend()"
-        type="primary"
-        class="h-12 w-full"
-        v-loading="handwritingCanvas?.isSending"
-        :disabled="activeTab === 'yoon'"
-      >
-        {{ t("ai_recognition") }}
-      </el-button>
-      <el-button
-        v-show="!isLogin"
-        type="primary"
-        class="h-12 w-full"
-        :disabled="true"
-      >
-        {{ t("login_to_enable_ai_recognition") }}
-      </el-button>
-
-      <div class="flex items-center gap-4">
-        <div>{{ t("predicted_value") }}：{{ predictKana }}</div>
-        <div>
-          {{ t("confidence_level") }}：{{
-            predictConfidence.toString().slice(0, 5)
-          }}
-        </div>
-        <el-popover placement="bottom" :width="300" trigger="click">
+      <!-- 加入特別學習 -->
+      <div class="flex items-center justify-between gap-2">
+        <el-popover placement="bottom" :width="fit - content" trigger="click">
           <template #reference>
             <el-tag type="success" class="text-lg hover:cursor-pointer"
-              >Round {{ round }}</el-tag
+              >Round {{ round }} - {{ completedInRound }} /
+              {{ totalInRound }}</el-tag
             >
           </template>
 
@@ -114,6 +100,65 @@
             </div>
           </div>
         </el-popover>
+
+        <div class="flex items-center gap-4 md:gap-8">
+          <img
+            src="/images/arrow-circle-left-solid.svg"
+            alt="上一個"
+            class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
+            @click="changeSound('prev')"
+          />
+          <img
+            src="/images/arrow-circle-right-solid.svg"
+            alt="下一個"
+            class="h-10 w-10 cursor-pointer md:h-8 md:w-8"
+            @click="changeSound('next')"
+          />
+        </div>
+      </div>
+
+      <!-- 第4列 -->
+      <div
+        class="flex items-center"
+        :class="isRightAligned ? 'justify-end' : 'justify-start'"
+      >
+        <el-badge :value="specialLearningList.length" class="mr-2">
+          <el-button
+            @click="specialLearningListDialogVisible = true"
+            type="text"
+            title="特別學習列表"
+          >
+            <el-icon :size="30"><List /></el-icon>
+          </el-button>
+        </el-badge>
+
+        <el-button @click="addSpecialLearning" type="text" title="加入特別學習">
+          <el-icon :size="30"><CirclePlusFilled /></el-icon>
+        </el-button>
+
+        <el-button
+          v-show="isLogin"
+          id="ai-recognition-button"
+          @click="handwritingCanvas.sendCanvasImageToBackend()"
+          class="tech-gradient-button h-12 w-full text-[18px]"
+          :disabled="handwritingCanvas?.isSending"
+        >
+          {{ t("ai_recognition") }}
+          <img
+            class="ml-2 h-6 w-6"
+            :class="{ 'animate-spin': handwritingCanvas?.isSending }"
+            src="/images/stars.png"
+            alt=""
+          />
+        </el-button>
+        <el-button
+          v-show="!isLogin"
+          type="primary"
+          class="h-12 w-full"
+          disabled
+        >
+          {{ t("login_to_enable_ai_recognition") }}
+        </el-button>
       </div>
 
       <el-tag
@@ -124,21 +169,22 @@
         {{ showCurrentWord ? t("hide_answer") : t("show_answer") }}
       </el-tag>
 
-      <div v-if="showCurrentWord" class="mt-4 rounded-lg bg-gray-100 p-4">
-        <h3 class="mb-2 text-xl font-bold">{{ t("") }}</h3>
-        <p>
-          <strong>{{ t("japanese") }}：</strong>{{ selectedSound.kana }}
-        </p>
-        <p>
-          <strong>{{ t("romaji") }}：</strong>{{ selectedSound.romaji }}
-        </p>
-        <p>
-          <strong>{{ t("kanji_source") }}：</strong>{{ selectedSound.evo }}
-        </p>
+      <div v-if="showCurrentWord" class="rounded-lg bg-gray-100 p-4">
+        <div class="flex justify-between md:flex-col">
+          <p>
+            <strong>{{ t("japanese") }}：</strong>{{ selectedSound.kana }}
+          </p>
+          <p>
+            <strong>{{ t("romaji") }}：</strong>{{ selectedSound.romaji }}
+          </p>
+          <p>
+            <strong>{{ t("kanji_source") }}：</strong>{{ selectedSound.evo }}
+          </p>
+        </div>
       </div>
     </div>
     <!-- 右側手寫區 -->
-    <div class="w-full content-center">
+    <div class="w-full content-center select-none">
       <el-card>
         <HandwritingCanvas
           ref="handwritingCanvas"
@@ -147,15 +193,59 @@
           :show-example="false"
           :current-type="activeTab"
           :learning-module="'listening'"
+          :show-change-sound-buttons="false"
+          :selected-sound="selectedSound"
         />
       </el-card>
     </div>
+
+    <!-- Special Learning List Dialog -->
+    <el-dialog
+      v-model="specialLearningListDialogVisible"
+      :title="t('special_learning_list')"
+      class="w-[90vw] max-w-[500px]"
+    >
+      <template #title>
+        <div class="items center flex justify-between">
+          <span>{{ t("special_learning_list") }}</span>
+          <el-button
+            @click="handleClearSpecialLearningList"
+            type="text"
+            style="font-size: 35px; padding: 0; margin: 0; line-height: 1"
+          >
+            <img
+              src="/images/broom.png"
+              alt=""
+              class="h-10 w-10 cursor-pointer"
+              :class="{ 'rotate-animation': isRotating }"
+            />
+          </el-button>
+        </div>
+      </template>
+
+      <div v-if="specialLearningList.length === 0">
+        {{ t("no_special_learning_words") }}
+      </div>
+      <div class="max-h-[70vh] overflow-auto" v-else>
+        <div
+          v-for="(item, index) in specialLearningList"
+          :key="index"
+          class="mt-2 flex items-center justify-between"
+        >
+          <span>{{ t(item.type) }} - {{ item.kana }}</span>
+          <el-button type="danger" @click="removeSpecialLearning(index)"
+            ><el-icon><Delete /></el-icon
+          ></el-button>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, reactive, watch, nextTick } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
+import { Delete, List, CirclePlusFilled } from "@element-plus/icons-vue";
 import HandwritingCanvas from "@/components/HandwritingCanvas.vue";
 import fiftySoundsData from "@/data/fifty-sounds.json";
 import { useI18n } from "vue-i18n";
@@ -166,25 +256,95 @@ const { user } = useAuth();
 
 const MYAPI = useApi();
 
+const { gtag } = useGtag();
+
+const config = useRuntimeConfig();
+const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+
+// 聽寫練習頁面專屬 SEO Meta
+useSeoMeta({
+  title: () => t("page_meta.listening_practice.title"),
+  description: () => t("page_meta.listening_practice.description"),
+  keywords: () => t("meta.keywords"),
+  ogTitle: () => t("page_meta.listening_practice.title"),
+  ogDescription: () => t("page_meta.listening_practice.description"),
+  ogImage: `${siteUrl}/favicon.png`,
+  ogUrl: () =>
+    `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/ListeningPractice`,
+  twitterTitle: () => t("page_meta.listening_practice.title"),
+  twitterDescription: () => t("page_meta.listening_practice.description"),
+  twitterImage: `${siteUrl}/favicon.png`,
+});
+
+// 添加結構化資料
+const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
+const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/ListeningPractice`;
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getCourseSchema(
+          t("page_meta.listening_practice.title"),
+          t("page_meta.listening_practice.description"),
+          pageUrl,
+        ),
+      ),
+    },
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getBreadcrumbSchema([
+          { name: t("home"), url: siteUrl },
+          { name: t("dictation_practice"), url: pageUrl },
+        ]),
+      ),
+    },
+  ],
+});
+
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
-const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
+const selectedSound = ref({
+  kana: "あ",
+  romaji: "a",
+  evo: "安",
+  type: "hiragana",
+});
 const handwritingCanvas = ref(null);
 const audioPlayer = ref(null);
 const isPlaying = ref(false);
 const isRandomMode = ref(false);
+const isRightAligned = ref(true);
 const showCurrentWord = ref(false);
+
+const specialLearningList = ref([]);
+const specialLearningListDialogVisible = ref(false);
 
 const predictKana = ref("");
 const predictConfidence = ref(0);
 
-let soundCounts = reactive({});
+const soundCounts = reactive({});
 const round = ref(1);
 
 const isLogin = computed(() => !!user.value);
 
-const currentSounds = computed(() =>
-  fiftySounds.value ? fiftySounds.value[activeTab.value] : [],
+const currentSounds = computed(() => {
+  if (activeTab.value === "special") {
+    return specialLearningList.value;
+  }
+  return fiftySounds.value ? fiftySounds.value[activeTab.value] : [];
+});
+
+const totalInRound = computed(
+  () => currentSounds.value.filter((sound) => sound.kana).length,
+);
+
+const completedInRound = computed(
+  () =>
+    currentSounds.value.filter(
+      (sound) => sound.kana && soundCounts[sound.kana] >= round.value,
+    ).length,
 );
 
 // 監聽 currentSounds 的變化，如果變化則重新初始化計數器
@@ -196,7 +356,7 @@ watch(currentSounds, () => {
 // 初始化計數器
 const initializeCounts = () => {
   // reset soundCounts
-  soundCounts = {};
+  Object.keys(soundCounts).forEach((key) => delete soundCounts[key]);
   currentSounds.value.forEach((sound) => {
     if (sound.kana) {
       soundCounts[sound.kana] = 0;
@@ -292,12 +452,10 @@ const changeSound = (type) => {
 
 const togglePlay = () => {
   if (audioPlayer.value) {
-    if (isPlaying.value) {
-      audioPlayer.value.pause();
-    } else {
-      audioPlayer.value.play();
-    }
-    isPlaying.value = !isPlaying.value;
+    // 每次點擊都重置到開始並播放
+    audioPlayer.value.currentTime = 0;
+    audioPlayer.value.play();
+    isPlaying.value = true;
   }
 };
 
@@ -317,16 +475,7 @@ const selectSound = (sound) => {
   if (sound.kana) {
     selectedSound.value = sound;
 
-    const dataToSend = {
-      learningModule: "listening",
-      learningMethod: "changeSound",
-      learningItem: sound.kana,
-    };
-
-    // 發送數據到後端
-    MYAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
-    });
+    gtag("event", `聽寫練習`);
   }
 };
 
@@ -336,12 +485,27 @@ const clearSelectedSound = () => {
 
 // 特殊對應關係配置
 const SPECIAL_KANA_MATCHES = {
-  な: ["な", "お"],
-  も: ["も", "を"],
-  り: ["り", "け"],
-  ぜ: ["ぜ", "だ"],
-  ぞ: ["ぞ", "だ"],
-  ぱ: ["ぱ", "ぽ"],
+  ニ: ["ニ", "二"],
+  ホ: ["ホ", "木"],
+  ヲ: ["ヲ", "ヨ", "ケ"],
+  ン: ["ン", "ソ", "ン"],
+  づ: ["づ", "ブ"],
+  ん: ["ん", "は", "ひ", "ほ"],
+  ヌ: ["ヌ", "又"],
+  エ: ["エ", "工", "エ"],
+  ロ: ["ロ", "口", "口", "囗", "□"],
+  ヘ: ["ヘ", "ㄟ", "へ"],
+  メ: ["メ", "シ", "x", "X"],
+  オ: ["オ", "才"],
+  ふ: ["ふ", "永", "示"],
+  ゆ: ["ゆ", "中", "由", "巾"],
+  ぬ: ["ぬ", "奴", "好"],
+  め: ["め", "女"],
+  チ: ["チ", "千"],
+  カ: ["カ", "力"],
+  く: ["く", "ㄑ"],
+  ろ: ["ろ", "3"],
+  い: ["い", "り"],
 };
 
 const autoDetect = (predict_res) => {
@@ -355,6 +519,7 @@ const autoDetect = (predict_res) => {
 
   if (predict_res.status == "error") {
     ElMessage.error(predict_res["message"] ?? "伺服器錯誤");
+    return;
   }
 
   const { predicted_hiragana, confidence } = predict_res.data;
@@ -381,23 +546,41 @@ const autoDetect = (predict_res) => {
       correctness: isCorrect,
     };
 
-    // 發送數據到後端
-    MYAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
-    });
+    gtag("event", `AI辨識`);
   } catch (error) {
     console.error("Error recording activity:", error);
   }
 };
 
 // 檢查假名是否匹配
+const areEqual = (strA, strB) => {
+  // 1. 先對字串進行規範化 (去除空格)
+  const normalizedA = strA.replace(/\s/g, "");
+  const normalizedB = strB.replace(/\s/g, "");
+
+  // 2. 嚴格比較 (您的原始邏輯 - 不考慮大小寫/重音)
+  const isStrictlyEqual =
+    normalizedA.localeCompare(normalizedB, "ja", {
+      sensitivity: "base",
+    }) === 0;
+
+  if (isStrictlyEqual) {
+    return true; // 如果嚴格相等，直接返回 true
+  }
+
+  // 3. 部分包含檢查 (新的機制)
+  const isPartialMatch = normalizedB.includes(normalizedA);
+
+  return isPartialMatch;
+};
+
 const checkKanaMatch = (currentKana, predictedKana) => {
   // 檢查特殊情況
   if (currentKana in SPECIAL_KANA_MATCHES) {
     return SPECIAL_KANA_MATCHES[currentKana].includes(predictedKana);
   }
   // 一般情況
-  return currentKana === predictedKana;
+  return areEqual(currentKana, predictedKana);
 };
 
 // 處理正確預測
@@ -413,10 +596,79 @@ const handleIncorrectPrediction = (predictedKana) => {
   ElMessage.error(t("incorrect") + `！: ${predictedKana}`);
 };
 
+// Special Learning Functions
+const loadSpecialLearningList = () => {
+  const list = localStorage.getItem("specialLearningList");
+  if (list) {
+    specialLearningList.value = JSON.parse(list);
+  }
+};
+
+const saveSpecialLearningList = () => {
+  localStorage.setItem(
+    "specialLearningList",
+    JSON.stringify(specialLearningList.value),
+  );
+};
+
+const addSpecialLearning = () => {
+  if (!selectedSound.value) return;
+  const isExist = specialLearningList.value.some(
+    (item) => item.kana === selectedSound.value.kana,
+  );
+  if (isExist) {
+    ElMessage.info(t("already_in_special_learning"));
+    return;
+  }
+  specialLearningList.value.push(selectedSound.value);
+  saveSpecialLearningList();
+  ElMessage.success(t("add_to_special_learning_success"));
+
+  gtag("event", `增加特別學習`);
+};
+
+const doSpecialLearning = () => {
+  if (specialLearningList.value.length === 0) {
+    ElMessage.warning(t("special_learning_list_empty"));
+    return;
+  }
+  activeTab.value = "special";
+  ElMessage.success(t("start_special_learning"));
+};
+
+const removeSpecialLearning = (index) => {
+  specialLearningList.value.splice(index, 1);
+  saveSpecialLearningList();
+
+  // if current mode is special, and list is empty, switch to hiragana
+  if (activeTab.value === "special" && specialLearningList.value.length === 0) {
+    activeTab.value = "hiragana";
+  }
+};
+
+const handleClearSpecialLearningList = () => {
+  ElMessageBox.confirm(t("clear_special_learning_list_confirm"), t("warning"), {
+    confirmButtonText: t("confirm"),
+    cancelButtonText: t("cancel"),
+    type: "warning",
+  })
+    .then(() => {
+      specialLearningList.value = [];
+      saveSpecialLearningList();
+      ElMessage.success(t("special_learning_list_cleared"));
+
+      specialLearningListDialogVisible.value = false;
+    })
+    .catch(() => {
+      ElMessage.info(t("cancelled"));
+    });
+};
+
 const isSelectedSound = (sound) =>
   selectedSound.value && selectedSound.value.kana === sound.kana;
 
 onMounted(() => {
+  loadSpecialLearningList();
   nextTick(() => {
     playSound();
   });
@@ -424,14 +676,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.sound-counts-container {
-  font-family: Arial, sans-serif;
-  width: 300px;
-  padding: 10px;
-  background-color: #f8f8f8;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.tech-gradient-button {
+  background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%) !important;
+  color: white !important;
+  border: none;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.3s ease;
 }
 
 h3 {
@@ -459,6 +710,7 @@ h3 {
 
 .sound {
   font-weight: bold;
+  width: max-content;
 }
 
 .count {

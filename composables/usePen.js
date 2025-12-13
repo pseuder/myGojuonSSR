@@ -1,7 +1,7 @@
 import { ref, reactive } from 'vue'
 
 export function usePen() {
-  const penMode = ref(true)
+  const penMode = ref(false)
   const penColor = ref('#000000')
   const penSize = ref(10)
   const penSizeOptions = reactive([

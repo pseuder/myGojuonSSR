@@ -1,91 +1,115 @@
 <template>
   <!-- 頁面結構基本不變 -->
-  <div class="flex flex-col lg:h-[80vh] lg:overflow-hidden">
+  <div class="flex h-full flex-col lg:overflow-hidden">
     <div
       v-if="currentVideo"
-      class="flex h-full flex-col gap-4 px-4 py-4 md:px-10 lg:flex-row"
+      class="flex h-full flex-col gap-4 px-4 py-4 md:px-10 lg:flex-row lg:gap-0"
     >
       <!-- 影片播放器+功能列 -->
-      <div class="flex flex-col lg:w-1/2">
-        <div class="gradient-text-tech-animated">
-          {{ currentVideo.name }} - {{ currentVideo.author }}
+      <div
+        class="flex h-full flex-col"
+        :style="{ width: isMobile ? '100%' : `${leftWidth}%` }"
+      >
+        <div class="shrink-0">
+          <!-- 影片標題＋作者 -->
+          <div class="gradient-text-tech-animated">
+            {{ currentVideo.name }} - {{ currentVideo.author }}
+          </div>
+          <!-- 標籤 -->
+          <div
+            v-if="currentVideo.tags"
+            class="mb-4 flex flex-wrap items-center gap-2"
+          >
+            <template v-for="tag in currentVideo.tags?.split(',')" :key="tag">
+              <el-tag type="info">{{ tag }}</el-tag>
+            </template>
+          </div>
         </div>
+
         <!-- 影片播放器 -->
-        <div id="player-container" ref="playerContainerRef" class="h-[70%]">
+        <div
+          id="player-container"
+          ref="playerContainerRef"
+          class="flex-1 overflow-auto"
+        >
           <div
             id="player"
             ref="playerRef"
-            style="max-height: 430px; aspect-ratio: 4/3"
+            class="aspect-video w-full lg:h-full"
           ></div>
         </div>
 
-        <!-- 功能列 (結構不變) -->
-        <div class="flex h-[10%] flex-col gap-2">
-          <div class="my-4 flex w-full flex-col items-center gap-2">
-            <div
-              class="flex w-full flex-row items-center justify-between gap-4"
-            >
-              <div
-                class="cursor-pointer hover:text-blue-500"
-                @click="goToPreviousLyric()"
-              >
-                <el-tag>A</el-tag> {{ t("jump_previous_line") }}
+        <!-- 功能列 -->
+        <div class="flex shrink-0 flex-col gap-2">
+          <div class="my-4 flex h-full w-full flex-col items-center gap-2">
+            <div class="flex w-full flex-row">
+              <div class="flex w-full flex-1 flex-col justify-between gap-4">
+                <div
+                  class="cursor-pointer hover:text-blue-500"
+                  @click="goToPreviousLyric()"
+                >
+                  <el-tag type="warning">A</el-tag>{{ t("jump_previous_line") }}
+                </div>
+                <div
+                  class="cursor-pointer hover:text-blue-500"
+                  @click="goToNextLyric()"
+                >
+                  <el-tag type="warning">D</el-tag>{{ t("jump_next_line") }}
+                </div>
+                <div
+                  class="cursor-pointer hover:text-blue-500"
+                  @click="toggleLoopCurrentLyric()"
+                >
+                  <el-tag type="warning">S</el-tag>
+                  <span v-if="isLooping" class="text-red-600">
+                    {{ t("stop_looping") }}</span
+                  >
+                  <span v-else> {{ t("loop_playback") }}</span>
+                </div>
               </div>
-              <div
-                class="cursor-pointer hover:text-blue-500"
-                @click="goToNextLyric()"
-              >
-                <el-tag>D</el-tag> {{ t("jump_next_line") }}
-              </div>
-              <div
-                class="cursor-pointer hover:text-blue-500"
-                @click="toggleLoopCurrentLyric()"
-              >
-                <el-tag>S</el-tag>
-                <span v-if="isLooping" class="text-red-600">{{
-                  t("stop_looping")
-                }}</span>
-                <span v-else>{{ t("loop_playback") }}</span>
-              </div>
-            </div>
 
-            <div class="flex w-full items-center justify-between gap-2">
-              <div class="flex flex-col gap-1">
+              <div class="flex flex-1 flex-col gap-1">
                 <el-checkbox v-model="autoScroll">{{
                   t("scrolling")
                 }}</el-checkbox>
                 <el-checkbox v-model="autoPlayNext">{{
                   t("auto_play_next_song")
                 }}</el-checkbox>
+                <el-input-number
+                  v-model="playbackRate"
+                  :precision="1"
+                  :step="0.1"
+                  :max="2"
+                  :min="0.3"
+                  @change="changePlaybackRate(playbackRate)"
+                />
               </div>
-
-              <el-radio-group v-model="display_mode" size="large">
-                <el-radio
-                  value="hira"
-                  size="large"
-                  style="margin-right: 18px"
-                  >{{ t("normal") }}</el-radio
-                >
-                <el-radio value="both" size="large">{{ t("mixed") }}</el-radio>
-              </el-radio-group>
-              <el-input-number
-                v-model="playbackRate"
-                :precision="1"
-                :step="0.1"
-                :max="2"
-                :min="0.3"
-                @change="changePlaybackRate(playbackRate)"
-              />
             </div>
           </div>
+
+          <el-tag v-if="currentVideo.remark" type="success">{{
+            currentVideo.remark
+          }}</el-tag>
         </div>
       </div>
 
-      <!-- 歌詞 (結構不變) -->
-      <el-scrollbar class="lyrics-container h-full overflow-x-auto lg:w-1/2">
-        <el-button type="warning" size="small" @click="handleCopyLyrics" plain>
+      <!-- 可拖動分隔線 (只在寬螢幕顯示) -->
+      <div
+        v-if="!isMobile"
+        class="mr-1 ml-1 hidden w-1 flex-shrink-0 cursor-col-resize items-center justify-center bg-gray-200 transition-colors hover:bg-blue-500 lg:flex"
+        @mousedown="startResize"
+      ></div>
+
+      <!-- 歌詞  -->
+      <el-scrollbar
+        class="h-full overflow-x-auto"
+        :style="{
+          width: isMobile ? '100%' : `calc(${100 - leftWidth}% - 4px)`,
+        }"
+      >
+        <!-- <el-button type="warning" size="small" @click="handleCopyLyrics" plain>
           複製歌詞
-        </el-button>
+        </el-button> -->
         <div class="">
           <div
             v-for="(line, index) in lyrics"
@@ -100,12 +124,12 @@
                 plain
                 @click="handleStartVideoClick(line.timestamp)"
               >
-                <el-icon :size="25">
-                  <Switch />
+                <el-icon :size="25" title="跳轉到此">
+                  <Right />
                 </el-icon>
               </el-button>
 
-              <el-button
+              <!-- <el-button
                 type="text"
                 plain
                 @click="togglePlayPause"
@@ -115,15 +139,21 @@
                   <VideoPause v-if="isPlaying" />
                   <VideoPlay v-else />
                 </el-icon>
-              </el-button>
+              </el-button> -->
             </div>
             <div class="flex flex-wrap gap-2">
               <template v-for="(ly, lyIndex) in line.lyrics" :key="lyIndex">
                 <div class="flex flex-col items-center justify-center">
-                  <div class="h-3 text-sm">
+                  <div
+                    class="h-3 text-sm"
+                    :style="ly.color ? { color: ly.color } : {}"
+                  >
                     {{ display_mode === "both" ? ly.cvt : "" }}
                   </div>
-                  <div class="text-xl">
+                  <div
+                    class="text-xl"
+                    :style="ly.color ? { color: ly.color } : {}"
+                  >
                     {{ ly.ori }}
                   </div>
                 </div>
@@ -137,12 +167,22 @@
     <div v-else class="flex h-full items-center justify-center">
       <p>Loading song...</p>
     </div>
+
+    <!-- 浮動播放/暫停按鈕 (只在小於lg螢幕時顯示) -->
+    <div v-if="currentVideo" class="fixed right-4 bottom-4 z-50 lg:hidden">
+      <el-button type="primary" size="large" circle @click="togglePlayPause">
+        <el-icon :size="24">
+          <VideoPause v-if="isPlaying" />
+          <VideoPlay v-else />
+        </el-icon>
+      </el-button>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import { VideoPause, VideoPlay, Switch } from "@element-plus/icons-vue";
+import { VideoPause, VideoPlay, Right } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
@@ -150,12 +190,14 @@ const { t } = useI18n();
 const MYAPI = useApi();
 const router = useRouter();
 const route = useRoute();
+const localePath = useLocalePath();
+
+const { gtag } = useGtag();
 
 // 使用 Nuxt 的 useRuntimeConfig 獲取環境變數，更安全
 const config = useRuntimeConfig();
-const API_BASE_URL = config.public.apiBase;
 
-// --- 核心變更：數據獲取與 SEO ---
+// --- 數據獲取與 SEO ---
 
 // 從路由參數獲取影片 ID，注意是 uid
 const videoId = computed(() => route.params.uid);
@@ -166,11 +208,13 @@ const {
   data: videoData,
   pending,
   error,
+  refresh: refreshVideoData,
 } = await useAsyncData(
-  `song-${uid}`, // 1. 唯一的 key，用於快取。通常用頁面名和參數組合
+  () => `song-${route.params.uid}`, // 使用函數讓快取鍵響應式更新
   async () => {
     try {
-      const response = await MYAPI.get(`/get_video/${uid}`);
+      const currentUid = route.params.uid; // 使用當前路由的 uid
+      const response = await MYAPI.get(`/get_video/${currentUid}`);
       if (!response.data) {
         // 在 Nuxt 中，建議這樣拋出一個帶有狀態碼的錯誤
         throw createError({
@@ -189,6 +233,10 @@ const {
       });
     }
   },
+  {
+    // 當路由參數改變時自動重新獲取數據
+    watch: [() => route.params.uid],
+  },
 );
 
 // 確保當 videoData 變化時，相關變數也跟著更新
@@ -206,45 +254,64 @@ const lyrics = computed(() => {
 });
 
 // 當 currentVideo 變化時，meta 標籤會自動更新
+const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+const songImageUrl = computed(() =>
+  currentVideo.value?.source_id
+    ? `https://i.ytimg.com/vi/${currentVideo.value.source_id}/hqdefault.jpg`
+    : `${siteUrl}/favicon.png`,
+);
+
 useSeoMeta({
   title: () =>
-    `${currentVideo.value?.name || "歌曲"} - ${currentVideo.value?.author || "演唱者"} | 日語歌曲練習`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author}｜${t(
+      "meta.title",
+    )}`,
   description: () =>
-    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能，幫助您學習日語。`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`,
   keywords: () =>
-    `日語歌曲, ${currentVideo.value?.name}, ${currentVideo.value?.author}, 日語學習, 歌詞練習, 發音練習`,
+    `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 歌曲, 歌詞, KTV`,
   ogTitle: () =>
-    `${currentVideo.value?.name} - ${currentVideo.value?.author} | 日語歌曲練習`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author}｜日語50音學習網站`,
   ogDescription: () =>
-    `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。提供歌詞對照、發音練習、循環播放等功能。`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`,
   twitterCard: "summary",
 });
 
-// [變更] 使用 useHead 處理 JSON-LD 結構化數據
+// 使用 useHead 處理 JSON-LD 結構化數據
+const { getVideoSchema, getBreadcrumbSchema } = useStructuredData();
 useHead({
-  script: [
-    {
-      type: "application/ld+json",
-      // 使用 getter 函數使其響應式
-      children: () =>
-        JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          name: `${currentVideo.value?.name} - ${currentVideo.value?.author} | 日語歌曲練習`,
-          description: `練習日語歌曲《${currentVideo.value?.name}》by ${currentVideo.value?.author}。`,
-          url: `http://localhost:3000${route.fullPath}`, // 正式環境請換成你的網域
-          mainEntity: {
-            "@type": "MusicRecording",
-            name: currentVideo.value?.name,
-            byArtist: { "@type": "Person", name: currentVideo.value?.author },
-            inLanguage: "ja",
-          },
-        }),
-    },
-  ],
   // 處理 YouTube API script 的載入
   script: [
     { src: "https://www.youtube.com/iframe_api", async: true, defer: true },
+    // 添加 VideoObject 結構化資料
+    {
+      type: "application/ld+json",
+      children: () => {
+        if (currentVideo.value) {
+          return JSON.stringify(getVideoSchema(currentVideo.value));
+        }
+        return "";
+      },
+    },
+    // 添加麵包屑結構化資料
+    {
+      type: "application/ld+json",
+      children: () => {
+        if (currentVideo.value) {
+          return JSON.stringify(
+            getBreadcrumbSchema([
+              { name: t("home"), url: siteUrl },
+              { name: t("song_practice"), url: `${siteUrl}/SongOverview` },
+              {
+                name: `${currentVideo.value.name} - ${currentVideo.value.author}`,
+                url: `${siteUrl}/SongPractice/${route.params.uid}`,
+              },
+            ]),
+          );
+        }
+        return "";
+      },
+    },
   ],
 });
 
@@ -262,6 +329,12 @@ const isPlaying = ref(false);
 const isLooping = ref(false);
 const loopStart = ref(0);
 const loopEnd = ref(0);
+
+// 可調整寬度相關
+const leftWidth = ref(50); // 左側寬度百分比
+const isResizing = ref(false);
+const windowWidth = ref(0);
+const isMobile = computed(() => windowWidth.value < 1024);
 
 const allVideos = ref([]);
 const fetchAllVideos = async () => {
@@ -346,6 +419,7 @@ const initializePlayer = () => {
         isPlaying.value = event.data === window.YT.PlayerState.PLAYING;
         if (event.data === window.YT.PlayerState.ENDED) {
           playNextSong();
+          player.seekTo(0);
         }
       },
       onError: (event) => {
@@ -371,30 +445,49 @@ const playNextSong = () => {
   const nextIndex = currentVideoIndexInAuthorList.value + 1;
   if (nextIndex < authorFilteredVideos.value.length) {
     const nextSong = authorFilteredVideos.value[nextIndex];
-    ElMessage.info(`即將播放下一首: ${nextSong.name}`);
+    ElMessage.info(`${t("play_next_song")}: ${nextSong.name}`);
     // [變更] 使用 Nuxt router 導航
-    router.push(`/SongPractice/${nextSong.source_id}`);
+    router.push(localePath(`/SongPractice/${nextSong.source_id}`));
   } else {
-    ElMessage.info("已是此歌手的最後一首歌，將從頭播放目前歌曲。");
+    ElMessage.info(t("last_song_and_replay"));
     if (player && player.seekTo) player.seekTo(0);
   }
 };
 
 // 當 videoId 改變時，重新初始化播放器
-watch(videoId, (newId, oldId) => {
+watch(videoId, async (newId, oldId) => {
   if (newId && newId !== oldId && process.client) {
     // 重置狀態
     currentLyricIndex.value = -1;
     isLooping.value = false;
-    // useAsyncData 會自動獲取新數據，我們只需重新初始化播放器
+
+    // 手動刷新數據以確保獲取新歌曲的信息
+    await refreshVideoData();
+
+    // 重新獲取所有影片列表（因為可能切換到不同歌手）
+    await fetchAllVideos();
+
+    // 重新初始化播放器
     initializePlayer();
   }
 });
 
-// 監聽自動播放設定變化並保存到本地存儲
+// 監聽自動播放, 播放速率和自動滾動的變化
 watch(autoPlayNext, (newValue) => {
   if (process.client) {
-    localStorage.setItem("autoPlayNext", JSON.stringify(newValue));
+    localStorage.setItem("myGojuon_autoPlayNext", JSON.stringify(newValue));
+  }
+});
+
+watch(playbackRate, (newValue) => {
+  if (process.client) {
+    localStorage.setItem("myGojuon_playbackRate", JSON.stringify(newValue));
+  }
+});
+
+watch(autoScroll, (newValue) => {
+  if (process.client) {
+    localStorage.setItem("myGojuon_autoScroll", JSON.stringify(newValue));
   }
 });
 
@@ -474,6 +567,21 @@ const goToNextLyric = () => {
   }
 };
 
+const skipBackward = () => {
+  if (player && player.getCurrentTime && player.seekTo) {
+    const currentTime = player.getCurrentTime();
+    player.seekTo(Math.max(0, currentTime - 3));
+  }
+};
+
+const skipForward = () => {
+  if (player && player.getCurrentTime && player.seekTo) {
+    const currentTime = player.getCurrentTime();
+    const duration = player.getDuration ? player.getDuration() : Infinity;
+    player.seekTo(Math.min(duration, currentTime + 3));
+  }
+};
+
 const toggleLoopCurrentLyric = () => {
   if (lyrics.value.length === 0 || currentLyricIndex.value < 0) {
     ElMessage.warning("沒有可循環的歌詞行");
@@ -532,17 +640,87 @@ const handleKeyPress = (event) => {
     case "s":
       toggleLoopCurrentLyric();
       break;
+    case "z":
+      skipBackward();
+      break;
+    case "x":
+      togglePlayPause();
+      break;
+    case "c":
+      skipForward();
+      break;
   }
+};
+
+// 更新窗口寬度
+const updateWindowWidth = () => {
+  if (process.client) {
+    windowWidth.value = window.innerWidth;
+  }
+};
+
+// 調整寬度功能
+const startResize = (event) => {
+  if (!process.client) return;
+  isResizing.value = true;
+  document.addEventListener("mousemove", onResize);
+  document.addEventListener("mouseup", stopResize);
+  // 防止文字選取
+  event.preventDefault();
+};
+
+const onResize = (event) => {
+  if (!isResizing.value || !process.client) return;
+
+  const container = document.querySelector(".lg\\:flex-row");
+  if (!container) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const newLeftWidth =
+    ((event.clientX - containerRect.left) / containerRect.width) * 100;
+
+  // 限制寬度在 20% 到 80% 之間
+  if (newLeftWidth >= 20 && newLeftWidth <= 80) {
+    leftWidth.value = newLeftWidth;
+  }
+};
+
+const stopResize = () => {
+  if (!process.client) return;
+  isResizing.value = false;
+  document.removeEventListener("mousemove", onResize);
+  document.removeEventListener("mouseup", stopResize);
+
+  // 保存到 localStorage
+  localStorage.setItem("myGojuon_leftWidth", JSON.stringify(leftWidth.value));
 };
 
 // onMounted 只在客戶端執行，是放置客戶端專用邏輯的最佳位置
 onMounted(() => {
   // 確保在客戶端環境下執行
   if (process.client) {
+    // 初始化窗口寬度
+    updateWindowWidth();
+    // 監聽窗口大小變化
+    window.addEventListener("resize", updateWindowWidth);
+
     // 載入本地存儲的設定
-    const savedAutoPlayNext = localStorage.getItem("autoPlayNext");
+    const savedAutoPlayNext = localStorage.getItem("myGojuon_autoPlayNext");
+    const savedPlaybackRate = localStorage.getItem("myGojuon_playbackRate");
+    const savedAutoScroll = localStorage.getItem("myGojuon_autoScroll");
+    const savedLeftWidth = localStorage.getItem("myGojuon_leftWidth");
+
     if (savedAutoPlayNext !== null) {
       autoPlayNext.value = JSON.parse(savedAutoPlayNext);
+    }
+    if (savedPlaybackRate !== null) {
+      playbackRate.value = JSON.parse(savedPlaybackRate);
+    }
+    if (savedAutoScroll !== null) {
+      autoScroll.value = JSON.parse(savedAutoScroll);
+    }
+    if (savedLeftWidth !== null) {
+      leftWidth.value = JSON.parse(savedLeftWidth);
     }
 
     fetchAllVideos();
@@ -557,16 +735,7 @@ onMounted(() => {
       initializePlayer();
     }
 
-    const dataToSend = {
-      learningModule: "song",
-      learningMethod: "get_video",
-      learningItem: videoId.value,
-    };
-
-    // 發送數據到後端
-    MYAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
-    });
+    gtag("event", currentVideo.value?.name);
 
     window.addEventListener("keypress", handleKeyPress, true);
   }
@@ -579,6 +748,10 @@ onUnmounted(() => {
       player = null;
     }
     window.removeEventListener("keypress", handleKeyPress);
+    window.removeEventListener("resize", updateWindowWidth);
+    // 清理拖動事件監聽器
+    document.removeEventListener("mousemove", onResize);
+    document.removeEventListener("mouseup", stopResize);
     // onYouTubeIframeAPIReady 設為 null，避免組件卸載後觸發
     window.onYouTubeIframeAPIReady = null;
   }
@@ -610,5 +783,13 @@ onUnmounted(() => {
   100% {
     background-position: 0% 50%;
   }
+}
+
+/* 防止拖動時選取文字 */
+.cursor-col-resize {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 </style>

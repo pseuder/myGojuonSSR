@@ -1,30 +1,25 @@
 <template>
-  <div class="relative h-full">
-    <nav class="navbar">
-      <el-menu
-        :default-active="activeIndex"
-        class="user-select-none w-full overflow-hidden"
-        mode="horizontal"
-        router
-      >
-        <MenuItem index="/" :label="t('home')" />
-        <MenuItem index="/WritingPractice" :label="t('handwriting_practice')" />
-        <MenuItem index="/ListeningPractice" :label="t('dictation_practice')" />
-        <MenuItem index="/SongOverview" :label="t('song_practice')" />
-        <MenuItem
-          index="/Analysis"
-          :label="t('activity_analysis')"
-          :condition="isAdmin"
-        />
-        <MenuItem
-          index="/Backend"
-          :label="t('admin_panel')"
-          :condition="isAdmin"
-        />
-      </el-menu>
-
-      <div class="flex flex-shrink-0 items-center gap-4">
-        <!-- <LocaleSwitcher @update:locale="recordActivity" /> -->
+  <div class="h-full w-full">
+    <nav class="flex w-full">
+      <div class="user-select-none w-[50%] grow">
+        <el-menu :default-active="activeIndex" mode="horizontal" router>
+          <MenuItem :index="localePath('/')" :label="t('home')" />
+          <MenuItem
+            :index="localePath('/WritingPractice')"
+            :label="t('handwriting_practice')"
+          />
+          <MenuItem
+            :index="localePath('/ListeningPractice')"
+            :label="t('dictation_practice')"
+          />
+          <MenuItem
+            :index="localePath('/SongOverview')"
+            :label="t('song_practice')"
+          />
+        </el-menu>
+      </div>
+      <div class="flex w-fit items-center gap-4">
+        <LocaleSwitcher @update:locale="recordActivity" />
         <myGoogleLogin />
       </div>
     </nav>
@@ -33,7 +28,7 @@
       <!-- 文字瀑布 -->
       <div ref="textContainer" class="text-fall-container"></div>
       <div
-        class="main-component relative"
+        class="main-component relative h-fit"
         :class="{
           'wide-layout':
             isInSongPractice || isInBackend || isInSongEdit || isInSongOverview,
@@ -60,6 +55,7 @@ const { initializeAuth, user } = useAuth();
 initializeAuth();
 
 const { t, locale } = useI18n();
+const localePath = useLocalePath();
 const route = useRoute();
 const activeIndex = ref("/");
 
@@ -68,7 +64,9 @@ const isAdmin = computed(() => user.value?.email === "iop890520@gmail.com");
 watch(
   () => route.path,
   (newPath) => {
-    activeIndex.value = newPath;
+    // 使用 localePath 確保 activeIndex 包含正確的語言前綴
+    const basePath = newPath.replace(/^\/(en|zh-TW)/, "") || "/";
+    activeIndex.value = localePath(basePath);
   },
   { immediate: true },
 );
@@ -80,27 +78,14 @@ watch(
 const isInSongPractice = computed(() => route.path.includes("/SongPractice"));
 const isInSongOverview = computed(() => route.path.includes("/SongOverview"));
 const isInBackend = computed(() => route.path.includes("/Backend"));
-const isInSongEdit = computed(() => route.path.includes("/songEdit"));
+const isInSongEdit = computed(() => route.path.includes("/SongEdit"));
 
 // ===== 文字瀑布 =====
 const TEXT_COUNT = 100; // 下落文字數量
 const textContainer = ref(null);
 const textArray = fiftySoundsData.hiragana
   .map((item) => item.kana)
-  .concat(fiftySoundsData.katakana.map((item) => item.kana))
-  .concat(fiftySoundsData.dakuon.map((item) => item.kana))
-  .concat(fiftySoundsData.handakuon.map((item) => item.kana));
-
-const recordActivity = (lang) => {
-  const dataToSend = {
-    learningModule: "language",
-    learningMethod: "switch_language",
-    learningItem: lang,
-  };
-  // axios.post("/record_activity", dataToSend).catch((error) => {
-  //   console.error("Error recording activity:", error);
-  // });
-};
+  .concat(fiftySoundsData.katakana.map((item) => item.kana));
 
 onMounted(() => {
   // document.documentElement.setAttribute("lang", locale.value);
@@ -141,16 +126,8 @@ onMounted(() => {
 </script>
 
 <style>
-.navbar {
-  height: fit-content;
-  position: relative;
-  z-index: 2;
-  display: flex;
-}
-
 .content {
   height: calc(100% - 60px);
-  /* height: 94%; */
   overflow-y: auto;
   padding: 20px;
   background-image: url("/images/gojuon-writing.jpg");
@@ -170,6 +147,12 @@ onMounted(() => {
 
 .wide-layout {
   max-width: 90vw !important;
+}
+
+@media (min-width: 1024px) {
+  .wide-layout {
+    height: 100%;
+  }
 }
 
 /* ---------------------------

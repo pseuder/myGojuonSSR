@@ -4,10 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   app: {
     head: {
-      title: "日語50音學習網站",
-      htmlAttrs: {
-        lang: "zh-TW",
-      },
+      // title 和其他 meta 由各頁面動態設置
       link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.png" }],
     },
   },
@@ -18,6 +15,7 @@ export default defineNuxtConfig({
     "@nuxtjs/i18n",
     "@nuxtjs/tailwindcss",
     "nuxt-gtag",
+    "@nuxt/image",
   ],
   site: {
     url: process.env.NUXT_PUBLIC_SITE_BASE,
@@ -37,6 +35,12 @@ export default defineNuxtConfig({
         iso: "zh-TW",
         name: "繁體中文",
         file: "TW.json",
+      },
+      {
+        code: "en",
+        iso: "en",
+        name: "English",
+        file: "EN.json",
       },
     ],
     defaultLocale: "zh-TW",

@@ -1,44 +1,59 @@
 <template>
-  <div class="" ref="canvasContainer">
-    <div class="my-2 flex items-center justify-between">
-      <el-switch
-        v-model="penMode"
-        :active-text="t('stylus')"
-        :inactive-text="t('touch')"
-        @change="handleModeChange"
-      />
+  <div class="select-none" ref="canvasContainer">
+    <div class="flex grow gap-2" v-if="showExample">
+      <span class="flex-shrink-0">{{ t("example_size") }}</span>
+      <el-slider v-model="exampleScale" />
+    </div>
+    <div class="my-2 flex items-center justify-end gap-2">
+      <div class="" v-if="selectedSound.type">
+        <el-tag type="info">{{
+          t(selectedSound.type ? selectedSound.type : "")
+        }}</el-tag>
+      </div>
 
-      <!-- <el-select
-        v-model="penSize"
-        placeholder="筆觸粗細"
-        size="small"
-        @change="updatePenStyle"
-        style="width: 50px"
-      >
-        <el-option
-          v-for="option in penSizeOptions"
-          :key="option.value"
-          :label="option.label"
-          :value="option.value"
-        />
-      </el-select> -->
-      <el-button
-        @click="handleClear"
-        type="text"
-        style="font-size: 35px; padding: 0; margin: 0; line-height: 1"
-      >
-        <img
-          src="/images/broom.png"
-          alt=""
-          class="h-10 w-10 cursor-pointer"
-          :class="{ 'rotate-animation': isRotating }"
-        />
-      </el-button>
+      <div class="flex-grow">
+        <el-tooltip placement="bottom">
+          <template #content>
+            <p style="white-space: pre-line">{{ t("supports_stylus") }}</p>
+          </template>
+          <span id="pen-info" title="">？</span>
+        </el-tooltip>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <el-button
+          @click="handleClear"
+          type="text"
+          class="m-0 p-0 text-[35px] leading-none"
+        >
+          <img
+            src="/images/broom.png"
+            alt=""
+            class="h-10 w-10 cursor-pointer"
+            :class="{ 'rotate-animation': isRotating }"
+          />
+        </el-button>
+        <!-- 上一個、下一個按鈕 -->
+        <div v-if="showChangeSoundButtons" class="flex items-center gap-4">
+          <img
+            src="/images/arrow-circle-left-solid.svg"
+            alt="上一個"
+            class="h-10 w-10 cursor-pointer"
+            @click="handleChangeSound('prev')"
+          />
+          <img
+            src="/images/arrow-circle-right-solid.svg"
+            alt="下一個"
+            class="h-10 w-10 cursor-pointer"
+            @click="handleChangeSound('next')"
+          />
+        </div>
+      </div>
     </div>
     <div class="canvas-wrapper" ref="canvasWrapper">
       <canvas
         ref="canvas"
-        @pointerdown="startDrawing"
+        @pointerdown="handlePointerDown"
         @pointermove="draw"
         @pointerup="stopDrawing"
         @pointerout="stopDrawing"
@@ -77,9 +92,28 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  showChangeSoundButtons: {
+    type: Boolean,
+    default: true,
+  },
+  selectedSound: {
+    type: Object,
+    default: () => ({
+      kana: "",
+      romaji: "",
+      evo: "",
+      type: "",
+    }),
+  },
 });
 
-const emit = defineEmits(["autoDetect"]);
+const emit = defineEmits(["autoDetect", "changeSound"]);
+
+const exampleScale = ref(80);
+
+const handleChangeSound = (direction) => {
+  emit("changeSound", direction);
+};
 
 const {
   canvas,
@@ -93,7 +127,7 @@ const {
   drawGrid,
   drawExampleKana,
   handleResize,
-} = useCanvas(props);
+} = useCanvas(props, exampleScale);
 
 const {
   penMode,
@@ -115,6 +149,13 @@ const {
   clearUserPaths,
   getDrawingDuration,
 } = useDrawing(canvas, penMode, penColor, penSize, ctx, handleDrawingStop);
+
+const handlePointerDown = (event) => {
+  if (event.pointerType === "pen") {
+    penMode.value = true;
+  }
+  startDrawing(event);
+};
 
 const isSending = ref(false);
 const isRotating = ref(false);
@@ -150,7 +191,7 @@ const sendCanvasImageToBackend = async () => {
     isSending.value = true;
     const imageBlob = await generateCanvasImage();
     const formData = new FormData();
-    formData.append("char_type", props.currentType);
+    formData.append("char_type", props.selectedSound.type);
     formData.append("image", imageBlob, "handwriting.png");
     formData.append("learning_item", props.exampleKana);
 
@@ -159,6 +200,7 @@ const sendCanvasImageToBackend = async () => {
         "Content-Type": "multipart/form-data",
       },
     });
+    console.log("Auto-detect response:", response);
     emit("autoDetect", response);
   } catch (error) {
     console.error(error);
@@ -214,6 +256,7 @@ watch(
   },
 );
 watch(() => props.showExample, redrawCanvas);
+watch(exampleScale, redrawCanvas);
 
 // 確保在每次繪製後重新繪製用戶路徑
 watch(

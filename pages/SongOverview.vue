@@ -1,8 +1,30 @@
 <template>
   <div class="flex h-[88vh] w-full flex-col p-2 lg:h-full">
     <div class="mb-4 flex-none">
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="w-full">
-        <el-tab-pane label="全部" name="all"> </el-tab-pane>
+      <!-- Navigation header when viewing specific author -->
+      <div
+        v-if="activeTab !== 'all'"
+        class="flex items-center gap-4 border-b border-gray-200 py-2 dark:border-gray-700"
+      >
+        <el-button @click="handleBackToAll" type="primary" plain>
+          <el-icon class=""><Back /></el-icon>
+        </el-button>
+        <h2 class="gradient-text-tech mx-auto text-2xl font-bold">
+          {{ currentAuthor?.name || "" }}
+        </h2>
+        <el-button class="invisible">
+          <el-icon class=""><ArrowLeft /></el-icon>
+        </el-button>
+      </div>
+
+      <!-- Tabs only shown when on ALL view -->
+      <el-tabs
+        v-else
+        v-model="activeTab"
+        @tab-change="handleTabChange"
+        class="w-full"
+      >
+        <el-tab-pane label="ALL" name="all"> </el-tab-pane>
         <el-tab-pane
           v-for="author in allAuthors"
           :key="author.id"
@@ -20,105 +42,275 @@
         v-if="activeTab === 'all'"
         class="flex w-full flex-1 flex-wrap content-start justify-center gap-4 overflow-y-auto p-2"
       >
-        <template v-for="author in allAuthors" :key="author.id">
-          <el-badge :value="author.song_count" type="primary">
-            <el-card
-              class="thumbnail-background h-fit w-80 cursor-pointer md:w-96"
-              shadow="hover"
-              @click="handleAuthorSelect(author.id)"
-              style="
-                background-image: url(&quot;https://lh3.googleusercontent.com/8zyKHiMiFonK_lTDa4K8FzYbOz1p9UjkasZ6lwFPDHckFNf6h5tmVusQ4fH6wx703hu_eeFJ3yt0z88=w816-h340-p-l90-rj&quot;);
-                background-size: cover;
-                background-position: top;
-              "
-            >
-              <div class="h-full w-full p-4 text-center">
-                <p class="thumbnail-text text-lg font-bold">
-                  {{ author.name }}
-                </p>
-              </div>
+        <!-- Skeleton loading for authors -->
+        <template v-if="isLoading && allAuthors.length === 0">
+          <div
+            v-for="i in 6"
+            :key="`skeleton-author-${i}`"
+            class="flex flex-col"
+          >
+            <el-card class="h-52 w-80 p-0 md:w-96" shadow="hover">
+              <el-skeleton animated>
+                <template #template>
+                  <el-skeleton-item variant="image" class="h-52 w-full" />
+                </template>
+              </el-skeleton>
             </el-card>
-          </el-badge>
+            <el-skeleton animated class="mt-2">
+              <template #template>
+                <el-skeleton-item variant="text" class="w-48" />
+              </template>
+            </el-skeleton>
+          </div>
+        </template>
+
+        <!-- Actual author cards -->
+        <template v-else v-for="author in allAuthors" :key="author.id">
+          <div
+            class="flex cursor-pointer flex-col hover:scale-105"
+            @click="handleAuthorSelect(author.id)"
+          >
+            <el-card class="h-52 w-80 p-0 md:w-96" shadow="hover">
+              <NuxtImg
+                :src="`/thumbnails/${author.name}.jpg`"
+                class="h-full w-full"
+                :alt="author.name"
+                position="top"
+                style="object-fit: cover; object-position: top"
+              />
+            </el-card>
+            <div class="text-lg font-bold">
+              {{ author.name }} - {{ author.song_count }} {{ t("songs") }}
+            </div>
+          </div>
         </template>
       </div>
 
       <!-- Video list view -->
-      <el-space
-        v-else
-        ref="scrollContainer"
-        class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"
-        wrap
-      >
-        <template v-for="video in allVideos" :key="video.source_id">
-          <el-card class="h-fit w-80 md:w-96" shadow="hover">
-            <div class="p-4">
-              <a
-                :href="resolveVideoUrl(video.source_id)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="mb-2 block w-full"
-              >
-                <img
-                  :src="
-                    'https://i.ytimg.com/vi/' +
-                    video.source_id +
-                    '/hqdefault.jpg'
-                  "
-                  class="h-48 w-full cursor-pointer object-cover"
-                  alt="video thumbnail"
-                />
-              </a>
+      <div v-else class="flex w-full flex-1 flex-col overflow-hidden">
+        <!-- Sorting controls -->
+        <div class="mb-2 flex gap-4">
+          <el-input
+            v-model="queryInput"
+            calss="grow"
+            :placeholder="t('search_placeholder')"
+            clearable
+          />
 
-              <a
-                :href="resolveVideoUrl(video.source_id)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="mb-2 block w-full truncate text-lg text-blue-400 no-underline hover:text-blue-600 hover:underline"
+          <button
+            @click="toggleSort('views')"
+            class="flex shrink-0 items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+            :class="{ 'bg-gray-100 dark:bg-gray-700': sortBy === 'views' }"
+          >
+            <span>{{ t("views") }}</span>
+            <span class="flex flex-col text-xs leading-none">
+              <span
+                :class="{
+                  'text-blue-500': sortBy === 'views' && sortOrder === 'desc',
+                }"
+                >▲</span
               >
-                {{ video.name }} - {{ video.author }}
-              </a>
+              <span
+                :class="{
+                  'text-blue-500': sortBy === 'views' && sortOrder === 'asc',
+                }"
+                >▼</span
+              >
+            </span>
+          </button>
 
-              <div class="flex gap-2" v-if="video.tags">
-                <el-tag
-                  v-for="tag in video.tags?.split(',')"
-                  :key="tag"
-                  type="success"
-                  >{{ tag }}</el-tag
-                >
+          <button
+            @click="toggleSort('publish_date')"
+            class="flex shrink-0 items-center gap-1 rounded px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+            :class="{
+              'bg-gray-100 dark:bg-gray-700': sortBy === 'publish_date',
+            }"
+          >
+            <span>{{ t("publish_date") }}</span>
+            <span class="flex flex-col text-xs leading-none">
+              <span
+                :class="{
+                  'text-blue-500':
+                    sortBy === 'publish_date' && sortOrder === 'desc',
+                }"
+                >▲</span
+              >
+              <span
+                :class="{
+                  'text-blue-500':
+                    sortBy === 'publish_date' && sortOrder === 'asc',
+                }"
+                >▼</span
+              >
+            </span>
+          </button>
+        </div>
+
+        <!-- Video cards container -->
+        <el-space
+          ref="scrollContainer"
+          class="w-full flex-1 justify-center overflow-x-hidden overflow-y-auto"
+          wrap
+        >
+          <!-- Skeleton loading for videos -->
+          <template v-if="isLoading && allVideos.length === 0">
+            <el-card
+              v-for="i in 8"
+              :key="`skeleton-video-${i}`"
+              class="h-fit w-80 md:w-96"
+              shadow="hover"
+            >
+              <div class="p-4">
+                <el-skeleton animated>
+                  <template #template>
+                    <el-skeleton-item variant="image" class="h-48 w-full" />
+                    <div class="mt-4">
+                      <el-skeleton-item variant="text" class="w-full" />
+                    </div>
+                    <div class="mt-2 flex gap-2">
+                      <el-skeleton-item variant="text" class="w-16" />
+                      <el-skeleton-item variant="text" class="w-20" />
+                    </div>
+                  </template>
+                </el-skeleton>
               </div>
-            </div>
-          </el-card>
-        </template>
-      </el-space>
+            </el-card>
+          </template>
 
-      <!-- Loading indicator for infinite scroll -->
+          <!-- Actual video cards -->
+          <template v-else v-for="video in sortedVideos" :key="video.source_id">
+            <el-card class="h-fit w-80 md:w-96" shadow="hover">
+              <div class="p-4">
+                <a
+                  :href="resolveVideoUrl(video.source_id)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="mb-2 block w-full"
+                  @click="handleVideoClick(video.source_id)"
+                >
+                  <img
+                    :src="
+                      'https://i.ytimg.com/vi/' +
+                      video.source_id +
+                      '/hqdefault.jpg'
+                    "
+                    class="h-48 w-full cursor-pointer object-cover"
+                    alt="video thumbnail"
+                  />
+                </a>
+
+                <a
+                  :href="resolveVideoUrl(video.source_id)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="mb-2 block w-full truncate text-lg text-blue-400 no-underline hover:text-blue-600 hover:underline"
+                >
+                  {{ video.name }}
+                </a>
+
+                <!-- Video metadata: views and publish date -->
+                <div
+                  class="mb-2 flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400"
+                >
+                  <span v-if="video.views" class="flex items-center gap-1">
+                    <el-tag type="info" effect="light" round>
+                      {{ t("views") }}
+                      {{ formatViews(video.views) }}
+                    </el-tag>
+                  </span>
+                  <span
+                    v-if="video.publish_date"
+                    class="flex items-center gap-1"
+                  >
+                    <el-tag type="info" effect="light" round>
+                      {{ t("publish_date") }}
+                      {{ formatDate(video.publish_date) }}
+                    </el-tag>
+                  </span>
+                </div>
+
+                <div class="flex gap-2" v-if="video.tags">
+                  <el-tag
+                    v-for="tag in video.tags?.split(',')"
+                    :key="tag"
+                    type="success"
+                    >{{ tag }}</el-tag
+                  >
+                </div>
+              </div>
+            </el-card>
+          </template>
+        </el-space>
+      </div>
+
+      <!-- Loading indicator for infinite scroll (only when loading more, not initial load) -->
       <div
-        v-if="isLoading && activeTab !== 'all'"
+        v-if="isLoading && activeTab !== 'all' && allVideos.length > 0"
         class="flex justify-center py-4"
       >
         <el-icon class="is-loading">
           <Loading />
         </el-icon>
-        <span class="ml-2">載入影片中...</span>
-      </div>
-
-      <!-- End of data indicator -->
-      <div
-        v-if="!hasMore && allVideos.length > 0 && activeTab !== 'all'"
-        class="flex justify-center py-4 text-gray-500"
-      >
-        已載入全部影片 (共 {{ total }} 部)
+        <span class="ml-2">{{ t("loading_more_videos") }}</span>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { Loading } from "@element-plus/icons-vue";
+import { Loading, ArrowLeft, Back } from "@element-plus/icons-vue";
+
+import { useI18n } from "vue-i18n";
+const { t, locale } = useI18n();
+const localePath = useLocalePath();
 
 const MYAPI = useApi();
+const config = useRuntimeConfig();
+const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+
+// 歌曲總覽頁面專屬 SEO Meta
+useSeoMeta({
+  title: () => t("page_meta.song_overview.title"),
+  description: () => t("page_meta.song_overview.description"),
+  keywords: () => t("meta.keywords"),
+  ogTitle: () => t("page_meta.song_overview.title"),
+  ogDescription: () => t("page_meta.song_overview.description"),
+  ogImage: `${siteUrl}/favicon.png`,
+  ogUrl: () =>
+    `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/SongOverview`,
+  twitterTitle: () => t("page_meta.song_overview.title"),
+  twitterDescription: () => t("page_meta.song_overview.description"),
+  twitterImage: `${siteUrl}/favicon.png`,
+});
+
+// 添加結構化資料
+const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
+const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/SongOverview`;
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getCourseSchema(
+          t("page_meta.song_overview.title"),
+          t("page_meta.song_overview.description"),
+          pageUrl,
+        ),
+      ),
+    },
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getBreadcrumbSchema([
+          { name: t("home"), url: siteUrl },
+          { name: t("song_practice"), url: pageUrl },
+        ]),
+      ),
+    },
+  ],
+});
 
 const router = useRouter();
 const route = useRoute();
@@ -131,11 +323,88 @@ const page_size = ref(10);
 const page_number = ref(1);
 const total = ref(0);
 const hasMore = ref(true);
+const queryInput = ref("");
 
 const isLoading = ref(true);
 
+// Sorting state
+const sortBy = ref(null); // 'views' or 'publish_date'
+const sortOrder = ref("desc"); // 'asc' or 'desc'
+
 // Ref for scrollable container
 const scrollContainer = ref(null);
+
+// Computed property for current author
+const currentAuthor = computed(() => {
+  if (!activeTab.value || activeTab.value === "all") return null;
+  return allAuthors.value.find(
+    (author) => String(author.id) === String(activeTab.value),
+  );
+});
+
+// Computed property for filtered videos based on search query
+const filteredVideos = computed(() => {
+  if (!queryInput.value.trim()) {
+    return allVideos.value;
+  }
+
+  const searchTerm = queryInput.value.toLowerCase().trim();
+
+  return allVideos.value.filter((video) => {
+    // Search in video name
+    const nameMatch = video.name?.toLowerCase().includes(searchTerm);
+
+    // Search in tags (備註)
+    const tagsMatch = video.tags?.toLowerCase().includes(searchTerm);
+
+    return nameMatch || tagsMatch;
+  });
+});
+
+// Computed property for sorted videos
+const sortedVideos = computed(() => {
+  const videos = [...filteredVideos.value];
+
+  if (!sortBy.value) {
+    return videos;
+  }
+
+  if (sortBy.value === "views") {
+    videos.sort((a, b) => {
+      const viewsA = parseInt(a.views) || 0;
+      const viewsB = parseInt(b.views) || 0;
+      return sortOrder.value === "desc" ? viewsB - viewsA : viewsA - viewsB;
+    });
+  } else if (sortBy.value === "publish_date") {
+    videos.sort((a, b) => {
+      const dateA = new Date(a.publish_date || 0);
+      const dateB = new Date(b.publish_date || 0);
+      return sortOrder.value === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  } finally {
+    isLoading.value = false;
+  }
+
+  return videos;
+});
+
+// Toggle sort function
+const toggleSort = (field) => {
+  if (sortBy.value === field) {
+    // If clicking the same field, cycle through: desc -> asc -> null (original order)
+    if (sortOrder.value === "desc") {
+      sortOrder.value = "asc";
+    } else {
+      // Third click: reset to original order
+      sortBy.value = null;
+      sortOrder.value = "desc";
+    }
+  } else {
+    // If clicking a different field, set it as sortBy and default to desc
+    sortBy.value = field;
+    sortOrder.value = "desc";
+  }
+};
 
 // Load more videos when scrolling to bottom
 const loadMoreVideos = async () => {
@@ -165,13 +434,57 @@ const handleScroll = () => {
 
 // 輔助函式: 解析路由
 const resolveVideoUrl = (source_id) => {
-  return "/SongPractice/" + source_id;
+  return localePath("/SongPractice/" + source_id);
+};
+
+// 輔助函式: 格式化觀看數
+const formatViews = (views) => {
+  const num = parseInt(views);
+  if (isNaN(num)) return "0";
+
+  if (num >= 100000000) {
+    // 1億以上
+    return (num / 100000000).toFixed(1) + "億";
+  } else if (num >= 10000) {
+    // 1萬以上
+    return (num / 10000).toFixed(1) + "萬";
+  }
+  return num.toLocaleString();
+};
+
+// 輔助函式: 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 };
 
 const handleAuthorSelect = (authorId) => {
   const authorIdStr = String(authorId);
   activeTab.value = authorIdStr;
   handleTabChange(authorIdStr);
+};
+
+const handleBackToAll = () => {
+  activeTab.value = "all";
+  handleTabChange("all");
+};
+
+const handleVideoClick = (source_id) => {
+  const dataToSend = {
+    source_id: source_id,
+  };
+
+  // 發送數據到後端
+  MYAPI.post("/record_song_activity", dataToSend).catch((error) => {
+    console.error("Error recording activity:", error);
+  });
 };
 
 const handleTabChange = async (tabName) => {
@@ -208,10 +521,13 @@ const handleTabChange = async (tabName) => {
 const fetchVideos = async (isAppend = false) => {
   isLoading.value = true;
 
-  const params = {
-    page_size: page_size.value,
-    page_number: page_number.value,
-  };
+  // const params = {
+  //   page_size: page_size.value,
+  //   page_number: page_number.value,
+  // };
+
+  const params = {};
+
   if (selectedAuthor.value) {
     params.author_id = selectedAuthor.value;
   }
@@ -219,13 +535,13 @@ const fetchVideos = async (isAppend = false) => {
   try {
     // Fetch authors first if not already loaded
     if (allAuthors.value.length === 0) {
-      const authorRes = await MYAPI.get("//get_all_authors");
+      const authorRes = await MYAPI.get("/get_all_authors");
       allAuthors.value = authorRes.data;
     }
 
     // If a specific author is selected, fetch their videos
     if (selectedAuthor.value) {
-      const videoRes = await MYAPI.get("//get_all_videos", params);
+      const videoRes = await MYAPI.get("/get_all_videos", params);
       if (videoRes["status"] == "success") {
         const newVideos = videoRes.data.data;
         total.value = videoRes.data.total;
@@ -255,7 +571,7 @@ const fetchVideos = async (isAppend = false) => {
     console.error("Error fetching data:", error);
     ElMessage({
       type: "error",
-      message: "載入資料時發生錯誤",
+      message: t("error_loading_data"),
     });
   } finally {
     isLoading.value = false;
@@ -290,6 +606,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.gradient-text-tech {
+  background: linear-gradient(120deg, #4caf50, #2196f3, #673ab7, #4caf50);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-animation 8s ease infinite;
+  font-weight: bold;
+}
+
 .gradient-text-tech-animated :deep(.el-tabs__item) {
   background: linear-gradient(120deg, #4caf50, #2196f3, #673ab7, #4caf50);
   background-size: 300% 100%;
@@ -328,7 +654,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   /* 变淡效果：50% 透明度的白色叠加层 */
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .thumbnail-text {
@@ -346,5 +672,15 @@ onUnmounted(() => {
     1px -1px 0 #000,
     -1px 1px 0 #000,
     1px 1px 0 #000;
+}
+
+:deep(.el-card__body) {
+  height: 100%;
+  width: 100%;
+  padding: 0px;
+}
+
+:deep(.el-tabs__header) {
+  display: none;
 }
 </style>

@@ -11,11 +11,14 @@
           popper-class="logout-popover"
         >
           <template #reference>
-            <div class="w-20 cursor-pointer text-blue-400 hover:text-blue-600">
+            <div
+              class="w-20 cursor-pointer truncate text-blue-400 hover:text-blue-600"
+            >
               {{ user.name }}
             </div>
           </template>
-          <div class="flex flex-col items-center">
+          <div class="flex flex-col items-center gap-2">
+            <div>{{ t("left_points") }}: ∞</div>
             <el-button
               @click="handleLogout"
               type="danger"
@@ -30,12 +33,10 @@
       </div>
     </template>
     <template v-else>
-      <!-- 關鍵：將 GoogleLogin 組件包裹在 ClientOnly 中 -->
       <ClientOnly>
-        <GoogleLogin :callback="handleLoginCallback" />
+        <GoogleLogin :callback="handleLoginCallback" prompt> </GoogleLogin>
         <template #fallback>
-          <!-- 服務端渲染或客戶端加載完成前顯示的內容 -->
-          <el-button loading>{{ t("loading_login") }}</el-button>
+          <el-button loading></el-button>
         </template>
       </ClientOnly>
     </template>
@@ -71,12 +72,12 @@ const handleLoginCallback = async (response) => {
     ElMessage.success(t("login_success"));
   } catch (error) {
     console.error("登入時發生錯誤:", error);
-    ElMessage.error(t("login_failed_error"));
+    ElMessage.error(t("login_fail"));
   }
 };
 
 const handleLogout = () => {
   logout();
-  ElMessage.info(t("logout_success"));
+  ElMessage.success(t("logout_success"));
 };
 </script>

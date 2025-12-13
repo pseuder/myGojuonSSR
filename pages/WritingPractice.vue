@@ -4,12 +4,9 @@
     <div class="w-full" :key="activeTab">
       <h2 class="mb-3 text-xl font-semibold">
         <el-tabs v-model="activeTab" class="w-fill mb-4 lg:max-w-md">
-          <el-tab-pane
-            v-for="tab in tabs"
-            :key="tab.name"
-            :label="t(tab.label)"
-            :name="tab.name"
-          />
+          <template v-for="tab in tabs" :key="tab.name">
+            <el-tab-pane :label="t(tab.label)" :name="tab.name" />
+          </template>
         </el-tabs>
       </h2>
       <div
@@ -39,19 +36,30 @@
         <!-- 功能列 -->
         <div class="flex w-full items-center justify-between">
           <!-- 日文 -->
-          <div class="text-3xl font-bold sm:text-5xl" :title="t('japanese')">
-            {{ selectedSound.kana }}
+          <div
+            class="inline-flex flex-col items-center text-3xl font-bold sm:text-5xl"
+            :title="t('japanese')"
+          >
+            <span class="text-[12px] text-gray-600"> {{ t("japanese") }}</span>
+            <span>{{ selectedSound.kana }}</span>
           </div>
           <!-- 羅馬字 -->
-          <div class="text-3xl font-bold sm:text-4xl" :title="t('romaji')">
-            {{ selectedSound.romaji }}
+          <div
+            class="inline-flex flex-col items-center text-3xl font-bold sm:text-4xl"
+            :title="t('romaji')"
+          >
+            <span class="text-[12px] text-gray-600"> {{ t("romaji") }}</span>
+            <span>{{ selectedSound.romaji }}</span>
           </div>
           <!-- 漢字來源 -->
           <div
-            class="text-3xl font-bold sm:text-4xl"
+            class="inline-flex flex-col items-center text-3xl font-bold sm:text-4xl"
             :title="t('kanji_source')"
           >
-            {{ selectedSound.evo }}
+            <span class="text-[12px] text-gray-600">
+              {{ t("kanji_source") }}</span
+            >
+            <span>{{ selectedSound.evo }}</span>
           </div>
 
           <!-- 自動撥放 -->
@@ -71,24 +79,13 @@
               v-if="isPlaying"
               src="/images/volume2.png"
               alt="暫停"
-              class="h-8 w-8"
-            />
-            <img v-else src="/images/volume.png" alt="播放" class="h-8 w-8" />
-          </div>
-
-          <!-- 上一個、下一個按鈕 -->
-          <div class="flex items-center gap-4">
-            <img
-              src="/images/arrow-circle-left-solid.svg"
-              alt="上一個"
-              class="h-8 w-8 cursor-pointer"
-              @click="changeSound('prev')"
+              class="h-8 w-8 select-none"
             />
             <img
-              src="/images/arrow-circle-right-solid.svg"
-              alt="下一個"
-              class="h-8 w-8 cursor-pointer"
-              @click="changeSound('next')"
+              v-else
+              src="/images/volume.png"
+              alt="播放"
+              class="h-8 w-8 select-none"
             />
           </div>
         </div>
@@ -96,10 +93,12 @@
         <!-- 手寫區 -->
         <HandwritingCanvas
           ref="handwritingCanvas"
+          class="select-none"
           :example-kana="selectedSound.kana"
           :current-type="activeTab"
           :show-example="true"
           :learning-module="'writing'"
+          @changeSound="changeSound"
         />
       </el-card>
     </div>
@@ -110,12 +109,58 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { CaretLeft, CaretRight } from "@element-plus/icons-vue";
 import { ElMessageBox, ElMessage } from "element-plus";
+const { gtag } = useGtag();
+
 import HandwritingCanvas from "/components/HandwritingCanvas.vue";
 import fiftySoundsData from "/data/fifty-sounds.json";
 
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 const myAPI = useApi();
+const config = useRuntimeConfig();
+const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+
+// 手寫練習頁面專屬 SEO Meta
+useSeoMeta({
+  title: () => t("page_meta.writing_practice.title"),
+  description: () => t("page_meta.writing_practice.description"),
+  keywords: () => t("meta.keywords"),
+  ogTitle: () => t("page_meta.writing_practice.title"),
+  ogDescription: () => t("page_meta.writing_practice.description"),
+  ogImage: `${siteUrl}/favicon.png`,
+  ogUrl: () =>
+    `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/WritingPractice`,
+  twitterTitle: () => t("page_meta.writing_practice.title"),
+  twitterDescription: () => t("page_meta.writing_practice.description"),
+  twitterImage: `${siteUrl}/favicon.png`,
+});
+
+// 添加結構化資料
+const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
+const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/WritingPractice`;
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getCourseSchema(
+          t("page_meta.writing_practice.title"),
+          t("page_meta.writing_practice.description"),
+          pageUrl,
+        ),
+      ),
+    },
+    {
+      type: "application/ld+json",
+      children: JSON.stringify(
+        getBreadcrumbSchema([
+          { name: t("home"), url: siteUrl },
+          { name: t("handwriting_practice"), url: pageUrl },
+        ]),
+      ),
+    },
+  ],
+});
 
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
@@ -128,9 +173,9 @@ const autoPlay = ref(false);
 const tabs = [
   { name: "hiragana", label: "hiragana" },
   { name: "katakana", label: "katakana" },
-  { name: "dakuon", label: "voiced_sounds" },
-  { name: "handakuon", label: "semi_voiced_sounds" },
-  { name: "yoon", label: "contracted_sounds" },
+  { name: "dakuon", label: "dakuon" },
+  { name: "handakuon", label: "handakuon" },
+  { name: "yoon", label: "yoon" },
 ];
 
 const currentSounds = computed(() =>
@@ -186,12 +231,10 @@ const changeSound = (type) => {
 
 const togglePlay = () => {
   if (audioPlayer.value) {
-    if (isPlaying.value) {
-      audioPlayer.value.pause();
-    } else {
-      audioPlayer.value.play();
-    }
-    isPlaying.value = !isPlaying.value;
+    // 每次點擊都重置到開始並播放
+    audioPlayer.value.currentTime = 0;
+    audioPlayer.value.play();
+    isPlaying.value = true;
   }
 };
 
@@ -216,19 +259,8 @@ const autoPlaySound = () => {
 const selectSound = (sound) => {
   if (sound.kana) {
     selectedSound.value = sound;
-
     navigator.clipboard.writeText(sound.kana);
-
-    const dataToSend = {
-      learningModule: "writing",
-      learningMethod: "selectSound",
-      learningItem: sound.kana,
-    };
-
-    // 發送數據到後端
-    myAPI.post("/record_activity", dataToSend).catch((error) => {
-      console.error("Error recording activity:", error);
-    });
+    gtag("event", `手寫練習`);
   }
 };
 
