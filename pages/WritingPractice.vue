@@ -68,9 +68,15 @@
           </el-checkbox>
 
           <!-- 音檔播放控制 -->
+          <audio
+            ref="audioPlayer"
+            :src="`/sounds/${selectedSound.romaji}.mp3`"
+            @loadeddata="autoPlaySound"
+            @ended="audioEnded"
+          ></audio>
           <div class="hover:cursor-pointer" @click="togglePlay">
             <img
-              v-if="audioPreloader.isPlaying.value"
+              v-if="isPlaying"
               src="/images/volume2.png"
               alt="暫停"
               class="h-8 w-8 select-none"
@@ -113,9 +119,6 @@ const { t, locale } = useI18n();
 const myAPI = useApi();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
-
-// 使用音檔預載系統
-const audioPreloader = useAudioPreloader();
 
 // 手寫練習頁面專屬 SEO Meta
 useSeoMeta({
@@ -163,6 +166,8 @@ const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
 const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
 const handwritingCanvas = ref(null);
+const audioPlayer = ref(null);
+const isPlaying = ref(false);
 const autoPlay = ref(false);
 
 const tabs = [
@@ -186,33 +191,8 @@ const groupedSounds = computed(() => {
   return groups;
 });
 
-// 監聽 activeTab 變化，預載新 tab 的音檔
-watch(activeTab, async (newTab) => {
+watch(activeTab, () => {
   selectedSound.value = currentSounds.value[0];
-
-  // 預載當前 tab 的所有音檔
-  const romajiList = fiftySounds.value[newTab]
-    .filter((sound) => sound.romaji)
-    .map((sound) => sound.romaji);
-  await audioPreloader.preloadSounds(romajiList);
-
-  // 在背景預載其他 tab 的音檔
-  const otherTabs = tabs.filter((tab) => tab.name !== newTab);
-  otherTabs.forEach((tab) => {
-    const otherRomajiList = fiftySounds.value[tab.name]
-      .filter((sound) => sound.romaji)
-      .map((sound) => sound.romaji);
-    audioPreloader.preloadInBackground(otherRomajiList);
-  });
-});
-
-// 監聽 selectedSound 變化，自動播放
-watch(selectedSound, async (newSound) => {
-  if (newSound && newSound.romaji) {
-    if (autoPlay.value) {
-      await audioPreloader.playSound(newSound.romaji);
-    }
-  }
 });
 
 const findNextValidKana = (currentIndex, direction) => {
@@ -243,12 +223,36 @@ const changeSound = (type) => {
 
   if (nextSound) {
     selectSound(nextSound);
+
+    // 重製播放器圖示
+    isPlaying.value = false;
   }
 };
 
-const togglePlay = async () => {
-  if (selectedSound.value && selectedSound.value.romaji) {
-    await audioPreloader.playSound(selectedSound.value.romaji);
+const togglePlay = () => {
+  if (audioPlayer.value) {
+    // 每次點擊都重置到開始並播放
+    audioPlayer.value.currentTime = 0;
+    audioPlayer.value.play();
+    isPlaying.value = true;
+  }
+};
+
+const audioEnded = () => {
+  isPlaying.value = false;
+};
+
+const playSound = () => {
+  if (audioPlayer.value) {
+    audioPlayer.value.currentTime = 0; // 重置音频到开始位置
+    audioPlayer.value.play();
+    isPlaying.value = true;
+  }
+};
+
+const autoPlaySound = () => {
+  if (autoPlay.value) {
+    playSound();
   }
 };
 
@@ -271,27 +275,19 @@ const handleKeydown = (event) => {
   }
 };
 
-onMounted(async () => {
+onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
-
-  // 預載當前 tab 的所有音檔
-  const romajiList = fiftySounds.value[activeTab.value]
-    .filter((sound) => sound.romaji)
-    .map((sound) => sound.romaji);
-  await audioPreloader.preloadSounds(romajiList);
-
-  // 在背景預載其他 tab 的音檔
-  const otherTabs = tabs.filter((tab) => tab.name !== activeTab.value);
-  otherTabs.forEach((tab) => {
-    const otherRomajiList = fiftySounds.value[tab.name]
-      .filter((sound) => sound.romaji)
-      .map((sound) => sound.romaji);
-    audioPreloader.preloadInBackground(otherRomajiList);
-  });
+  // 初始加载时播放第一个音频
+  // nextTick(() => {
+  //   playSound();
+  // });
 });
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
-  audioPreloader.stopSound();
+  if (audioPlayer.value) {
+    audioPlayer.value.pause();
+    audioPlayer.value.src = "";
+  }
 });
 </script>
