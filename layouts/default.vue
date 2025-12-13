@@ -87,9 +87,37 @@ const textArray = fiftySoundsData.hiragana
   .map((item) => item.kana)
   .concat(fiftySoundsData.katakana.map((item) => item.kana));
 
+// 檢測是否為桌面裝置
+const isDesktopDevice = () => {
+  // 檢查 userAgent 是否包含行動裝置關鍵字
+  const userAgent = navigator.userAgent.toLowerCase();
+  const mobileKeywords = [
+    "android",
+    "webos",
+    "iphone",
+    "ipad",
+    "ipod",
+    "blackberry",
+    "windows phone",
+  ];
+  const isMobile = mobileKeywords.some((keyword) =>
+    userAgent.includes(keyword),
+  );
+
+  return !isMobile;
+};
+
 onMounted(() => {
   // document.documentElement.setAttribute("lang", locale.value);
   if (!textContainer.value) return;
+
+  // 只在桌面裝置上創建文字瀑布
+  if (isDesktopDevice()) {
+    requestAnimationFrame(createTextElement); // 開始創建
+  } else {
+    console.log("non-desktop device do not show the text waterfall");
+  }
+
   let count = 0;
   function createTextElement() {
     if (count < TEXT_COUNT) {
@@ -121,7 +149,6 @@ onMounted(() => {
       requestAnimationFrame(createTextElement); // 使用 requestAnimationFrame
     }
   }
-  requestAnimationFrame(createTextElement); // 開始創建
 });
 </script>
 
