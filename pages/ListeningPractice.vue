@@ -41,13 +41,6 @@
             title="進行特別學習"
           />
         </el-button>
-
-        <!-- 靠左/靠右 -->
-        <!-- <el-switch
-          v-model="isRightAligned"
-          active-text="靠右"
-          inactive-text="靠左"
-        /> -->
       </div>
 
       <!-- 預測值/信心值/Round -->
@@ -237,28 +230,30 @@
 </template>
 
 <script setup>
+// ===========================
+// Imports & Composables
+// ===========================
 import { ref, computed, onMounted, reactive, watch, nextTick } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
 import { Delete, List, CirclePlusFilled } from "@element-plus/icons-vue";
 import HandwritingCanvas from "@/components/HandwritingCanvas.vue";
 import fiftySoundsData from "@/data/fifty-sounds.json";
 import { useI18n } from "vue-i18n";
-const { t, locale } = useI18n();
-
 import { useAuth } from "~/composables/useAuth";
+
+const { t, locale } = useI18n();
 const { user } = useAuth();
-
-const MYAPI = useApi();
-
 const { gtag } = useGtag();
-
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
 // 使用 Web Audio API 進行音頻管理
 const { isPlaying, play: playAudio, stop: stopAudio } = useWebAudio();
 
-// 聽寫練習頁面專屬 SEO Meta
+// ===========================
+// SEO & Meta
+// ===========================
+
 useSeoMeta({
   title: () => t("page_meta.listening_practice.title"),
   description: () => t("page_meta.listening_practice.description"),
@@ -273,7 +268,6 @@ useSeoMeta({
   twitterImage: `${siteUrl}/favicon.png`,
 });
 
-// 添加結構化資料
 const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
 const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/ListeningPractice`;
 useHead({
@@ -300,171 +294,9 @@ useHead({
   ],
 });
 
-const fiftySounds = ref(fiftySoundsData);
-const activeTab = ref("hiragana");
-const selectedSound = ref({
-  kana: "あ",
-  romaji: "a",
-  evo: "安",
-  type: "hiragana",
-});
-const handwritingCanvas = ref(null);
-
-// 從 localStorage 讀取 isRandomMode 設定，預設為 false
-const isRandomMode = ref(false);
-const isRightAligned = ref(true);
-const showCurrentWord = ref(false);
-
-const specialLearningList = ref([]);
-const specialLearningListDialogVisible = ref(false);
-
-const predictKana = ref("");
-const predictConfidence = ref(0);
-
-const soundCounts = reactive({});
-const round = ref(1);
-
-const isLogin = computed(() => !!user.value);
-
-const currentSounds = computed(() => {
-  if (activeTab.value === "special") {
-    return specialLearningList.value;
-  }
-  return fiftySounds.value ? fiftySounds.value[activeTab.value] : [];
-});
-
-const totalInRound = computed(
-  () => currentSounds.value.filter((sound) => sound.kana).length,
-);
-
-const completedInRound = computed(
-  () =>
-    currentSounds.value.filter(
-      (sound) => sound.kana && soundCounts[sound.kana] >= round.value,
-    ).length,
-);
-
-// 監聽 currentSounds 的變化，如果變化則重新初始化計數器
-watch(currentSounds, () => {
-  initializeCounts();
-  round.value = 1;
-});
-
-// 初始化計數器
-const initializeCounts = () => {
-  // reset soundCounts
-  Object.keys(soundCounts).forEach((key) => delete soundCounts[key]);
-  currentSounds.value.forEach((sound) => {
-    if (sound.kana) {
-      soundCounts[sound.kana] = 0;
-    }
-  });
-};
-
-initializeCounts();
-
-watch(
-  selectedSound,
-  async (newSound, oldSound) => {
-    if (newSound !== oldSound) {
-      await nextTick();
-      await playSound();
-    }
-  },
-  { deep: true },
-);
-
-watch(activeTab, () => {
-  selectedSound.value = currentSounds.value[0];
-
-  // 重置soundCounts
-  initializeCounts();
-});
-
-const findNextValidKana = (currentIndex, direction) => {
-  const totalItems = currentSounds.value.length;
-  let nextIndex = currentIndex;
-  let loopCount = 0;
-
-  while (loopCount < totalItems) {
-    nextIndex = (nextIndex + direction + totalItems) % totalItems;
-    if (currentSounds.value[nextIndex].kana) {
-      return currentSounds.value[nextIndex];
-    }
-    loopCount++;
-  }
-
-  return null;
-};
-
-const handleModeChange = () => {
-  ElMessage.success(
-    isRandomMode.value ? t("switch_to_random") : t("switch_to_sequential"),
-  );
-};
-
-const getRandomSound = () => {
-  const validSounds = currentSounds.value.filter((sound) => sound.kana);
-  const availableSounds = validSounds.filter(
-    (sound) => soundCounts[sound.kana] < round.value,
-  );
-
-  if (availableSounds.length === 0) {
-    // 所有音都已經出現了，開始新的一輪
-    round.value++;
-    return getRandomSound(); // 遞迴調用以獲取新一輪的聲音
-  }
-
-  const randomIndex = Math.floor(Math.random() * availableSounds.length);
-  const selectedSound = availableSounds[randomIndex];
-  // soundCounts[selectedSound.kana]++;
-
-  return selectedSound;
-};
-
-const changeSound = (type) => {
-  if (isRandomMode.value) {
-    selectSound(getRandomSound());
-  } else {
-    const currentIndex = currentSounds.value.findIndex(
-      (sound) => sound.kana === selectedSound.value.kana,
-    );
-
-    const nextSound =
-      type === "next"
-        ? findNextValidKana(currentIndex, 1)
-        : findNextValidKana(currentIndex, -1);
-
-    if (nextSound) {
-      // Increment the count for the current sound before moving to the next
-      // soundCounts[selectedSound.value.kana]++;
-      selectSound(nextSound);
-    }
-  }
-};
-
-const togglePlay = async () => {
-  // 每次點擊都重新播放
-  await playSound();
-};
-
-const playSound = async () => {
-  const audioUrl = `/sounds/${selectedSound.value.romaji}.mp3`;
-  await playAudio(audioUrl);
-};
-
-const selectSound = (sound) => {
-  if (sound.kana) {
-    selectedSound.value = sound;
-
-    gtag("event", `聽寫練習`);
-  }
-};
-
-const clearSelectedSound = () => {
-  selectedSound.value = null;
-};
-
+// ===========================
+// Constants & Configuration
+// ===========================
 // 特殊對應關係配置
 const SPECIAL_KANA_MATCHES = {
   ニ: ["ニ", "二"],
@@ -490,6 +322,160 @@ const SPECIAL_KANA_MATCHES = {
   い: ["い", "り"],
 };
 
+// ===========================
+// Data & State
+// ===========================
+const fiftySounds = ref(fiftySoundsData);
+const activeTab = ref("hiragana");
+const selectedSound = ref({
+  kana: "あ",
+  romaji: "a",
+  evo: "安",
+  type: "hiragana",
+});
+const handwritingCanvas = ref(null);
+
+const isRandomMode = ref(false);
+const isRightAligned = ref(true);
+const showCurrentWord = ref(false);
+
+const specialLearningList = ref([]);
+const specialLearningListDialogVisible = ref(false);
+
+const predictKana = ref("");
+const predictConfidence = ref(0);
+
+const soundCounts = reactive({});
+const round = ref(1);
+
+// ===========================
+// Computed Properties
+// ===========================
+const isLogin = computed(() => !!user.value);
+
+const currentSounds = computed(() => {
+  if (activeTab.value === "special") {
+    return specialLearningList.value;
+  }
+  return fiftySounds.value ? fiftySounds.value[activeTab.value] : [];
+});
+
+const totalInRound = computed(
+  () => currentSounds.value.filter((sound) => sound.kana).length,
+);
+
+const completedInRound = computed(
+  () =>
+    currentSounds.value.filter(
+      (sound) => sound.kana && soundCounts[sound.kana] >= round.value,
+    ).length,
+);
+
+// ===========================
+// Initialization Functions
+// ===========================
+// 初始化計數器
+const initializeCounts = () => {
+  // reset soundCounts
+  Object.keys(soundCounts).forEach((key) => delete soundCounts[key]);
+  currentSounds.value.forEach((sound) => {
+    if (sound.kana) {
+      soundCounts[sound.kana] = 0;
+    }
+  });
+};
+
+initializeCounts();
+
+// ===========================
+// Navigation Functions
+// ===========================
+const findNextValidKana = (currentIndex, direction) => {
+  const totalItems = currentSounds.value.length;
+  let nextIndex = currentIndex;
+  let loopCount = 0;
+
+  while (loopCount < totalItems) {
+    nextIndex = (nextIndex + direction + totalItems) % totalItems;
+    if (currentSounds.value[nextIndex].kana) {
+      return currentSounds.value[nextIndex];
+    }
+    loopCount++;
+  }
+
+  return null;
+};
+
+const getRandomSound = () => {
+  const validSounds = currentSounds.value.filter((sound) => sound.kana);
+  const availableSounds = validSounds.filter(
+    (sound) => soundCounts[sound.kana] < round.value,
+  );
+
+  if (availableSounds.length === 0) {
+    // 所有音都已經出現了，開始新的一輪
+    round.value++;
+    return getRandomSound(); // 遞迴調用以獲取新一輪的聲音
+  }
+
+  const randomIndex = Math.floor(Math.random() * availableSounds.length);
+  const selectedSound = availableSounds[randomIndex];
+  // soundCounts[selectedSound.kana]++;
+
+  return selectedSound;
+};
+
+const handleModeChange = () => {
+  ElMessage.success(
+    isRandomMode.value ? t("switch_to_random") : t("switch_to_sequential"),
+  );
+};
+
+const changeSound = (type) => {
+  if (isRandomMode.value) {
+    selectSound(getRandomSound());
+  } else {
+    const currentIndex = currentSounds.value.findIndex(
+      (sound) => sound.kana === selectedSound.value.kana,
+    );
+
+    const nextSound =
+      type === "next"
+        ? findNextValidKana(currentIndex, 1)
+        : findNextValidKana(currentIndex, -1);
+
+    if (nextSound) {
+      // Increment the count for the current sound before moving to the next
+      // soundCounts[selectedSound.value.kana]++;
+      selectSound(nextSound);
+    }
+  }
+};
+
+// ===========================
+// Sound Management Functions
+// ===========================
+const togglePlay = async () => {
+  // 每次點擊都重新播放
+  await playSound();
+};
+
+const playSound = async () => {
+  const audioUrl = `/sounds/${selectedSound.value.romaji}.mp3`;
+  await playAudio(audioUrl);
+};
+
+const selectSound = (sound) => {
+  if (sound.kana) {
+    selectedSound.value = sound;
+
+    gtag("event", `聽寫練習`);
+  }
+};
+
+// ===========================
+// AI Recognition Functions
+// ===========================
 const autoDetect = (predict_res) => {
   if (predict_res === "ERR_NETWORK") {
     ElMessage.error(t("network_error"));
@@ -519,28 +505,14 @@ const autoDetect = (predict_res) => {
   } else {
     handleIncorrectPrediction(predicted_hiragana);
   }
-
-  try {
-    const dataToSend = {
-      learningModule: "listening",
-      learningMethod: "predict",
-      learningItem: currentKana,
-      correctness: isCorrect,
-    };
-
-    gtag("event", `AI辨識`);
-  } catch (error) {
-    console.error("Error recording activity:", error);
-  }
 };
 
-// 檢查假名是否匹配
 const areEqual = (strA, strB) => {
   // 1. 先對字串進行規範化 (去除空格)
   const normalizedA = strA.replace(/\s/g, "");
   const normalizedB = strB.replace(/\s/g, "");
 
-  // 2. 嚴格比較 (您的原始邏輯 - 不考慮大小寫/重音)
+  // 2. 嚴格比較 (不考慮大小寫/重音)
   const isStrictlyEqual =
     normalizedA.localeCompare(normalizedB, "ja", {
       sensitivity: "base",
@@ -565,7 +537,6 @@ const checkKanaMatch = (currentKana, predictedKana) => {
   return areEqual(currentKana, predictedKana);
 };
 
-// 處理正確預測
 const handleCorrectPrediction = (currentKana) => {
   predictKana.value = currentKana;
   ElMessage.success(t("corrent") + `！: ${currentKana}`);
@@ -573,12 +544,13 @@ const handleCorrectPrediction = (currentKana) => {
   changeSound("next");
 };
 
-// 處理錯誤預測
 const handleIncorrectPrediction = (predictedKana) => {
   ElMessage.error(t("incorrect") + `！: ${predictedKana}`);
 };
 
+// ===========================
 // Special Learning Functions
+// ===========================
 const loadSpecialLearningList = () => {
   const list = localStorage.getItem("specialLearningList");
   if (list) {
@@ -646,36 +618,31 @@ const handleClearSpecialLearningList = () => {
     });
 };
 
-const isSelectedSound = (sound) =>
-  selectedSound.value && selectedSound.value.kana === sound.kana;
+// ===========================
+// Watchers
+// ===========================
+// 監聽 currentSounds 的變化，如果變化則重新初始化計數器
+watch(currentSounds, () => {
+  initializeCounts();
+  round.value = 1;
+});
 
-onMounted(() => {
-  loadSpecialLearningList();
-
-  // 從 localStorage 讀取 isRandomMode 設定
-  const savedIsRandomMode = localStorage.getItem("listeningPractice_isRandomMode");
-  if (savedIsRandomMode !== null) {
-    isRandomMode.value = savedIsRandomMode === "true";
-  }
-
-  // 從 localStorage 讀取 activeTab 設定
-  const savedActiveTab = localStorage.getItem("listeningPractice_activeTab");
-  if (savedActiveTab !== null) {
-    // 驗證 savedActiveTab 是否為有效值
-    const validTabs = ["hiragana", "katakana", "dakuon", "handakuon", "yoon", "special"];
-    if (validTabs.includes(savedActiveTab)) {
-      // 如果是 special，需要確保 specialLearningList 不為空
-      if (savedActiveTab === "special" && specialLearningList.value.length === 0) {
-        activeTab.value = "hiragana";
-      } else {
-        activeTab.value = savedActiveTab;
-      }
+watch(
+  selectedSound,
+  async (newSound, oldSound) => {
+    if (newSound !== oldSound) {
+      await nextTick();
+      await playSound();
     }
-  }
+  },
+  { deep: true },
+);
 
-  nextTick(() => {
-    playSound();
-  });
+watch(activeTab, () => {
+  selectedSound.value = currentSounds.value[0];
+
+  // 重置soundCounts
+  initializeCounts();
 });
 
 // 監聽 isRandomMode 變化並保存到 localStorage
@@ -686,6 +653,50 @@ watch(isRandomMode, (newValue) => {
 // 監聽 activeTab 變化並保存到 localStorage
 watch(activeTab, (newValue) => {
   localStorage.setItem("listeningPractice_activeTab", newValue);
+});
+
+// ===========================
+// Lifecycle Hooks
+// ===========================
+onMounted(() => {
+  loadSpecialLearningList();
+
+  // 從 localStorage 讀取 isRandomMode 設定
+  const savedIsRandomMode = localStorage.getItem(
+    "listeningPractice_isRandomMode",
+  );
+  if (savedIsRandomMode !== null) {
+    isRandomMode.value = savedIsRandomMode === "true";
+  }
+
+  // 從 localStorage 讀取 activeTab 設定
+  const savedActiveTab = localStorage.getItem("listeningPractice_activeTab");
+  if (savedActiveTab !== null) {
+    // 驗證 savedActiveTab 是否為有效值
+    const validTabs = [
+      "hiragana",
+      "katakana",
+      "dakuon",
+      "handakuon",
+      "yoon",
+      "special",
+    ];
+    if (validTabs.includes(savedActiveTab)) {
+      // 如果是 special，需要確保 specialLearningList 不為空
+      if (
+        savedActiveTab === "special" &&
+        specialLearningList.value.length === 0
+      ) {
+        activeTab.value = "hiragana";
+      } else {
+        activeTab.value = savedActiveTab;
+      }
+    }
+  }
+
+  nextTick(() => {
+    playSound();
+  });
 });
 </script>
 
