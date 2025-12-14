@@ -165,7 +165,7 @@ useHead({
 // ============================================================
 // Data & State
 // ============================================================
-const fiftySounds = ref(fiftySoundsData);
+const fiftySounds = fiftySoundsData;
 const activeTab = ref("hiragana");
 const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
 const autoPlay = ref(false);
@@ -181,9 +181,7 @@ const tabs = [
 // ============================================================
 // Computed Properties
 // ============================================================
-const currentSounds = computed(() =>
-  fiftySounds.value ? fiftySounds.value[activeTab.value] : [],
-);
+const currentSounds = computed(() => fiftySounds[activeTab.value] ?? []);
 
 const groupedSounds = computed(() => {
   const groups = [];
@@ -247,6 +245,7 @@ const handleTabChange = (TabPaneName) => {
 // Audio Playback
 // ============================================================
 const playSound = async () => {
+  stopAudio(); // 先停止當前播放
   const audioUrl = `/sounds/${selectedSound.value.romaji}.mp3`;
   await playAudio(audioUrl);
 };
@@ -270,6 +269,9 @@ const handleKeydown = (event) => {
 // LocalStorage Persistence
 // ============================================================
 const loadPreferences = () => {
+  // localStorage 在 SSR 階段不存在, 加入環境檢查
+  if (typeof window === "undefined") return;
+
   // 讀取 autoPlay 設定
   const savedAutoPlay = localStorage.getItem("writingPractice_autoPlay");
   if (savedAutoPlay !== null) {
