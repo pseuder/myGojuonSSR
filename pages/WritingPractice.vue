@@ -104,21 +104,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
-const { gtag } = useGtag();
-
+// ============================================================
+// Imports & Composables
+// ============================================================
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import HandwritingCanvas from "/components/HandwritingCanvas.vue";
 import fiftySoundsData from "/data/fifty-sounds.json";
 
-import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
+const { gtag } = useGtag();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
-
-// 使用 Web Audio API 進行音頻管理
 const { isPlaying, play: playAudio, stop: stopAudio } = useWebAudio();
+const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
 
-// 手寫練習頁面專屬 SEO Meta
+// ============================================================
+// SEO & Meta
+// ============================================================
+const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/WritingPractice`;
+
 useSeoMeta({
   title: () => t("page_meta.writing_practice.title"),
   description: () => t("page_meta.writing_practice.description"),
@@ -133,9 +138,6 @@ useSeoMeta({
   twitterImage: `${siteUrl}/favicon.png`,
 });
 
-// 添加結構化資料
-const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
-const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/WritingPractice`;
 useHead({
   script: [
     {
@@ -160,11 +162,12 @@ useHead({
   ],
 });
 
+// ============================================================
+// Data & State
+// ============================================================
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
 const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
-
-// 從 localStorage 讀取 autoPlay 設定，預設為 false
 const autoPlay = ref(false);
 
 const tabs = [
@@ -175,6 +178,9 @@ const tabs = [
   { name: "yoon", label: "yoon" },
 ];
 
+// ============================================================
+// Computed Properties
+// ============================================================
 const currentSounds = computed(() =>
   fiftySounds.value ? fiftySounds.value[activeTab.value] : [],
 );
@@ -188,17 +194,19 @@ const groupedSounds = computed(() => {
   return groups;
 });
 
-// 切換Tab時將selectedSound設為單前第一個單字
-const handleTabChange = (TabPaneName) => {
-  selectedSound.value = currentSounds.value[0];
+// ============================================================
+// Sound Selection & Navigation
+// ============================================================
+const selectSound = (sound) => {
+  if (sound.kana) {
+    selectedSound.value = sound;
+    navigator.clipboard.writeText(sound.kana);
+    gtag("event", `手寫練習`);
+  }
 };
 
-// 監聽 selectedSound 變化，自動播放音頻（如果啟用）
-watch(selectedSound, async () => {
-  if (autoPlay.value) {
-    await playSound();
-  }
-});
+const isSelectedSound = (sound) =>
+  selectedSound.value && selectedSound.value.kana === sound.kana;
 
 const findNextValidKana = (currentIndex, direction) => {
   const totalItems = currentSounds.value.length;
@@ -231,27 +239,25 @@ const changeSound = (type) => {
   }
 };
 
-const togglePlay = async () => {
-  // 每次點擊都重新播放
-  await playSound();
+const handleTabChange = (TabPaneName) => {
+  selectedSound.value = currentSounds.value[0];
 };
 
+// ============================================================
+// Audio Playback
+// ============================================================
 const playSound = async () => {
   const audioUrl = `/sounds/${selectedSound.value.romaji}.mp3`;
   await playAudio(audioUrl);
 };
 
-const selectSound = (sound) => {
-  if (sound.kana) {
-    selectedSound.value = sound;
-    navigator.clipboard.writeText(sound.kana);
-    gtag("event", `手寫練習`);
-  }
+const togglePlay = async () => {
+  await playSound();
 };
 
-const isSelectedSound = (sound) =>
-  selectedSound.value && selectedSound.value.kana === sound.kana;
-
+// ============================================================
+// Keyboard Events
+// ============================================================
 const handleKeydown = (event) => {
   if (event.key === "ArrowLeft") {
     changeSound("prev");
@@ -260,40 +266,38 @@ const handleKeydown = (event) => {
   }
 };
 
-onMounted(() => {
-  window.addEventListener("keydown", handleKeydown);
-
-  // 從 localStorage 讀取 autoPlay 設定
+// ============================================================
+// LocalStorage Persistence
+// ============================================================
+const loadPreferences = () => {
+  // 讀取 autoPlay 設定
   const savedAutoPlay = localStorage.getItem("writingPractice_autoPlay");
   if (savedAutoPlay !== null) {
     autoPlay.value = savedAutoPlay === "true";
   }
 
-  // 從 localStorage 讀取 activeTab 設定
+  // 讀取 activeTab 設定
   const savedActiveTab = localStorage.getItem("writingPractice_activeTab");
   if (savedActiveTab !== null) {
-    // 驗證 savedActiveTab 是否為有效值
     const validTabs = ["hiragana", "katakana", "dakuon", "handakuon", "yoon"];
     if (validTabs.includes(savedActiveTab)) {
       activeTab.value = savedActiveTab;
     }
   }
 
-  // 從 localStorage 讀取 selectedSound 設定
+  // 讀取 selectedSound 設定
   const savedSelectedSound = localStorage.getItem(
     "writingPractice_selectedSound",
   );
   if (savedSelectedSound !== null) {
     try {
       const parsedSound = JSON.parse(savedSelectedSound);
-      // 驗證這個假名是否存在於當前的 activeTab 中
       const soundExists = currentSounds.value.find(
         (sound) => sound.kana === parsedSound.kana,
       );
       if (soundExists) {
         selectedSound.value = parsedSound;
       } else {
-        // 如果不存在，使用當前列表的第一個
         selectedSound.value = currentSounds.value[0];
       }
     } catch (error) {
@@ -301,19 +305,17 @@ onMounted(() => {
       selectedSound.value = currentSounds.value[0];
     }
   }
-});
+};
 
-// 監聽 autoPlay 變化並保存到 localStorage
+// 監聽並保存用戶偏好設定
 watch(autoPlay, (newValue) => {
   localStorage.setItem("writingPractice_autoPlay", newValue.toString());
 });
 
-// 監聽 activeTab 變化並保存到 localStorage
 watch(activeTab, (newValue) => {
   localStorage.setItem("writingPractice_activeTab", newValue);
 });
 
-// 監聽 selectedSound 變化並保存到 localStorage
 watch(
   selectedSound,
   (newValue) => {
@@ -326,6 +328,23 @@ watch(
   },
   { deep: true },
 );
+
+// ============================================================
+// Auto Play Feature
+// ============================================================
+watch(selectedSound, async () => {
+  if (autoPlay.value) {
+    await playSound();
+  }
+});
+
+// ============================================================
+// Lifecycle Hooks
+// ============================================================
+onMounted(() => {
+  window.addEventListener("keydown", handleKeydown);
+  loadPreferences();
+});
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
