@@ -95,7 +95,7 @@
           :example-kana="selectedSound.kana"
           :current-type="activeTab"
           :show-example="true"
-          :learning-module="'writing'"
+          :learning-module="LEARNING_MODULE"
           @changeSound="changeSound"
         />
       </el-card>
@@ -118,6 +118,45 @@ const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 const { isPlaying, play: playAudio, stop: stopAudio } = useWebAudio();
 const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
+
+// ============================================================
+// Constants
+// ============================================================
+const STORAGE_KEYS = {
+  AUTO_PLAY: "writingPractice_autoPlay",
+  ACTIVE_TAB: "writingPractice_activeTab",
+  SELECTED_SOUND: "writingPractice_selectedSound",
+};
+
+const TAB_TYPES = {
+  HIRAGANA: "hiragana",
+  KATAKANA: "katakana",
+  DAKUON: "dakuon",
+  HANDAKUON: "handakuon",
+  YOON: "yoon",
+};
+
+const KEYBOARD_KEYS = {
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
+};
+
+const SOUND_DIRECTION = {
+  NEXT: "next",
+  PREV: "prev",
+};
+
+const GROUP_SIZES = {
+  YOON: 3,
+  DEFAULT: 5,
+};
+
+const AUDIO_CONFIG = {
+  SOUNDS_PATH: "/sounds/",
+  FILE_EXTENSION: ".mp3",
+};
+
+const LEARNING_MODULE = "writing";
 
 // ============================================================
 // SEO & Meta
@@ -166,16 +205,16 @@ useHead({
 // Data & State
 // ============================================================
 const fiftySounds = fiftySoundsData;
-const activeTab = ref("hiragana");
+const activeTab = ref(TAB_TYPES.HIRAGANA);
 const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
 const autoPlay = ref(false);
 
 const tabs = [
-  { name: "hiragana", label: "hiragana" },
-  { name: "katakana", label: "katakana" },
-  { name: "dakuon", label: "dakuon" },
-  { name: "handakuon", label: "handakuon" },
-  { name: "yoon", label: "yoon" },
+  { name: TAB_TYPES.HIRAGANA, label: "hiragana" },
+  { name: TAB_TYPES.KATAKANA, label: "katakana" },
+  { name: TAB_TYPES.DAKUON, label: "dakuon" },
+  { name: TAB_TYPES.HANDAKUON, label: "handakuon" },
+  { name: TAB_TYPES.YOON, label: "yoon" },
 ];
 
 // ============================================================
@@ -185,7 +224,7 @@ const currentSounds = computed(() => fiftySounds[activeTab.value] ?? []);
 
 const groupedSounds = computed(() => {
   const groups = [];
-  const groupSize = activeTab.value === "yoon" ? 3 : 5;
+  const groupSize = activeTab.value === TAB_TYPES.YOON ? GROUP_SIZES.YOON : GROUP_SIZES.DEFAULT;
   for (let i = 0; i < currentSounds.value.length; i += groupSize) {
     groups.push(currentSounds.value.slice(i, i + groupSize));
   }
@@ -228,7 +267,7 @@ const changeSound = (type) => {
   );
 
   const nextSound =
-    type === "next"
+    type === SOUND_DIRECTION.NEXT
       ? findNextValidKana(currentIndex, 1)
       : findNextValidKana(currentIndex, -1);
 
@@ -246,7 +285,7 @@ const handleTabChange = (TabPaneName) => {
 // ============================================================
 const playSound = async () => {
   stopAudio(); // 先停止當前播放
-  const audioUrl = `/sounds/${selectedSound.value.romaji}.mp3`;
+  const audioUrl = `${AUDIO_CONFIG.SOUNDS_PATH}${selectedSound.value.romaji}${AUDIO_CONFIG.FILE_EXTENSION}`;
   await playAudio(audioUrl);
 };
 
@@ -258,10 +297,10 @@ const togglePlay = async () => {
 // Keyboard Events
 // ============================================================
 const handleKeydown = (event) => {
-  if (event.key === "ArrowLeft") {
-    changeSound("prev");
-  } else if (event.key === "ArrowRight") {
-    changeSound("next");
+  if (event.key === KEYBOARD_KEYS.ARROW_LEFT) {
+    changeSound(SOUND_DIRECTION.PREV);
+  } else if (event.key === KEYBOARD_KEYS.ARROW_RIGHT) {
+    changeSound(SOUND_DIRECTION.NEXT);
   }
 };
 
@@ -273,24 +312,22 @@ const loadPreferences = () => {
   if (typeof window === "undefined") return;
 
   // 讀取 autoPlay 設定
-  const savedAutoPlay = localStorage.getItem("writingPractice_autoPlay");
+  const savedAutoPlay = localStorage.getItem(STORAGE_KEYS.AUTO_PLAY);
   if (savedAutoPlay !== null) {
     autoPlay.value = savedAutoPlay === "true";
   }
 
   // 讀取 activeTab 設定
-  const savedActiveTab = localStorage.getItem("writingPractice_activeTab");
+  const savedActiveTab = localStorage.getItem(STORAGE_KEYS.ACTIVE_TAB);
   if (savedActiveTab !== null) {
-    const validTabs = ["hiragana", "katakana", "dakuon", "handakuon", "yoon"];
+    const validTabs = Object.values(TAB_TYPES);
     if (validTabs.includes(savedActiveTab)) {
       activeTab.value = savedActiveTab;
     }
   }
 
   // 讀取 selectedSound 設定
-  const savedSelectedSound = localStorage.getItem(
-    "writingPractice_selectedSound",
-  );
+  const savedSelectedSound = localStorage.getItem(STORAGE_KEYS.SELECTED_SOUND);
   if (savedSelectedSound !== null) {
     try {
       const parsedSound = JSON.parse(savedSelectedSound);
@@ -311,11 +348,11 @@ const loadPreferences = () => {
 
 // 監聽並保存用戶偏好設定
 watch(autoPlay, (newValue) => {
-  localStorage.setItem("writingPractice_autoPlay", newValue.toString());
+  localStorage.setItem(STORAGE_KEYS.AUTO_PLAY, newValue.toString());
 });
 
 watch(activeTab, (newValue) => {
-  localStorage.setItem("writingPractice_activeTab", newValue);
+  localStorage.setItem(STORAGE_KEYS.ACTIVE_TAB, newValue);
 });
 
 watch(
@@ -323,7 +360,7 @@ watch(
   (newValue) => {
     if (newValue && newValue.kana) {
       localStorage.setItem(
-        "writingPractice_selectedSound",
+        STORAGE_KEYS.SELECTED_SOUND,
         JSON.stringify(newValue),
       );
     }
