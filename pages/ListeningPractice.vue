@@ -54,7 +54,6 @@
         />
 
         <div>{{ t("predicted_value") }}：{{ predictKana }}</div>
-        <!-- <div>{{ t("confidence_level") }}：{{ predictConfidence }}</div> -->
       </div>
 
       <!-- 加入特別學習 -->
@@ -295,34 +294,6 @@ useHead({
 });
 
 // ===========================
-// Constants & Configuration
-// ===========================
-// 特殊對應關係配置
-const SPECIAL_KANA_MATCHES = {
-  ニ: ["ニ", "二"],
-  ホ: ["ホ", "木"],
-  ヲ: ["ヲ", "ヨ", "ケ"],
-  ン: ["ン", "ソ", "ン"],
-  づ: ["づ", "ブ"],
-  ん: ["ん", "は", "ひ", "ほ"],
-  ヌ: ["ヌ", "又"],
-  エ: ["エ", "工", "エ"],
-  ロ: ["ロ", "口", "口", "囗", "□"],
-  ヘ: ["ヘ", "ㄟ", "へ"],
-  メ: ["メ", "シ", "x", "X"],
-  オ: ["オ", "才"],
-  ふ: ["ふ", "永", "示"],
-  ゆ: ["ゆ", "中", "由", "巾"],
-  ぬ: ["ぬ", "奴", "好"],
-  め: ["め", "女"],
-  チ: ["チ", "千"],
-  カ: ["カ", "力"],
-  く: ["く", "ㄑ"],
-  ろ: ["ろ", "3"],
-  い: ["い", "り"],
-};
-
-// ===========================
 // Data & State
 // ===========================
 const fiftySounds = ref(fiftySoundsData);
@@ -343,7 +314,6 @@ const specialLearningList = ref([]);
 const specialLearningListDialogVisible = ref(false);
 
 const predictKana = ref("");
-const predictConfidence = ref(0);
 
 const soundCounts = reactive({});
 const round = ref(1);
@@ -490,51 +460,17 @@ const autoDetect = (predict_res) => {
     return;
   }
 
-  const { predicted_hiragana, confidence } = predict_res.data;
+  const { predicted_hiragana, correctness } = predict_res.data;
   const currentKana = selectedSound.value.kana;
 
   // 更新預測結果
   predictKana.value = predicted_hiragana;
-  predictConfidence.value = confidence;
 
-  // 檢查是否匹配
-  const isCorrect = checkKanaMatch(currentKana, predicted_hiragana);
-
-  if (isCorrect) {
+  if (correctness) {
     handleCorrectPrediction(currentKana);
   } else {
     handleIncorrectPrediction(predicted_hiragana);
   }
-};
-
-const areEqual = (strA, strB) => {
-  // 1. 先對字串進行規範化 (去除空格)
-  const normalizedA = strA.replace(/\s/g, "");
-  const normalizedB = strB.replace(/\s/g, "");
-
-  // 2. 嚴格比較 (不考慮大小寫/重音)
-  const isStrictlyEqual =
-    normalizedA.localeCompare(normalizedB, "ja", {
-      sensitivity: "base",
-    }) === 0;
-
-  if (isStrictlyEqual) {
-    return true; // 如果嚴格相等，直接返回 true
-  }
-
-  // 3. 部分包含檢查 (新的機制)
-  const isPartialMatch = normalizedB.includes(normalizedA);
-
-  return isPartialMatch;
-};
-
-const checkKanaMatch = (currentKana, predictedKana) => {
-  // 檢查特殊情況
-  if (currentKana in SPECIAL_KANA_MATCHES) {
-    return SPECIAL_KANA_MATCHES[currentKana].includes(predictedKana);
-  }
-  // 一般情況
-  return areEqual(currentKana, predictedKana);
 };
 
 const handleCorrectPrediction = (currentKana) => {
