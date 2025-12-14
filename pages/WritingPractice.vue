@@ -68,12 +68,6 @@
           </el-checkbox>
 
           <!-- 音檔播放控制 -->
-          <audio
-            ref="audioPlayer"
-            :src="`/sounds/${selectedSound.romaji}.mp3`"
-            @loadeddata="autoPlaySound"
-            @ended="audioEnded"
-          ></audio>
           <div class="hover:cursor-pointer" @click="togglePlay">
             <img
               v-if="isPlaying"
@@ -116,6 +110,9 @@ import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+
+// 使用 Web Audio API 進行音頻管理
+const { isPlaying, play: playAudio, stop: stopAudio } = useWebAudio();
 
 // 手寫練習頁面專屬 SEO Meta
 useSeoMeta({
@@ -162,8 +159,6 @@ useHead({
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
 const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
-const audioPlayer = ref(null);
-const isPlaying = ref(false);
 
 // 從 localStorage 讀取 autoPlay 設定，預設為 false
 const autoPlay = ref(false);
@@ -191,6 +186,13 @@ const groupedSounds = computed(() => {
 
 watch(activeTab, () => {
   selectedSound.value = currentSounds.value[0];
+});
+
+// 監聽 selectedSound 變化，自動播放音頻（如果啟用）
+watch(selectedSound, async () => {
+  if (autoPlay.value) {
+    await playSound();
+  }
 });
 
 const findNextValidKana = (currentIndex, direction) => {
@@ -221,37 +223,17 @@ const changeSound = (type) => {
 
   if (nextSound) {
     selectSound(nextSound);
-
-    // 重製播放器圖示
-    isPlaying.value = false;
   }
 };
 
-const togglePlay = () => {
-  if (audioPlayer.value) {
-    // 每次點擊都重置到開始並播放
-    audioPlayer.value.currentTime = 0;
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
+const togglePlay = async () => {
+  // 每次點擊都重新播放
+  await playSound();
 };
 
-const audioEnded = () => {
-  isPlaying.value = false;
-};
-
-const playSound = () => {
-  if (audioPlayer.value) {
-    audioPlayer.value.currentTime = 0; // 重置音频到开始位置
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
-};
-
-const autoPlaySound = () => {
-  if (autoPlay.value) {
-    playSound();
-  }
+const playSound = async () => {
+  const audioUrl = `/sounds/${selectedSound.value.romaji}.mp3`;
+  await playAudio(audioUrl);
 };
 
 const selectSound = (sound) => {
@@ -290,9 +272,6 @@ watch(autoPlay, (newValue) => {
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
-  if (audioPlayer.value) {
-    audioPlayer.value.pause();
-    audioPlayer.value.src = "";
-  }
+  // Web Audio API 資源會在 useWebAudio composable 中自動清理
 });
 </script>

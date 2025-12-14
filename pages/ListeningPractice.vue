@@ -3,12 +3,6 @@
     <!-- 左側50音列表 -->
     <div class="flex w-full flex-col gap-2 md:gap-4">
       <div class="flex items-center gap-4">
-        <audio
-          ref="audioPlayer"
-          :src="`/sounds/${selectedSound.romaji}.mp3`"
-          @ended="audioEnded"
-        ></audio>
-
         <div class="hover:cursor-pointer" @click="togglePlay">
           <img
             v-if="isPlaying"
@@ -261,6 +255,9 @@ const { gtag } = useGtag();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
+// 使用 Web Audio API 進行音頻管理
+const { isPlaying, play: playAudio, stop: stopAudio } = useWebAudio();
+
 // 聽寫練習頁面專屬 SEO Meta
 useSeoMeta({
   title: () => t("page_meta.listening_practice.title"),
@@ -312,8 +309,6 @@ const selectedSound = ref({
   type: "hiragana",
 });
 const handwritingCanvas = ref(null);
-const audioPlayer = ref(null);
-const isPlaying = ref(false);
 
 // 從 localStorage 讀取 isRandomMode 設定，預設為 false
 const isRandomMode = ref(false);
@@ -370,14 +365,10 @@ initializeCounts();
 
 watch(
   selectedSound,
-  (newSound, oldSound) => {
+  async (newSound, oldSound) => {
     if (newSound !== oldSound) {
-      if (audioPlayer.value) {
-        audioPlayer.value.load();
-        nextTick(() => {
-          playSound();
-        });
-      }
+      await nextTick();
+      await playSound();
     }
   },
   { deep: true },
@@ -452,25 +443,14 @@ const changeSound = (type) => {
   }
 };
 
-const togglePlay = () => {
-  if (audioPlayer.value) {
-    // 每次點擊都重置到開始並播放
-    audioPlayer.value.currentTime = 0;
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
+const togglePlay = async () => {
+  // 每次點擊都重新播放
+  await playSound();
 };
 
-const audioEnded = () => {
-  isPlaying.value = false;
-};
-
-const playSound = () => {
-  if (audioPlayer.value) {
-    audioPlayer.value.currentTime = 0; // 重置音频到开始位置
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
+const playSound = async () => {
+  const audioUrl = `/sounds/${selectedSound.value.romaji}.mp3`;
+  await playAudio(audioUrl);
 };
 
 const selectSound = (sound) => {
