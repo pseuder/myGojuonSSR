@@ -3,7 +3,11 @@
     <!-- 50音列表 -->
     <div class="w-full" :key="activeTab">
       <h2 class="mb-3 text-xl font-semibold">
-        <el-tabs v-model="activeTab" class="w-fill mb-4 lg:max-w-md">
+        <el-tabs
+          v-model="activeTab"
+          class="w-fill mb-4 lg:max-w-md"
+          @tab-change="handleTabChange"
+        >
           <template v-for="tab in tabs" :key="tab.name">
             <el-tab-pane :label="t(tab.label)" :name="tab.name" />
           </template>
@@ -184,9 +188,10 @@ const groupedSounds = computed(() => {
   return groups;
 });
 
-watch(activeTab, () => {
+// 切換Tab時將selectedSound設為單前第一個單字
+const handleTabChange = (TabPaneName) => {
   selectedSound.value = currentSounds.value[0];
-});
+};
 
 // 監聽 selectedSound 變化，自動播放音頻（如果啟用）
 watch(selectedSound, async () => {
@@ -263,12 +268,64 @@ onMounted(() => {
   if (savedAutoPlay !== null) {
     autoPlay.value = savedAutoPlay === "true";
   }
+
+  // 從 localStorage 讀取 activeTab 設定
+  const savedActiveTab = localStorage.getItem("writingPractice_activeTab");
+  if (savedActiveTab !== null) {
+    // 驗證 savedActiveTab 是否為有效值
+    const validTabs = ["hiragana", "katakana", "dakuon", "handakuon", "yoon"];
+    if (validTabs.includes(savedActiveTab)) {
+      activeTab.value = savedActiveTab;
+    }
+  }
+
+  // 從 localStorage 讀取 selectedSound 設定
+  const savedSelectedSound = localStorage.getItem(
+    "writingPractice_selectedSound",
+  );
+  if (savedSelectedSound !== null) {
+    try {
+      const parsedSound = JSON.parse(savedSelectedSound);
+      // 驗證這個假名是否存在於當前的 activeTab 中
+      const soundExists = currentSounds.value.find(
+        (sound) => sound.kana === parsedSound.kana,
+      );
+      if (soundExists) {
+        selectedSound.value = parsedSound;
+      } else {
+        // 如果不存在，使用當前列表的第一個
+        selectedSound.value = currentSounds.value[0];
+      }
+    } catch (error) {
+      console.error("Failed to parse savedSelectedSound:", error);
+      selectedSound.value = currentSounds.value[0];
+    }
+  }
 });
 
 // 監聽 autoPlay 變化並保存到 localStorage
 watch(autoPlay, (newValue) => {
   localStorage.setItem("writingPractice_autoPlay", newValue.toString());
 });
+
+// 監聽 activeTab 變化並保存到 localStorage
+watch(activeTab, (newValue) => {
+  localStorage.setItem("writingPractice_activeTab", newValue);
+});
+
+// 監聽 selectedSound 變化並保存到 localStorage
+watch(
+  selectedSound,
+  (newValue) => {
+    if (newValue && newValue.kana) {
+      localStorage.setItem(
+        "writingPractice_selectedSound",
+        JSON.stringify(newValue),
+      );
+    }
+  },
+  { deep: true },
+);
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
