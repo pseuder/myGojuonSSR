@@ -67,7 +67,7 @@
 
         <el-button
           @click="handleClear"
-          type="text"
+          link
           class="m-0 p-0 text-[35px] leading-none"
         >
           <img

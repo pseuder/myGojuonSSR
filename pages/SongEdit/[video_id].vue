@@ -155,24 +155,20 @@
           >
             <div class="flex flex-shrink-0 flex-col items-center">
               <div class="flex">
-                <el-button
-                  type="text"
-                  plain
-                  @click="startVideoOn(line.timestamp)"
-                >
+                <el-button link plain @click="startVideoOn(line.timestamp)">
                   <el-icon :size="25">
                     <Switch />
                   </el-icon>
                 </el-button>
 
-                <el-button type="text" plain @click="handleDelete(index)">
+                <el-button link plain @click="handleDelete(index)">
                   <el-icon :size="25" color="red">
                     <Delete />
                   </el-icon>
                 </el-button>
 
                 <el-button
-                  type="text"
+                  link
                   class="text-sm text-blue-500"
                   @click="handleAddNewLyricLine(index)"
                 >
@@ -182,7 +178,7 @@
                 </el-button>
 
                 <el-button
-                  type="text"
+                  link
                   class="text-sm text-blue-500"
                   @click="handleDuplicateLyricLine(index)"
                 >
@@ -199,16 +195,16 @@
               />
 
               <div class="flex">
-                <el-button type="text" @click="handleDecreaseTime(index, 5)">
+                <el-button link @click="handleDecreaseTime(index, 5)">
                   -5
                 </el-button>
-                <el-button type="text" @click="handleDecreaseTime(index, 10)">
+                <el-button link @click="handleDecreaseTime(index, 10)">
                   -10
                 </el-button>
-                <el-button type="text" @click="handleIncreaseTime(index, 5)">
+                <el-button link @click="handleIncreaseTime(index, 5)">
                   +5
                 </el-button>
-                <el-button type="text" @click="handleIncreaseTime(index, 10)">
+                <el-button link @click="handleIncreaseTime(index, 10)">
                   +10
                 </el-button>
               </div>
@@ -221,21 +217,21 @@
                 >
                   <span class="flex">
                     <el-button
-                      type="text"
+                      link
                       class="text-sm text-blue-500"
                       @click="handleWidthenLyric(index, lyIndex)"
                     >
                       加寬
                     </el-button>
                     <el-button
-                      type="text"
+                      link
                       class="text-sm text-red-500"
                       @click="handleDeleteLyric(index, lyIndex)"
                     >
                       刪除
                     </el-button>
                     <el-button
-                      type="text"
+                      link
                       class="text-sm text-yellow-800"
                       @click="handleAddLyric(index, lyIndex)"
                     >
@@ -325,7 +321,7 @@
                     </el-button>
                     <el-button
                       v-if="ly.color"
-                      type="text"
+                      link
                       size="small"
                       class="text-xs text-gray-500"
                       @click="ly.color = ''"
@@ -963,7 +959,6 @@ const searchYouTube = async () => {
   loading.value = true;
   searchResults.value = []; // 清空之前的搜尋結果
   nextPageToken.value = ""; // 重置分頁 token
-  recordActivity("search_youtube", searchQuery.value);
   try {
     const response = await $fetch(
       "https://www.googleapis.com/youtube/v3/search",
@@ -1022,37 +1017,6 @@ const loadMoreResults = async () => {
     ElMessage.error("載入更多 YouTube 影片時發生錯誤");
   } finally {
     loading.value = false;
-  }
-};
-
-//-- 取得歌詞 --//
-const handleFindLyrics = async () => {
-  lyricsLoading.value = true;
-  recordActivity("find_lyrics", videoTitle.value);
-  try {
-    const response = await MYAPI.get("/gemini_get_lyrics", {
-      params: {
-        title: videoTitle.value,
-        channel: videoChannel.value,
-      },
-    });
-
-    let res_lyrics = response.data;
-
-    if (res_lyrics === "") {
-      ElMessage.warning("找不到歌詞");
-      return;
-    }
-
-    for (const line of res_lyrics) {
-      if (line.lyrics.length === 0) continue;
-      allLyrics.value.push(line);
-    }
-  } catch (error) {
-    console.error("取得歌詞時發生錯誤：", error);
-    ElMessage.error("取得歌詞時發生錯誤");
-  } finally {
-    lyricsLoading.value = false;
   }
 };
 
@@ -1183,10 +1147,6 @@ const getApiKey = async () => {
   }
 };
 
-const recordActivity = (learningMethod = "", learningItem = "") => {
-  gtag("event", `歌曲編輯`);
-};
-
 //-- Resizer 相關 --//
 // 檢測是否為移動設備
 const checkIfMobile = () => {
@@ -1248,7 +1208,6 @@ const loadVideoFromApi = async (videoIdParam) => {
       }
 
       ElMessage.success("影片資料載入成功");
-      recordActivity("auto_load_video", videoTitle.value);
     } else {
       ElMessage.warning("找不到指定的影片資料");
     }
@@ -1373,12 +1332,11 @@ onMounted(async () => {
   window.addEventListener("mousemove", handleMouseMove);
   window.addEventListener("mouseup", handleMouseUp);
 
-  recordActivity("enter_page", "");
-
   // 檢查 URL 參數中是否有 video_id
   const urlVideoId = route.params.video_id;
   if (urlVideoId) {
-    await loadVideoFromApi(urlVideoId);
+    console.log(urlVideoId);
+    if (urlVideoId != "empty") await loadVideoFromApi(urlVideoId);
   }
 });
 

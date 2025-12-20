@@ -19,7 +19,7 @@
         </el-menu>
       </div>
       <div class="flex w-fit items-center gap-4">
-        <LocaleSwitcher @update:locale="recordActivity" />
+        <LocaleSwitcher />
         <myGoogleLogin />
       </div>
     </nav>

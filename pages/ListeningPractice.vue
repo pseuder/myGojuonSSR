@@ -33,7 +33,7 @@
           />
         </el-select>
 
-        <el-button @click="doSpecialLearning" type="text">
+        <el-button @click="doSpecialLearning" link>
           <img
             src="/images/student.png"
             alt="進行特別學習"
@@ -111,14 +111,20 @@
         <el-badge :value="specialLearningList.length" class="mr-2">
           <el-button
             @click="specialLearningListDialogVisible = true"
-            type="text"
+            type="primary"
+            link
             title="特別學習列表"
           >
             <el-icon :size="30"><List /></el-icon>
           </el-button>
         </el-badge>
 
-        <el-button @click="addSpecialLearning" type="text" title="加入特別學習">
+        <el-button
+          @click="addSpecialLearning"
+          type="primary"
+          link
+          title="加入特別學習"
+        >
           <el-icon :size="30"><CirclePlusFilled /></el-icon>
         </el-button>
 
@@ -196,7 +202,7 @@
           <span>{{ t("special_learning_list") }}</span>
           <el-button
             @click="handleClearSpecialLearningList"
-            type="text"
+            link
             style="font-size: 35px; padding: 0; margin: 0; line-height: 1"
           >
             <img
