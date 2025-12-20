@@ -60,6 +60,14 @@
         </div>
 
         <div class="flex gap-2">
+          <el-button
+            class="flex-1"
+            type="warning"
+            plain
+            @click="handleClearTime"
+          >
+            清空時間部分
+          </el-button>
           <el-button class="flex-1" type="warning" plain @click="handleCopy">
             複製歌詞
           </el-button>
@@ -582,6 +590,13 @@ const convertedLyricsDialogSubmit = async () => {
 
 const handleClearLyrics = () => {
   allLyrics.value = [];
+};
+
+const handleClearTime = () => {
+  allLyrics.value.forEach((line) => {
+    line.timestamp = "";
+  });
+  ElMessage.success("已清空所有時間戳記");
 };
 
 const handleInsert = () => {
