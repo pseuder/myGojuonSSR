@@ -203,8 +203,11 @@ const {
   async () => {
     try {
       const currentUid = route.params.uid; // 使用當前路由的 uid
+      if (currentUid == undefined) return;
       const response = await MYAPI.get(`/get_video/${currentUid}`);
       if (!response.data) {
+        console.error("Song Not Response");
+        console.error(response);
         // 在 Nuxt 中，建議這樣拋出一個帶有狀態碼的錯誤
         throw createError({
           statusCode: 404,

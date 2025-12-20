@@ -324,6 +324,7 @@ const predictKana = ref("");
 
 const soundCounts = reactive({});
 const round = ref(1);
+const isRotating = ref(false);
 
 // ===========================
 // Computed Properties
@@ -550,11 +551,16 @@ const handleClearSpecialLearningList = () => {
     type: "warning",
   })
     .then(() => {
-      specialLearningList.value = [];
-      saveSpecialLearningList();
-      ElMessage.success(t("special_learning_list_cleared"));
+      isRotating.value = true;
 
-      specialLearningListDialogVisible.value = false;
+      setTimeout(() => {
+        specialLearningList.value = [];
+        saveSpecialLearningList();
+        ElMessage.success(t("special_learning_list_cleared"));
+
+        specialLearningListDialogVisible.value = false;
+        isRotating.value = false;
+      }, 500);
     })
     .catch(() => {
       ElMessage.info(t("cancelled"));
@@ -708,5 +714,18 @@ h3 {
 .count.active {
   background-color: #f44336;
   color: white;
+}
+
+.rotate-animation {
+  animation: rotate 0.5s linear;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
