@@ -58,7 +58,7 @@
 
       <!-- 加入特別學習 -->
       <div class="flex items-center justify-between gap-2">
-        <el-popover placement="bottom" :width="fit - content" trigger="click">
+        <el-popover placement="bottom" width="auto" trigger="click">
           <template #reference>
             <el-tag type="success" class="text-lg hover:cursor-pointer"
               >Round {{ round }} - {{ completedInRound }} /
@@ -128,29 +128,31 @@
           <el-icon :size="30"><CirclePlusFilled /></el-icon>
         </el-button>
 
-        <el-button
-          v-show="isLogin"
-          id="ai-recognition-button"
-          @click="handwritingCanvas.sendCanvasImageToBackend()"
-          class="tech-gradient-button h-12 w-full text-[18px]"
-          :disabled="handwritingCanvas?.isSending"
-        >
-          {{ t("ai_recognition") }}
-          <img
-            class="ml-2 h-6 w-6"
-            :class="{ 'animate-spin': handwritingCanvas?.isSending }"
-            src="/images/stars.png"
-            alt=""
-          />
-        </el-button>
-        <el-button
-          v-show="!isLogin"
-          type="primary"
-          class="h-12 w-full"
-          disabled
-        >
-          {{ t("login_to_enable_ai_recognition") }}
-        </el-button>
+        <ClientOnly>
+          <el-button
+            v-if="isLogin"
+            id="ai-recognition-button"
+            @click="handwritingCanvas.sendCanvasImageToBackend()"
+            class="tech-gradient-button h-12 w-full text-[18px]"
+            :disabled="handwritingCanvas?.isSending"
+          >
+            {{ t("ai_recognition") }}
+            <img
+              class="ml-2 h-6 w-6"
+              :class="{ 'animate-spin': handwritingCanvas?.isSending }"
+              src="/images/stars.png"
+              alt=""
+            />
+          </el-button>
+          <el-button
+            v-else
+            type="primary"
+            class="h-12 w-full"
+            disabled
+          >
+            {{ t("login_to_enable_ai_recognition") }}
+          </el-button>
+        </ClientOnly>
       </div>
 
       <el-tag
@@ -194,10 +196,9 @@
     <!-- Special Learning List Dialog -->
     <el-dialog
       v-model="specialLearningListDialogVisible"
-      :title="t('special_learning_list')"
       class="w-[90vw] max-w-[500px]"
     >
-      <template #title>
+      <template #header>
         <div class="items center flex justify-between">
           <span>{{ t("special_learning_list") }}</span>
           <el-button

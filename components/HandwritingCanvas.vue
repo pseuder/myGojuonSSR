@@ -21,19 +21,20 @@
       </div>
 
       <div class="flex items-center gap-6">
-        <div class="relative h-10 w-10" :style="{ color: penColor }">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 1182.000000 1280.000000"
-            class="h-10 w-10 cursor-pointer"
-          >
-            <g
-              transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
-              fill="currentColor"
-              stroke="currentColor"
+        <ClientOnly>
+          <div class="relative h-10 w-10" :style="{ color: penColor }">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 1182.000000 1280.000000"
+              class="h-10 w-10 cursor-pointer"
             >
-              <path
-                d="M6135 11194 c-1192 -76 -2249 -543 -3088 -1364 -762 -745 -1247
+              <g
+                transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
+                fill="currentColor"
+                stroke="currentColor"
+              >
+                <path
+                  d="M6135 11194 c-1192 -76 -2249 -543 -3088 -1364 -762 -745 -1247
 -1695 -1396 -2737 -38 -261 -46 -384 -45 -698 0 -443 38 -760 139 -1165 89
 -351 181 -602 350 -945 185 -376 364 -652 636 -980 118 -143 461 -481 616
 -608 711 -581 1539 -940 2440 -1057 312 -41 690 -50 798 -20 182 51 328 143
@@ -53,17 +54,18 @@
 401 793 351z m5958 -19 c348 -98 582 -408 582 -770 0 -165 -39 -297 -126 -433
 -250 -387 -770 -483 -1146 -210 -122 88 -238 250 -286 399 -88 271 -20 577
 175 785 123 130 271 213 438 245 96 19 269 11 363 -16z"
-              />
-            </g>
-          </svg>
+                />
+              </g>
+            </svg>
 
-          <el-color-picker
-            v-model="penColor"
-            :predefine="predefinedColors"
-            class="absolute inset-0 opacity-0"
-          >
-          </el-color-picker>
-        </div>
+            <el-color-picker
+              v-model="penColor"
+              :predefine="predefinedColors"
+              class="absolute inset-0 opacity-0"
+            >
+            </el-color-picker>
+          </div>
+        </ClientOnly>
 
         <el-button
           @click="handleClear"
@@ -275,7 +277,6 @@ const sendCanvasImageToBackend = async () => {
         "Content-Type": "multipart/form-data",
       },
     });
-    console.log("Auto-detect response:", response);
     emit("autoDetect", response);
   } catch (error) {
     console.error(error);
