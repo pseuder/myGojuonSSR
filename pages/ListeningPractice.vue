@@ -551,11 +551,15 @@ const loadLearningState = () => {
 // Reset Round Function
 // ===========================
 const resetRound = () => {
-  ElMessageBox.confirm(t("確定要重置 Round 嗎?這將清空所有計數紀錄。"), t("warning"), {
-    confirmButtonText: t("confirm"),
-    cancelButtonText: t("cancel"),
-    type: "warning",
-  })
+  ElMessageBox.confirm(
+    t("確定要重置 Round 嗎?這將清空所有計數紀錄。"),
+    t("warning"),
+    {
+      confirmButtonText: t("confirm"),
+      cancelButtonText: t("cancel"),
+      type: "warning",
+    },
+  )
     .then(() => {
       // 重置 round 為 1
       round.value = 1;
@@ -749,12 +753,39 @@ onMounted(() => {
 
 <style scoped>
 .tech-gradient-button {
-  background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%) !important;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
   color: white !important;
   border: none;
+  background-size: 300% 100%;
+  animation: gradient-animation 8s ease infinite;
   transition:
-    transform 0.2s ease-in-out,
-    box-shadow 0.3s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.tech-gradient-button.is-disabled {
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
+  color: white !important;
+  border: none;
+  background-size: 300% 100%;
+  animation: gradient-animation 8s ease infinite;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 h3 {
