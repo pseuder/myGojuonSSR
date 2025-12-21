@@ -57,36 +57,48 @@
       </div>
 
       <!-- 加入特別學習 -->
-      <div class="flex items-center justify-between gap-2">
-        <el-popover placement="bottom" width="auto" trigger="click">
-          <template #reference>
-            <el-tag type="success" class="text-lg hover:cursor-pointer"
-              >Round {{ round }} - {{ completedInRound }} /
-              {{ totalInRound }}</el-tag
-            >
-          </template>
-
-          <div class="sound-grid">
-            <div
-              v-for="(count, sound) in soundCounts"
-              :key="sound"
-              class="sound-item"
-            >
-              <span class="sound">{{ sound }}</span>
-              <span
-                class="count"
-                :class="{
-                  active1: count == 1,
-                  active2: count == 2,
-                  active3: count == 3,
-                  active: count > 3,
-                }"
-                >{{ count }}</span
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap justify-center gap-2 self-center">
+          <el-button
+            type="success"
+            :icon="RefreshRight"
+            circle
+            plain
+            title="重置Round"
+            @click="resetRound"
+          />
+          <el-popover placement="bottom" width="auto" trigger="click">
+            <template #reference>
+              <el-tag
+                type="success"
+                class="text-lg hover:cursor-pointer"
+                size="large"
+                >Round {{ round }} - {{ completedInRound }} /
+                {{ totalInRound }}</el-tag
               >
-            </div>
-          </div>
-        </el-popover>
+            </template>
 
+            <div class="sound-grid">
+              <div
+                v-for="(count, sound) in soundCounts"
+                :key="sound"
+                class="sound-item"
+              >
+                <span class="sound">{{ sound }}</span>
+                <span
+                  class="count"
+                  :class="{
+                    active1: count == 1,
+                    active2: count == 2,
+                    active3: count == 3,
+                    active: count > 3,
+                  }"
+                  >{{ count }}</span
+                >
+              </div>
+            </div>
+          </el-popover>
+        </div>
         <div class="flex items-center gap-4 md:gap-8">
           <img
             src="/images/arrow-circle-left-solid.svg"
@@ -236,7 +248,12 @@
 // ===========================
 import { ref, computed, onMounted, reactive, watch, nextTick } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
-import { Delete, List, CirclePlusFilled } from "@element-plus/icons-vue";
+import {
+  Delete,
+  List,
+  CirclePlusFilled,
+  RefreshRight,
+} from "@element-plus/icons-vue";
 import HandwritingCanvas from "@/components/HandwritingCanvas.vue";
 import fiftySoundsData from "@/data/fifty-sounds.json";
 import { useI18n } from "vue-i18n";
@@ -528,6 +545,29 @@ const loadLearningState = () => {
       console.error("Failed to load learning state:", e);
     }
   }
+};
+
+// ===========================
+// Reset Round Function
+// ===========================
+const resetRound = () => {
+  ElMessageBox.confirm(t("確定要重置 Round 嗎?這將清空所有計數紀錄。"), t("warning"), {
+    confirmButtonText: t("confirm"),
+    cancelButtonText: t("cancel"),
+    type: "warning",
+  })
+    .then(() => {
+      // 重置 round 為 1
+      round.value = 1;
+      // 清空 soundCounts
+      initializeCounts();
+      // 保存狀態
+      saveLearningState();
+      ElMessage.success(t("Round 已重置"));
+    })
+    .catch(() => {
+      ElMessage.info(t("cancelled"));
+    });
 };
 
 // ===========================
