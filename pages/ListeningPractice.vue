@@ -325,6 +325,7 @@ const predictKana = ref("");
 const soundCounts = reactive({});
 const round = ref(1);
 const isRotating = ref(false);
+const isMounting = ref(true); // 標記是否正在掛載中
 
 // ===========================
 // Computed Properties
@@ -579,7 +580,8 @@ watch(currentSounds, () => {
 watch(
   selectedSound,
   async (newSound, oldSound) => {
-    if (newSound !== oldSound) {
+    // 掛載期間不自動播放，避免重複播放
+    if (newSound !== oldSound && !isMounting.value) {
       await nextTick();
       await playSound();
     }
@@ -643,7 +645,9 @@ onMounted(() => {
     }
   }
 
+  // 掛載完成後播放聲音並解除掛載標記
   nextTick(() => {
+    isMounting.value = false;
     playSound();
   });
 });
