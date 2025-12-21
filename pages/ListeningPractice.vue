@@ -3,12 +3,6 @@
     <!-- 左側50音列表 -->
     <div class="flex w-full flex-col gap-2 md:gap-4">
       <div class="flex items-center gap-4">
-        <audio
-          ref="audioPlayer"
-          :src="`/sounds/${selectedSound.romaji}.mp3`"
-          @ended="audioEnded"
-        ></audio>
-
         <div class="hover:cursor-pointer" @click="togglePlay">
           <img
             v-if="isPlaying"
@@ -39,7 +33,7 @@
           />
         </el-select>
 
-        <el-button @click="doSpecialLearning" type="text">
+        <el-button @click="doSpecialLearning" link>
           <img
             src="/images/student.png"
             alt="進行特別學習"
@@ -47,13 +41,6 @@
             title="進行特別學習"
           />
         </el-button>
-
-        <!-- 靠左/靠右 -->
-        <!-- <el-switch
-          v-model="isRightAligned"
-          active-text="靠右"
-          inactive-text="靠左"
-        /> -->
       </div>
 
       <!-- 預測值/信心值/Round -->
@@ -67,40 +54,51 @@
         />
 
         <div>{{ t("predicted_value") }}：{{ predictKana }}</div>
-        <!-- <div>{{ t("confidence_level") }}：{{ predictConfidence }}</div> -->
       </div>
 
       <!-- 加入特別學習 -->
-      <div class="flex items-center justify-between gap-2">
-        <el-popover placement="bottom" :width="fit - content" trigger="click">
-          <template #reference>
-            <el-tag type="success" class="text-lg hover:cursor-pointer"
-              >Round {{ round }} - {{ completedInRound }} /
-              {{ totalInRound }}</el-tag
-            >
-          </template>
-
-          <div class="sound-grid">
-            <div
-              v-for="(count, sound) in soundCounts"
-              :key="sound"
-              class="sound-item"
-            >
-              <span class="sound">{{ sound }}</span>
-              <span
-                class="count"
-                :class="{
-                  active1: count == 1,
-                  active2: count == 2,
-                  active3: count == 3,
-                  active: count > 3,
-                }"
-                >{{ count }}</span
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap justify-center gap-2 self-center">
+          <el-button
+            type="success"
+            :icon="RefreshRight"
+            circle
+            plain
+            title="重置Round"
+            @click="resetRound"
+          />
+          <el-popover placement="bottom" width="auto" trigger="click">
+            <template #reference>
+              <el-tag
+                type="success"
+                class="text-lg hover:cursor-pointer"
+                size="large"
+                >Round {{ round }} - {{ completedInRound }} /
+                {{ totalInRound }}</el-tag
               >
-            </div>
-          </div>
-        </el-popover>
+            </template>
 
+            <div class="sound-grid">
+              <div
+                v-for="(count, sound) in soundCounts"
+                :key="sound"
+                class="sound-item"
+              >
+                <span class="sound">{{ sound }}</span>
+                <span
+                  class="count"
+                  :class="{
+                    active1: count == 1,
+                    active2: count == 2,
+                    active3: count == 3,
+                    active: count > 3,
+                  }"
+                  >{{ count }}</span
+                >
+              </div>
+            </div>
+          </el-popover>
+        </div>
         <div class="flex items-center gap-4 md:gap-8">
           <img
             src="/images/arrow-circle-left-solid.svg"
@@ -125,40 +123,43 @@
         <el-badge :value="specialLearningList.length" class="mr-2">
           <el-button
             @click="specialLearningListDialogVisible = true"
-            type="text"
+            type="primary"
+            link
             title="特別學習列表"
           >
             <el-icon :size="30"><List /></el-icon>
           </el-button>
         </el-badge>
 
-        <el-button @click="addSpecialLearning" type="text" title="加入特別學習">
+        <el-button
+          @click="addSpecialLearning"
+          type="primary"
+          link
+          title="加入特別學習"
+        >
           <el-icon :size="30"><CirclePlusFilled /></el-icon>
         </el-button>
 
-        <el-button
-          v-show="isLogin"
-          id="ai-recognition-button"
-          @click="handwritingCanvas.sendCanvasImageToBackend()"
-          class="tech-gradient-button h-12 w-full text-[18px]"
-          :disabled="handwritingCanvas?.isSending"
-        >
-          {{ t("ai_recognition") }}
-          <img
-            class="ml-2 h-6 w-6"
-            :class="{ 'animate-spin': handwritingCanvas?.isSending }"
-            src="/images/stars.png"
-            alt=""
-          />
-        </el-button>
-        <el-button
-          v-show="!isLogin"
-          type="primary"
-          class="h-12 w-full"
-          disabled
-        >
-          {{ t("login_to_enable_ai_recognition") }}
-        </el-button>
+        <ClientOnly>
+          <el-button
+            v-if="isLogin"
+            id="ai-recognition-button"
+            @click="handwritingCanvas.sendCanvasImageToBackend()"
+            class="tech-gradient-button h-12 w-full text-[18px]"
+            :disabled="handwritingCanvas?.isSending"
+          >
+            {{ t("ai_recognition") }}
+            <img
+              class="ml-2 h-6 w-6"
+              :class="{ 'animate-spin': handwritingCanvas?.isSending }"
+              src="/images/stars.png"
+              alt=""
+            />
+          </el-button>
+          <el-button v-else type="primary" class="h-12 w-full" disabled>
+            {{ t("login_to_enable_ai_recognition") }}
+          </el-button>
+        </ClientOnly>
       </div>
 
       <el-tag
@@ -202,15 +203,14 @@
     <!-- Special Learning List Dialog -->
     <el-dialog
       v-model="specialLearningListDialogVisible"
-      :title="t('special_learning_list')"
       class="w-[90vw] max-w-[500px]"
     >
-      <template #title>
+      <template #header>
         <div class="items center flex justify-between">
           <span>{{ t("special_learning_list") }}</span>
           <el-button
             @click="handleClearSpecialLearningList"
-            type="text"
+            link
             style="font-size: 35px; padding: 0; margin: 0; line-height: 1"
           >
             <img
@@ -243,25 +243,35 @@
 </template>
 
 <script setup>
+// ===========================
+// Imports & Composables
+// ===========================
 import { ref, computed, onMounted, reactive, watch, nextTick } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
-import { Delete, List, CirclePlusFilled } from "@element-plus/icons-vue";
+import {
+  Delete,
+  List,
+  CirclePlusFilled,
+  RefreshRight,
+} from "@element-plus/icons-vue";
 import HandwritingCanvas from "@/components/HandwritingCanvas.vue";
 import fiftySoundsData from "@/data/fifty-sounds.json";
 import { useI18n } from "vue-i18n";
-const { t, locale } = useI18n();
-
 import { useAuth } from "~/composables/useAuth";
+
+const { t, locale } = useI18n();
 const { user } = useAuth();
-
-const MYAPI = useApi();
-
 const { gtag } = useGtag();
-
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
-// 聽寫練習頁面專屬 SEO Meta
+// 使用 Web Audio API 進行音頻管理
+const { isPlaying, play: playAudio, stop: stopAudio } = useWebAudio();
+
+// ===========================
+// SEO & Meta
+// ===========================
+
 useSeoMeta({
   title: () => t("page_meta.listening_practice.title"),
   description: () => t("page_meta.listening_practice.description"),
@@ -276,7 +286,6 @@ useSeoMeta({
   twitterImage: `${siteUrl}/favicon.png`,
 });
 
-// 添加結構化資料
 const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
 const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/ListeningPractice`;
 useHead({
@@ -303,6 +312,9 @@ useHead({
   ],
 });
 
+// ===========================
+// Data & State
+// ===========================
 const fiftySounds = ref(fiftySoundsData);
 const activeTab = ref("hiragana");
 const selectedSound = ref({
@@ -312,8 +324,7 @@ const selectedSound = ref({
   type: "hiragana",
 });
 const handwritingCanvas = ref(null);
-const audioPlayer = ref(null);
-const isPlaying = ref(false);
+
 const isRandomMode = ref(false);
 const isRightAligned = ref(true);
 const showCurrentWord = ref(false);
@@ -322,11 +333,17 @@ const specialLearningList = ref([]);
 const specialLearningListDialogVisible = ref(false);
 
 const predictKana = ref("");
-const predictConfidence = ref(0);
 
 const soundCounts = reactive({});
 const round = ref(1);
+const isRotating = ref(false);
+const isMounting = ref(true); // 標記是否正在掛載中
+const soundHistory = ref([]); // 歷史記錄栈，用於實現真正的"上一個"功能
+const currentHistoryIndex = ref(-1); // 當前在歷史記錄中的位置
 
+// ===========================
+// Computed Properties
+// ===========================
 const isLogin = computed(() => !!user.value);
 
 const currentSounds = computed(() => {
@@ -347,12 +364,9 @@ const completedInRound = computed(
     ).length,
 );
 
-// 監聽 currentSounds 的變化，如果變化則重新初始化計數器
-watch(currentSounds, () => {
-  initializeCounts();
-  round.value = 1;
-});
-
+// ===========================
+// Initialization Functions
+// ===========================
 // 初始化計數器
 const initializeCounts = () => {
   // reset soundCounts
@@ -366,28 +380,9 @@ const initializeCounts = () => {
 
 initializeCounts();
 
-watch(
-  selectedSound,
-  (newSound, oldSound) => {
-    if (newSound !== oldSound) {
-      if (audioPlayer.value) {
-        audioPlayer.value.load();
-        nextTick(() => {
-          playSound();
-        });
-      }
-    }
-  },
-  { deep: true },
-);
-
-watch(activeTab, () => {
-  selectedSound.value = currentSounds.value[0];
-
-  // 重置soundCounts
-  initializeCounts();
-});
-
+// ===========================
+// Navigation Functions
+// ===========================
 const findNextValidKana = (currentIndex, direction) => {
   const totalItems = currentSounds.value.length;
   let nextIndex = currentIndex;
@@ -402,12 +397,6 @@ const findNextValidKana = (currentIndex, direction) => {
   }
 
   return null;
-};
-
-const handleModeChange = () => {
-  ElMessage.success(
-    isRandomMode.value ? t("switch_to_random") : t("switch_to_sequential"),
-  );
 };
 
 const getRandomSound = () => {
@@ -429,85 +418,97 @@ const getRandomSound = () => {
   return selectedSound;
 };
 
-const changeSound = (type) => {
-  if (isRandomMode.value) {
-    selectSound(getRandomSound());
-  } else {
-    const currentIndex = currentSounds.value.findIndex(
-      (sound) => sound.kana === selectedSound.value.kana,
-    );
+const handleModeChange = () => {
+  ElMessage.success(
+    isRandomMode.value ? t("switch_to_random") : t("switch_to_sequential"),
+  );
+};
 
-    const nextSound =
-      type === "next"
-        ? findNextValidKana(currentIndex, 1)
-        : findNextValidKana(currentIndex, -1);
+const changeSound = (type) => {
+  if (type === "prev") {
+    // 實現真正的"上一個"功能：從歷史記錄中返回
+    if (currentHistoryIndex.value > 0) {
+      currentHistoryIndex.value--;
+      const prevSound = soundHistory.value[currentHistoryIndex.value];
+      selectedSound.value = prevSound;
+    } else {
+      ElMessage.warning(t("no_previous_sound") || "沒有上一個了");
+    }
+    return;
+  }
+
+  // "下一個"的邏輯
+  if (type === "next") {
+    // 如果當前不在歷史記錄的最後位置，先嘗試前進歷史記錄
+    if (currentHistoryIndex.value < soundHistory.value.length - 1) {
+      currentHistoryIndex.value++;
+      const nextSound = soundHistory.value[currentHistoryIndex.value];
+      selectedSound.value = nextSound;
+      return;
+    }
+
+    // 否則選擇新的音
+    let nextSound;
+    if (isRandomMode.value) {
+      nextSound = getRandomSound();
+    } else {
+      const currentIndex = currentSounds.value.findIndex(
+        (sound) => sound.kana === selectedSound.value.kana,
+      );
+      nextSound = findNextValidKana(currentIndex, 1);
+    }
 
     if (nextSound) {
-      // Increment the count for the current sound before moving to the next
-      // soundCounts[selectedSound.value.kana]++;
-      selectSound(nextSound);
+      selectSound(nextSound, true); // 傳遞 true 表示這是新的選擇，需要加入歷史
     }
   }
 };
 
-const togglePlay = () => {
-  if (audioPlayer.value) {
-    // 每次點擊都重置到開始並播放
-    audioPlayer.value.currentTime = 0;
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
+// ===========================
+// Sound Management Functions
+// ===========================
+const togglePlay = async () => {
+  // 每次點擊都重新播放
+  await playSound();
 };
 
-const audioEnded = () => {
-  isPlaying.value = false;
+const playSound = async () => {
+  const audioUrl = `/sounds/${selectedSound.value.romaji}.mp3`;
+  await playAudio(audioUrl);
 };
 
-const playSound = () => {
-  if (audioPlayer.value) {
-    audioPlayer.value.currentTime = 0; // 重置音频到开始位置
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
-};
-
-const selectSound = (sound) => {
+const selectSound = (sound, addToHistory = false) => {
   if (sound.kana) {
     selectedSound.value = sound;
+
+    // 如果是新的選擇（不是從歷史記錄中導航），加入歷史記錄
+    if (addToHistory) {
+      // 如果當前不在歷史記錄的末尾，刪除後面的記錄
+      if (currentHistoryIndex.value < soundHistory.value.length - 1) {
+        soundHistory.value = soundHistory.value.slice(
+          0,
+          currentHistoryIndex.value + 1,
+        );
+      }
+
+      // 添加新的記錄
+      soundHistory.value.push(sound);
+      currentHistoryIndex.value = soundHistory.value.length - 1;
+
+      // 限制歷史記錄長度為 100
+      if (soundHistory.value.length > 100) {
+        soundHistory.value.shift();
+        currentHistoryIndex.value--;
+      }
+    }
 
     gtag("event", `聽寫練習`);
   }
 };
 
-const clearSelectedSound = () => {
-  selectedSound.value = null;
-};
-
-// 特殊對應關係配置
-const SPECIAL_KANA_MATCHES = {
-  ニ: ["ニ", "二"],
-  ホ: ["ホ", "木"],
-  ヲ: ["ヲ", "ヨ", "ケ"],
-  ン: ["ン", "ソ", "ン"],
-  づ: ["づ", "ブ"],
-  ん: ["ん", "は", "ひ", "ほ"],
-  ヌ: ["ヌ", "又"],
-  エ: ["エ", "工", "エ"],
-  ロ: ["ロ", "口", "口", "囗", "□"],
-  ヘ: ["ヘ", "ㄟ", "へ"],
-  メ: ["メ", "シ", "x", "X"],
-  オ: ["オ", "才"],
-  ふ: ["ふ", "永", "示"],
-  ゆ: ["ゆ", "中", "由", "巾"],
-  ぬ: ["ぬ", "奴", "好"],
-  め: ["め", "女"],
-  チ: ["チ", "千"],
-  カ: ["カ", "力"],
-  く: ["く", "ㄑ"],
-  ろ: ["ろ", "3"],
-  い: ["い", "り"],
-};
-
+// ===========================
+// AI Recognition Functions
+// ===========================
 const autoDetect = (predict_res) => {
   if (predict_res === "ERR_NETWORK") {
     ElMessage.error(t("network_error"));
@@ -522,81 +523,114 @@ const autoDetect = (predict_res) => {
     return;
   }
 
-  const { predicted_hiragana, confidence } = predict_res.data;
+  const { predicted_hiragana, correctness } = predict_res.data;
   const currentKana = selectedSound.value.kana;
 
   // 更新預測結果
   predictKana.value = predicted_hiragana;
-  predictConfidence.value = confidence;
 
-  // 檢查是否匹配
-  const isCorrect = checkKanaMatch(currentKana, predicted_hiragana);
-
-  if (isCorrect) {
+  if (correctness) {
     handleCorrectPrediction(currentKana);
   } else {
     handleIncorrectPrediction(predicted_hiragana);
   }
-
-  try {
-    const dataToSend = {
-      learningModule: "listening",
-      learningMethod: "predict",
-      learningItem: currentKana,
-      correctness: isCorrect,
-    };
-
-    gtag("event", `AI辨識`);
-  } catch (error) {
-    console.error("Error recording activity:", error);
-  }
 };
 
-// 檢查假名是否匹配
-const areEqual = (strA, strB) => {
-  // 1. 先對字串進行規範化 (去除空格)
-  const normalizedA = strA.replace(/\s/g, "");
-  const normalizedB = strB.replace(/\s/g, "");
-
-  // 2. 嚴格比較 (您的原始邏輯 - 不考慮大小寫/重音)
-  const isStrictlyEqual =
-    normalizedA.localeCompare(normalizedB, "ja", {
-      sensitivity: "base",
-    }) === 0;
-
-  if (isStrictlyEqual) {
-    return true; // 如果嚴格相等，直接返回 true
-  }
-
-  // 3. 部分包含檢查 (新的機制)
-  const isPartialMatch = normalizedB.includes(normalizedA);
-
-  return isPartialMatch;
-};
-
-const checkKanaMatch = (currentKana, predictedKana) => {
-  // 檢查特殊情況
-  if (currentKana in SPECIAL_KANA_MATCHES) {
-    return SPECIAL_KANA_MATCHES[currentKana].includes(predictedKana);
-  }
-  // 一般情況
-  return areEqual(currentKana, predictedKana);
-};
-
-// 處理正確預測
 const handleCorrectPrediction = (currentKana) => {
   predictKana.value = currentKana;
   ElMessage.success(t("corrent") + `！: ${currentKana}`);
   soundCounts[currentKana]++;
+  saveLearningState();
   changeSound("next");
 };
 
-// 處理錯誤預測
 const handleIncorrectPrediction = (predictedKana) => {
   ElMessage.error(t("incorrect") + `！: ${predictedKana}`);
 };
 
+// ===========================
+// Learning State Management
+// ===========================
+const saveLearningState = () => {
+  const state = {
+    round: round.value,
+    soundCounts: soundCounts,
+    activeTab: activeTab.value,
+    selectedSound: selectedSound.value,
+    soundHistory: soundHistory.value,
+    currentHistoryIndex: currentHistoryIndex.value,
+  };
+  localStorage.setItem(
+    "listeningPractice_learningState",
+    JSON.stringify(state),
+  );
+};
+
+const loadLearningState = () => {
+  const savedState = localStorage.getItem("listeningPractice_learningState");
+  if (savedState) {
+    try {
+      const state = JSON.parse(savedState);
+
+      // 只有當 activeTab 相同時才恢復學習狀態
+      if (state.activeTab === activeTab.value) {
+        round.value = state.round || 1;
+        // 恢復 soundCounts
+        if (state.soundCounts) {
+          Object.keys(soundCounts).forEach((key) => delete soundCounts[key]);
+          Object.assign(soundCounts, state.soundCounts);
+        }
+        // 恢復 selectedSound
+        if (state.selectedSound) {
+          selectedSound.value = state.selectedSound;
+        }
+        // 恢復歷史記錄
+        if (state.soundHistory) {
+          soundHistory.value = state.soundHistory;
+        }
+        if (state.currentHistoryIndex !== undefined) {
+          currentHistoryIndex.value = state.currentHistoryIndex;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load learning state:", e);
+    }
+  }
+};
+
+// ===========================
+// Reset Round Function
+// ===========================
+const resetRound = () => {
+  ElMessageBox.confirm(
+    t("確定要重置 Round 嗎?這將清空所有計數紀錄。"),
+    t("warning"),
+    {
+      confirmButtonText: t("confirm"),
+      cancelButtonText: t("cancel"),
+      type: "warning",
+    },
+  )
+    .then(() => {
+      // 重置 round 為 1
+      round.value = 1;
+      // 清空 soundCounts
+      initializeCounts();
+      // 清空歷史記錄並重新初始化
+      soundHistory.value = [selectedSound.value];
+      currentHistoryIndex.value = 0;
+      // 保存狀態
+      saveLearningState();
+      ElMessage.success(t("Round 已重置"));
+    })
+    .catch(() => {
+      ElMessage.info(t("cancelled"));
+    });
+};
+
+// ===========================
 // Special Learning Functions
+// ===========================
 const loadSpecialLearningList = () => {
   const list = localStorage.getItem("specialLearningList");
   if (list) {
@@ -653,23 +687,130 @@ const handleClearSpecialLearningList = () => {
     type: "warning",
   })
     .then(() => {
-      specialLearningList.value = [];
-      saveSpecialLearningList();
-      ElMessage.success(t("special_learning_list_cleared"));
+      isRotating.value = true;
 
-      specialLearningListDialogVisible.value = false;
+      setTimeout(() => {
+        specialLearningList.value = [];
+        saveSpecialLearningList();
+        ElMessage.success(t("special_learning_list_cleared"));
+
+        specialLearningListDialogVisible.value = false;
+        isRotating.value = false;
+      }, 500);
     })
     .catch(() => {
       ElMessage.info(t("cancelled"));
     });
 };
 
-const isSelectedSound = (sound) =>
-  selectedSound.value && selectedSound.value.kana === sound.kana;
+// ===========================
+// Watchers
+// ===========================
+// 監聽 currentSounds 的變化，如果變化則重新初始化計數器
+watch(currentSounds, () => {
+  // 掛載期間不重置,讓 loadLearningState 處理
+  if (!isMounting.value) {
+    initializeCounts();
+    round.value = 1;
+    saveLearningState();
+  }
+});
 
+watch(
+  selectedSound,
+  async (newSound, oldSound) => {
+    // 掛載期間不自動播放，避免重複播放
+    if (newSound !== oldSound && !isMounting.value) {
+      await nextTick();
+      await playSound();
+    }
+    saveLearningState();
+  },
+  { deep: true },
+);
+
+watch(activeTab, () => {
+  // 掛載期間不重置,讓 loadLearningState 處理
+  if (!isMounting.value) {
+    selectedSound.value = currentSounds.value[0];
+
+    // 重置soundCounts
+    initializeCounts();
+
+    // 清空歷史記錄並重新初始化
+    soundHistory.value = [currentSounds.value[0]];
+    currentHistoryIndex.value = 0;
+
+    saveLearningState();
+  }
+});
+
+// 監聽 isRandomMode 變化並保存到 localStorage
+watch(isRandomMode, (newValue) => {
+  localStorage.setItem("listeningPractice_isRandomMode", newValue.toString());
+});
+
+// 監聽 activeTab 變化並保存到 localStorage
+watch(activeTab, (newValue) => {
+  localStorage.setItem("listeningPractice_activeTab", newValue);
+});
+
+// 監聽 round 變化並保存學習狀態
+watch(round, () => {
+  saveLearningState();
+});
+
+// ===========================
+// Lifecycle Hooks
+// ===========================
 onMounted(() => {
   loadSpecialLearningList();
+
+  // 從 localStorage 讀取 isRandomMode 設定
+  const savedIsRandomMode = localStorage.getItem(
+    "listeningPractice_isRandomMode",
+  );
+  if (savedIsRandomMode !== null) {
+    isRandomMode.value = savedIsRandomMode === "true";
+  }
+
+  // 從 localStorage 讀取 activeTab 設定
+  const savedActiveTab = localStorage.getItem("listeningPractice_activeTab");
+  if (savedActiveTab !== null) {
+    // 驗證 savedActiveTab 是否為有效值
+    const validTabs = [
+      "hiragana",
+      "katakana",
+      "dakuon",
+      "handakuon",
+      "yoon",
+      "special",
+    ];
+    if (validTabs.includes(savedActiveTab)) {
+      // 如果是 special，需要確保 specialLearningList 不為空
+      if (
+        savedActiveTab === "special" &&
+        specialLearningList.value.length === 0
+      ) {
+        activeTab.value = "hiragana";
+      } else {
+        activeTab.value = savedActiveTab;
+      }
+    }
+  }
+
+  // 恢復學習狀態
+  loadLearningState();
+
+  // 初始化歷史記錄（如果是第一次加載）
+  if (soundHistory.value.length === 0 && selectedSound.value.kana) {
+    soundHistory.value = [selectedSound.value];
+    currentHistoryIndex.value = 0;
+  }
+
+  // 掛載完成後播放聲音並解除掛載標記
   nextTick(() => {
+    isMounting.value = false;
     playSound();
   });
 });
@@ -677,12 +818,39 @@ onMounted(() => {
 
 <style scoped>
 .tech-gradient-button {
-  background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%) !important;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
   color: white !important;
   border: none;
+  background-size: 300% 100%;
+  animation: gradient-animation 8s ease infinite;
   transition:
-    transform 0.2s ease-in-out,
-    box-shadow 0.3s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.tech-gradient-button.is-disabled {
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
+  color: white !important;
+  border: none;
+  background-size: 300% 100%;
+  animation: gradient-animation 8s ease infinite;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 h3 {
@@ -740,5 +908,18 @@ h3 {
 .count.active {
   background-color: #f44336;
   color: white;
+}
+
+.rotate-animation {
+  animation: rotate 0.5s linear;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

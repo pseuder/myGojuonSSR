@@ -120,7 +120,8 @@
           >
             <div class="flex flex-shrink-0 items-center">
               <el-button
-                type="text"
+                type="primary"
+                link
                 plain
                 @click="handleStartVideoClick(line.timestamp)"
               >
@@ -128,18 +129,6 @@
                   <Right />
                 </el-icon>
               </el-button>
-
-              <!-- <el-button
-                type="text"
-                plain
-                @click="togglePlayPause"
-                style="margin-left: 4px"
-              >
-                <el-icon :size="25">
-                  <VideoPause v-if="isPlaying" />
-                  <VideoPlay v-else />
-                </el-icon>
-              </el-button> -->
             </div>
             <div class="flex flex-wrap gap-2">
               <template v-for="(ly, lyIndex) in line.lyrics" :key="lyIndex">
@@ -171,7 +160,7 @@
     <!-- 浮動播放/暫停按鈕 (只在小於lg螢幕時顯示) -->
     <div v-if="currentVideo" class="fixed right-4 bottom-4 z-50 lg:hidden">
       <el-button type="primary" size="large" circle @click="togglePlayPause">
-        <el-icon :size="24">
+        <el-icon :size="28">
           <VideoPause v-if="isPlaying" />
           <VideoPlay v-else />
         </el-icon>
@@ -214,8 +203,11 @@ const {
   async () => {
     try {
       const currentUid = route.params.uid; // 使用當前路由的 uid
+      if (currentUid == undefined) return;
       const response = await MYAPI.get(`/get_video/${currentUid}`);
       if (!response.data) {
+        console.error("Song Not Response");
+        console.error(response);
         // 在 Nuxt 中，建議這樣拋出一個帶有狀態碼的錯誤
         throw createError({
           statusCode: 404,
@@ -261,19 +253,38 @@ const songImageUrl = computed(() =>
     : `${siteUrl}/favicon.png`,
 );
 
+// 提取歌詞前N個字作為description
+const lyricsDescription = computed(() => {
+  if (!lyrics.value || lyrics.value.length === 0) {
+    return `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`;
+  }
+
+  let fullText = "";
+  for (const line of lyrics.value) {
+    for (const lyric of line.lyrics) {
+      fullText += lyric.ori;
+    }
+    fullText += " ";
+  }
+
+  // 取前60個字
+  const description = fullText.substring(0, 60);
+  return description + (fullText.length > 60 ? "..." : "");
+});
+
 useSeoMeta({
   title: () =>
     `${currentVideo.value?.name} - ${currentVideo.value?.author}｜${t(
       "meta.title",
     )}`,
-  description: () =>
-    `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`,
+  description: () => lyricsDescription.value,
   keywords: () =>
     `${currentVideo.value?.name}, ${currentVideo.value?.author}, ${currentVideo.value?.tags}, 歌曲, 歌詞, KTV`,
   ogTitle: () =>
-    `${currentVideo.value?.name} - ${currentVideo.value?.author}｜日語50音學習網站`,
-  ogDescription: () =>
-    `${currentVideo.value?.name} - ${currentVideo.value?.author} KTV歌詞練習`,
+    `${currentVideo.value?.name} - ${currentVideo.value?.author}｜${t(
+      "meta.title",
+    )}`,
+  ogDescription: () => lyricsDescription.value,
   twitterCard: "summary",
 });
 
@@ -288,7 +299,9 @@ useHead({
       type: "application/ld+json",
       children: () => {
         if (currentVideo.value) {
-          return JSON.stringify(getVideoSchema(currentVideo.value));
+          return JSON.stringify(
+            getVideoSchema(currentVideo.value, lyricsDescription.value),
+          );
         }
         return "";
       },

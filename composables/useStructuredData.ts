@@ -57,14 +57,14 @@ export const useStructuredData = () => {
   };
 
   // VideoObject Schema - 用於歌曲頁面
-  const getVideoSchema = (video: any) => {
+  const getVideoSchema = (video: any, customDescription?: string) => {
     if (!video) return null;
 
     return {
       "@context": "https://schema.org",
       "@type": "VideoObject",
       name: `${video.name} - ${video.author}`,
-      description: t("page_meta.song_practice.description").replace(
+      description: customDescription || t("page_meta.song_practice.description").replace(
         "{song_name}",
         `${video.name} - ${video.author}`
       ),

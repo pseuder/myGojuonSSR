@@ -3,7 +3,11 @@
     <!-- 50音列表 -->
     <div class="w-full" :key="activeTab">
       <h2 class="mb-3 text-xl font-semibold">
-        <el-tabs v-model="activeTab" class="w-fill mb-4 lg:max-w-md">
+        <el-tabs
+          v-model="activeTab"
+          class="w-fill mb-4 lg:max-w-md"
+          @tab-change="handleTabChange"
+        >
           <template v-for="tab in tabs" :key="tab.name">
             <el-tab-pane :label="t(tab.label)" :name="tab.name" />
           </template>
@@ -68,12 +72,6 @@
           </el-checkbox>
 
           <!-- 音檔播放控制 -->
-          <audio
-            ref="audioPlayer"
-            :src="`/sounds/${selectedSound.romaji}.mp3`"
-            @loadeddata="autoPlaySound"
-            @ended="audioEnded"
-          ></audio>
           <div class="hover:cursor-pointer" @click="togglePlay">
             <img
               v-if="isPlaying"
@@ -97,7 +95,7 @@
           :example-kana="selectedSound.kana"
           :current-type="activeTab"
           :show-example="true"
-          :learning-module="'writing'"
+          :learning-module="LEARNING_MODULE"
           @changeSound="changeSound"
         />
       </el-card>
@@ -106,21 +104,65 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
-import { CaretLeft, CaretRight } from "@element-plus/icons-vue";
-import { ElMessageBox, ElMessage } from "element-plus";
-const { gtag } = useGtag();
-
+// ============================================================
+// Imports & Composables
+// ============================================================
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import HandwritingCanvas from "/components/HandwritingCanvas.vue";
 import fiftySoundsData from "/data/fifty-sounds.json";
 
-import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
-const myAPI = useApi();
+const { gtag } = useGtag();
 const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
+const { isPlaying, play: playAudio, stop: stopAudio } = useWebAudio();
+const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
 
-// 手寫練習頁面專屬 SEO Meta
+// ============================================================
+// Constants
+// ============================================================
+const STORAGE_KEYS = {
+  AUTO_PLAY: "writingPractice_autoPlay",
+  ACTIVE_TAB: "writingPractice_activeTab",
+  SELECTED_SOUND: "writingPractice_selectedSound",
+};
+
+const TAB_TYPES = {
+  HIRAGANA: "hiragana",
+  KATAKANA: "katakana",
+  DAKUON: "dakuon",
+  HANDAKUON: "handakuon",
+  YOON: "yoon",
+};
+
+const KEYBOARD_KEYS = {
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
+};
+
+const SOUND_DIRECTION = {
+  NEXT: "next",
+  PREV: "prev",
+};
+
+const GROUP_SIZES = {
+  YOON: 3,
+  DEFAULT: 5,
+};
+
+const AUDIO_CONFIG = {
+  SOUNDS_PATH: "/sounds/",
+  FILE_EXTENSION: ".mp3",
+};
+
+const LEARNING_MODULE = "writing";
+
+// ============================================================
+// SEO & Meta
+// ============================================================
+const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/WritingPractice`;
+
 useSeoMeta({
   title: () => t("page_meta.writing_practice.title"),
   description: () => t("page_meta.writing_practice.description"),
@@ -135,9 +177,6 @@ useSeoMeta({
   twitterImage: `${siteUrl}/favicon.png`,
 });
 
-// 添加結構化資料
-const { getCourseSchema, getBreadcrumbSchema } = useStructuredData();
-const pageUrl = `${siteUrl}${locale.value === "zh-TW" ? "" : `/${locale.value}`}/WritingPractice`;
 useHead({
   script: [
     {
@@ -162,38 +201,49 @@ useHead({
   ],
 });
 
-const fiftySounds = ref(fiftySoundsData);
-const activeTab = ref("hiragana");
+// ============================================================
+// Data & State
+// ============================================================
+const fiftySounds = fiftySoundsData;
+const activeTab = ref(TAB_TYPES.HIRAGANA);
 const selectedSound = ref({ kana: "あ", romaji: "a", evo: "安" });
-const handwritingCanvas = ref(null);
-const audioPlayer = ref(null);
-const isPlaying = ref(false);
 const autoPlay = ref(false);
 
 const tabs = [
-  { name: "hiragana", label: "hiragana" },
-  { name: "katakana", label: "katakana" },
-  { name: "dakuon", label: "dakuon" },
-  { name: "handakuon", label: "handakuon" },
-  { name: "yoon", label: "yoon" },
+  { name: TAB_TYPES.HIRAGANA, label: "hiragana" },
+  { name: TAB_TYPES.KATAKANA, label: "katakana" },
+  { name: TAB_TYPES.DAKUON, label: "dakuon" },
+  { name: TAB_TYPES.HANDAKUON, label: "handakuon" },
+  { name: TAB_TYPES.YOON, label: "yoon" },
 ];
 
-const currentSounds = computed(() =>
-  fiftySounds.value ? fiftySounds.value[activeTab.value] : [],
-);
+// ============================================================
+// Computed Properties
+// ============================================================
+const currentSounds = computed(() => fiftySounds[activeTab.value] ?? []);
 
 const groupedSounds = computed(() => {
   const groups = [];
-  const groupSize = activeTab.value === "yoon" ? 3 : 5;
+  const groupSize = activeTab.value === TAB_TYPES.YOON ? GROUP_SIZES.YOON : GROUP_SIZES.DEFAULT;
   for (let i = 0; i < currentSounds.value.length; i += groupSize) {
     groups.push(currentSounds.value.slice(i, i + groupSize));
   }
   return groups;
 });
 
-watch(activeTab, () => {
-  selectedSound.value = currentSounds.value[0];
-});
+// ============================================================
+// Sound Selection & Navigation
+// ============================================================
+const selectSound = (sound) => {
+  if (sound.kana) {
+    selectedSound.value = sound;
+    navigator.clipboard.writeText(sound.kana);
+    gtag("event", `手寫練習`);
+  }
+};
+
+const isSelectedSound = (sound) =>
+  selectedSound.value && selectedSound.value.kana === sound.kana;
 
 const findNextValidKana = (currentIndex, direction) => {
   const totalItems = currentSounds.value.length;
@@ -217,77 +267,126 @@ const changeSound = (type) => {
   );
 
   const nextSound =
-    type === "next"
+    type === SOUND_DIRECTION.NEXT
       ? findNextValidKana(currentIndex, 1)
       : findNextValidKana(currentIndex, -1);
 
   if (nextSound) {
     selectSound(nextSound);
-
-    // 重製播放器圖示
-    isPlaying.value = false;
   }
 };
 
-const togglePlay = () => {
-  if (audioPlayer.value) {
-    // 每次點擊都重置到開始並播放
-    audioPlayer.value.currentTime = 0;
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
+const handleTabChange = (TabPaneName) => {
+  selectedSound.value = currentSounds.value[0];
 };
 
-const audioEnded = () => {
-  isPlaying.value = false;
+// ============================================================
+// Audio Playback
+// ============================================================
+const playSound = async () => {
+  stopAudio(); // 先停止當前播放
+  const audioUrl = `${AUDIO_CONFIG.SOUNDS_PATH}${selectedSound.value.romaji}${AUDIO_CONFIG.FILE_EXTENSION}`;
+  await playAudio(audioUrl);
 };
 
-const playSound = () => {
-  if (audioPlayer.value) {
-    audioPlayer.value.currentTime = 0; // 重置音频到开始位置
-    audioPlayer.value.play();
-    isPlaying.value = true;
-  }
+const togglePlay = async () => {
+  await playSound();
 };
 
-const autoPlaySound = () => {
-  if (autoPlay.value) {
-    playSound();
-  }
-};
-
-const selectSound = (sound) => {
-  if (sound.kana) {
-    selectedSound.value = sound;
-    navigator.clipboard.writeText(sound.kana);
-    gtag("event", `手寫練習`);
-  }
-};
-
-const isSelectedSound = (sound) =>
-  selectedSound.value && selectedSound.value.kana === sound.kana;
-
+// ============================================================
+// Keyboard Events
+// ============================================================
 const handleKeydown = (event) => {
-  if (event.key === "ArrowLeft") {
-    changeSound("prev");
-  } else if (event.key === "ArrowRight") {
-    changeSound("next");
+  if (event.key === KEYBOARD_KEYS.ARROW_LEFT) {
+    changeSound(SOUND_DIRECTION.PREV);
+  } else if (event.key === KEYBOARD_KEYS.ARROW_RIGHT) {
+    changeSound(SOUND_DIRECTION.NEXT);
   }
 };
 
+// ============================================================
+// LocalStorage Persistence
+// ============================================================
+const loadPreferences = () => {
+  // localStorage 在 SSR 階段不存在, 加入環境檢查
+  if (typeof window === "undefined") return;
+
+  // 讀取 autoPlay 設定
+  const savedAutoPlay = localStorage.getItem(STORAGE_KEYS.AUTO_PLAY);
+  if (savedAutoPlay !== null) {
+    autoPlay.value = savedAutoPlay === "true";
+  }
+
+  // 讀取 activeTab 設定
+  const savedActiveTab = localStorage.getItem(STORAGE_KEYS.ACTIVE_TAB);
+  if (savedActiveTab !== null) {
+    const validTabs = Object.values(TAB_TYPES);
+    if (validTabs.includes(savedActiveTab)) {
+      activeTab.value = savedActiveTab;
+    }
+  }
+
+  // 讀取 selectedSound 設定
+  const savedSelectedSound = localStorage.getItem(STORAGE_KEYS.SELECTED_SOUND);
+  if (savedSelectedSound !== null) {
+    try {
+      const parsedSound = JSON.parse(savedSelectedSound);
+      const soundExists = currentSounds.value.find(
+        (sound) => sound.kana === parsedSound.kana,
+      );
+      if (soundExists) {
+        selectedSound.value = parsedSound;
+      } else {
+        selectedSound.value = currentSounds.value[0];
+      }
+    } catch (error) {
+      console.error("Failed to parse savedSelectedSound:", error);
+      selectedSound.value = currentSounds.value[0];
+    }
+  }
+};
+
+// 監聽並保存用戶偏好設定
+watch(autoPlay, (newValue) => {
+  localStorage.setItem(STORAGE_KEYS.AUTO_PLAY, newValue.toString());
+});
+
+watch(activeTab, (newValue) => {
+  localStorage.setItem(STORAGE_KEYS.ACTIVE_TAB, newValue);
+});
+
+watch(
+  selectedSound,
+  (newValue) => {
+    if (newValue && newValue.kana) {
+      localStorage.setItem(
+        STORAGE_KEYS.SELECTED_SOUND,
+        JSON.stringify(newValue),
+      );
+    }
+  },
+  { deep: true },
+);
+
+// ============================================================
+// Auto Play Feature
+// ============================================================
+watch(selectedSound, async () => {
+  if (autoPlay.value) {
+    await playSound();
+  }
+});
+
+// ============================================================
+// Lifecycle Hooks
+// ============================================================
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
-  // 初始加载时播放第一个音频
-  // nextTick(() => {
-  //   playSound();
-  // });
+  loadPreferences();
 });
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
-  if (audioPlayer.value) {
-    audioPlayer.value.pause();
-    audioPlayer.value.src = "";
-  }
+  // Web Audio API 資源會在 useWebAudio composable 中自動清理
 });
 </script>

@@ -1,46 +1,50 @@
 <!-- components/MyGoogleLogin.vue -->
 <template>
-  <div class="mr-2 flex h-full w-full items-center overflow-hidden">
-    <!-- 使用從 useAuth 來的響應式 isLogin 狀態 -->
-    <template v-if="isLogin && user">
-      <div class="flex items-center">
-        <el-popover
-          placement="bottom"
-          :width="100"
-          trigger="click"
-          popper-class="logout-popover"
-        >
-          <template #reference>
-            <div
-              class="w-20 cursor-pointer truncate text-blue-400 hover:text-blue-600"
-            >
-              {{ user.name }}
+  <ClientOnly>
+    <div class="mr-2 flex h-full w-full items-center overflow-hidden">
+      <!-- 使用從 useAuth 來的響應式 isLogin 狀態 -->
+      <template v-if="isLogin && user">
+        <div class="flex items-center">
+          <el-popover
+            placement="bottom"
+            :width="100"
+            trigger="click"
+            popper-class="logout-popover"
+          >
+            <template #reference>
+              <div
+                class="w-20 cursor-pointer truncate text-blue-400 hover:text-blue-600"
+              >
+                {{ user.name }}
+              </div>
+            </template>
+            <div class="flex flex-col items-center gap-2">
+              <div>{{ t("left_points") }}: ∞</div>
+              <el-button
+                @click="handleLogout"
+                type="danger"
+                plain
+                size="small"
+                class="w-full"
+              >
+                {{ t("logout") }}
+              </el-button>
             </div>
-          </template>
-          <div class="flex flex-col items-center gap-2">
-            <div>{{ t("left_points") }}: ∞</div>
-            <el-button
-              @click="handleLogout"
-              type="danger"
-              plain
-              size="small"
-              class="w-full"
-            >
-              {{ t("logout") }}
-            </el-button>
-          </div>
-        </el-popover>
+          </el-popover>
+        </div>
+      </template>
+      <template v-else>
+        <GoogleLogin :callback="handleLoginCallback" prompt> </GoogleLogin>
+      </template>
+    </div>
+    <template #fallback>
+      <div class="mr-2 flex h-full w-full items-center overflow-hidden">
+        <div class="flex items-center">
+          <el-skeleton :rows="0" animated style="width: 80px; height: 32px" />
+        </div>
       </div>
     </template>
-    <template v-else>
-      <ClientOnly>
-        <GoogleLogin :callback="handleLoginCallback" prompt> </GoogleLogin>
-        <template #fallback>
-          <el-button loading></el-button>
-        </template>
-      </ClientOnly>
-    </template>
-  </div>
+  </ClientOnly>
 </template>
 
 <script setup>

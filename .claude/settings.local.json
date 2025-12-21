@@ -4,7 +4,9 @@
       "Bash(dir:*)",
       "Bash(yarn build)",
       "Bash(mkdir:*)",
-      "Bash(move:*)"
+      "Bash(move:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
