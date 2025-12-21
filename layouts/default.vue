@@ -203,19 +203,24 @@ onMounted(() => {
   animation: fall linear infinite;
   white-space: nowrap;
   user-select: none;
+  /* GPU 硬體加速優化 */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: layout style paint;
 }
 
-/* 簡單的下落動畫 */
+/* 簡單的下落動畫 - 使用 translate3d 啟用硬體加速 */
 @keyframes fall {
   0% {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
     opacity: 0;
   }
   10% {
     opacity: 1;
   }
   100% {
-    transform: translateY(120vh);
+    transform: translate3d(0, 120vh, 0);
     opacity: 0;
   }
 }
