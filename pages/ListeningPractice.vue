@@ -517,12 +517,10 @@ const loadLearningState = () => {
         // 恢復 soundCounts
         if (state.soundCounts) {
           Object.keys(soundCounts).forEach((key) => delete soundCounts[key]);
-          console.log(state.soundCounts);
           Object.assign(soundCounts, state.soundCounts);
         }
         // 恢復 selectedSound
         if (state.selectedSound) {
-          console.log(state.selectedSound);
           selectedSound.value = state.selectedSound;
         }
       }
