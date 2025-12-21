@@ -124,5 +124,6 @@
   "views": "觀看數",
   "publish_date": "發布日期",
   "loading_more_videos": "載入更多影片中...",
-  "error_loading_data": "載入資料時發生錯誤"
+  "error_loading_data": "載入資料時發生錯誤",
+  "no_previous_sound": "沒有上一個音節可用"
 }

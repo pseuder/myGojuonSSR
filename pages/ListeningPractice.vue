@@ -338,6 +338,8 @@ const soundCounts = reactive({});
 const round = ref(1);
 const isRotating = ref(false);
 const isMounting = ref(true); // 標記是否正在掛載中
+const soundHistory = ref([]); // 歷史記錄栈，用於實現真正的"上一個"功能
+const currentHistoryIndex = ref(-1); // 當前在歷史記錄中的位置
 
 // ===========================
 // Computed Properties
@@ -423,22 +425,41 @@ const handleModeChange = () => {
 };
 
 const changeSound = (type) => {
-  if (isRandomMode.value) {
-    selectSound(getRandomSound());
-  } else {
-    const currentIndex = currentSounds.value.findIndex(
-      (sound) => sound.kana === selectedSound.value.kana,
-    );
+  if (type === "prev") {
+    // 實現真正的"上一個"功能：從歷史記錄中返回
+    if (currentHistoryIndex.value > 0) {
+      currentHistoryIndex.value--;
+      const prevSound = soundHistory.value[currentHistoryIndex.value];
+      selectedSound.value = prevSound;
+    } else {
+      ElMessage.warning(t("no_previous_sound") || "沒有上一個了");
+    }
+    return;
+  }
 
-    const nextSound =
-      type === "next"
-        ? findNextValidKana(currentIndex, 1)
-        : findNextValidKana(currentIndex, -1);
+  // "下一個"的邏輯
+  if (type === "next") {
+    // 如果當前不在歷史記錄的最後位置，先嘗試前進歷史記錄
+    if (currentHistoryIndex.value < soundHistory.value.length - 1) {
+      currentHistoryIndex.value++;
+      const nextSound = soundHistory.value[currentHistoryIndex.value];
+      selectedSound.value = nextSound;
+      return;
+    }
+
+    // 否則選擇新的音
+    let nextSound;
+    if (isRandomMode.value) {
+      nextSound = getRandomSound();
+    } else {
+      const currentIndex = currentSounds.value.findIndex(
+        (sound) => sound.kana === selectedSound.value.kana,
+      );
+      nextSound = findNextValidKana(currentIndex, 1);
+    }
 
     if (nextSound) {
-      // Increment the count for the current sound before moving to the next
-      // soundCounts[selectedSound.value.kana]++;
-      selectSound(nextSound);
+      selectSound(nextSound, true); // 傳遞 true 表示這是新的選擇，需要加入歷史
     }
   }
 };
@@ -456,9 +477,30 @@ const playSound = async () => {
   await playAudio(audioUrl);
 };
 
-const selectSound = (sound) => {
+const selectSound = (sound, addToHistory = false) => {
   if (sound.kana) {
     selectedSound.value = sound;
+
+    // 如果是新的選擇（不是從歷史記錄中導航），加入歷史記錄
+    if (addToHistory) {
+      // 如果當前不在歷史記錄的末尾，刪除後面的記錄
+      if (currentHistoryIndex.value < soundHistory.value.length - 1) {
+        soundHistory.value = soundHistory.value.slice(
+          0,
+          currentHistoryIndex.value + 1,
+        );
+      }
+
+      // 添加新的記錄
+      soundHistory.value.push(sound);
+      currentHistoryIndex.value = soundHistory.value.length - 1;
+
+      // 限制歷史記錄長度為 100
+      if (soundHistory.value.length > 100) {
+        soundHistory.value.shift();
+        currentHistoryIndex.value--;
+      }
+    }
 
     gtag("event", `聽寫練習`);
   }
@@ -515,6 +557,8 @@ const saveLearningState = () => {
     soundCounts: soundCounts,
     activeTab: activeTab.value,
     selectedSound: selectedSound.value,
+    soundHistory: soundHistory.value,
+    currentHistoryIndex: currentHistoryIndex.value,
   };
   localStorage.setItem(
     "listeningPractice_learningState",
@@ -539,6 +583,13 @@ const loadLearningState = () => {
         // 恢復 selectedSound
         if (state.selectedSound) {
           selectedSound.value = state.selectedSound;
+        }
+        // 恢復歷史記錄
+        if (state.soundHistory) {
+          soundHistory.value = state.soundHistory;
+        }
+        if (state.currentHistoryIndex !== undefined) {
+          currentHistoryIndex.value = state.currentHistoryIndex;
         }
       }
     } catch (e) {
@@ -565,6 +616,9 @@ const resetRound = () => {
       round.value = 1;
       // 清空 soundCounts
       initializeCounts();
+      // 清空歷史記錄並重新初始化
+      soundHistory.value = [selectedSound.value];
+      currentHistoryIndex.value = 0;
       // 保存狀態
       saveLearningState();
       ElMessage.success(t("Round 已重置"));
@@ -682,6 +736,11 @@ watch(activeTab, () => {
 
     // 重置soundCounts
     initializeCounts();
+
+    // 清空歷史記錄並重新初始化
+    soundHistory.value = [currentSounds.value[0]];
+    currentHistoryIndex.value = 0;
+
     saveLearningState();
   }
 });
@@ -742,6 +801,12 @@ onMounted(() => {
 
   // 恢復學習狀態
   loadLearningState();
+
+  // 初始化歷史記錄（如果是第一次加載）
+  if (soundHistory.value.length === 0 && selectedSound.value.kana) {
+    soundHistory.value = [selectedSound.value];
+    currentHistoryIndex.value = 0;
+  }
 
   // 掛載完成後播放聲音並解除掛載標記
   nextTick(() => {

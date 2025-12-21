@@ -124,5 +124,6 @@
   "views": "Views",
   "publish_date": "Publish Date",
   "loading_more_videos": "Loading more videos...",
-  "error_loading_data": "Error loading data"
+  "error_loading_data": "Error loading data",
+  "no_previous_sound": "No previous sound available"
 }
