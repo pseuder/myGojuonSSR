@@ -144,12 +144,7 @@
               alt=""
             />
           </el-button>
-          <el-button
-            v-else
-            type="primary"
-            class="h-12 w-full"
-            disabled
-          >
+          <el-button v-else type="primary" class="h-12 w-full" disabled>
             {{ t("login_to_enable_ai_recognition") }}
           </el-button>
         </ClientOnly>
@@ -486,11 +481,55 @@ const handleCorrectPrediction = (currentKana) => {
   predictKana.value = currentKana;
   ElMessage.success(t("corrent") + `！: ${currentKana}`);
   soundCounts[currentKana]++;
+  saveLearningState();
   changeSound("next");
 };
 
 const handleIncorrectPrediction = (predictedKana) => {
   ElMessage.error(t("incorrect") + `！: ${predictedKana}`);
+};
+
+// ===========================
+// Learning State Management
+// ===========================
+const saveLearningState = () => {
+  const state = {
+    round: round.value,
+    soundCounts: soundCounts,
+    activeTab: activeTab.value,
+    selectedSound: selectedSound.value,
+  };
+  localStorage.setItem(
+    "listeningPractice_learningState",
+    JSON.stringify(state),
+  );
+};
+
+const loadLearningState = () => {
+  const savedState = localStorage.getItem("listeningPractice_learningState");
+  if (savedState) {
+    try {
+      const state = JSON.parse(savedState);
+
+      // 只有當 activeTab 相同時才恢復學習狀態
+      if (state.activeTab === activeTab.value) {
+        round.value = state.round || 1;
+        // 恢復 soundCounts
+        if (state.soundCounts) {
+          Object.keys(soundCounts).forEach((key) => delete soundCounts[key]);
+          console.log(state.soundCounts);
+          Object.assign(soundCounts, state.soundCounts);
+        }
+        // 恢復 selectedSound
+        if (state.selectedSound) {
+          console.log(state.selectedSound);
+          selectedSound.value = state.selectedSound;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load learning state:", e);
+    }
+  }
 };
 
 // ===========================
@@ -573,8 +612,12 @@ const handleClearSpecialLearningList = () => {
 // ===========================
 // 監聽 currentSounds 的變化，如果變化則重新初始化計數器
 watch(currentSounds, () => {
-  initializeCounts();
-  round.value = 1;
+  // 掛載期間不重置,讓 loadLearningState 處理
+  if (!isMounting.value) {
+    initializeCounts();
+    round.value = 1;
+    saveLearningState();
+  }
 });
 
 watch(
@@ -585,15 +628,20 @@ watch(
       await nextTick();
       await playSound();
     }
+    saveLearningState();
   },
   { deep: true },
 );
 
 watch(activeTab, () => {
-  selectedSound.value = currentSounds.value[0];
+  // 掛載期間不重置,讓 loadLearningState 處理
+  if (!isMounting.value) {
+    selectedSound.value = currentSounds.value[0];
 
-  // 重置soundCounts
-  initializeCounts();
+    // 重置soundCounts
+    initializeCounts();
+    saveLearningState();
+  }
 });
 
 // 監聽 isRandomMode 變化並保存到 localStorage
@@ -604,6 +652,11 @@ watch(isRandomMode, (newValue) => {
 // 監聽 activeTab 變化並保存到 localStorage
 watch(activeTab, (newValue) => {
   localStorage.setItem("listeningPractice_activeTab", newValue);
+});
+
+// 監聽 round 變化並保存學習狀態
+watch(round, () => {
+  saveLearningState();
 });
 
 // ===========================
@@ -644,6 +697,9 @@ onMounted(() => {
       }
     }
   }
+
+  // 恢復學習狀態
+  loadLearningState();
 
   // 掛載完成後播放聲音並解除掛載標記
   nextTick(() => {
