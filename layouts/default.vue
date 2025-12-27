@@ -20,7 +20,7 @@
       </div>
       <div class="flex w-fit items-center gap-4">
         <LocaleSwitcher />
-        <myGoogleLogin />
+        <myGoogleLogin v-model:textWaterfallEnabled="textWaterfallEnabled" />
       </div>
     </nav>
 
@@ -60,6 +60,9 @@ const route = useRoute();
 const activeIndex = ref("/");
 
 const isAdmin = computed(() => user.value?.email === "iop890520@gmail.com");
+
+// 文字瀑布開關狀態
+const textWaterfallEnabled = ref(true);
 
 watch(
   () => route.path,
@@ -112,11 +115,16 @@ onMounted(() => {
   if (!textContainer.value) return;
 
   // 只在桌面裝置上創建文字瀑布
-  if (isDesktopDevice()) {
-    requestAnimationFrame(createTextElement); // 開始創建
-  } else {
+  if (isDesktopDevice() && textWaterfallEnabled.value) {
+    createTextWaterfall();
+  } else if (!isDesktopDevice()) {
     console.log("non-desktop device do not show the text waterfall");
   }
+});
+
+// 創建文字瀑布的函數
+function createTextWaterfall() {
+  if (!textContainer.value) return;
 
   let count = 0;
   function createTextElement() {
@@ -148,6 +156,25 @@ onMounted(() => {
       count++;
       requestAnimationFrame(createTextElement); // 使用 requestAnimationFrame
     }
+  }
+
+  requestAnimationFrame(createTextElement); // 開始創建
+}
+
+// 清除文字瀑布的函數
+function clearTextWaterfall() {
+  if (!textContainer.value) return;
+  textContainer.value.innerHTML = "";
+}
+
+// 監聽開關狀態變化
+watch(textWaterfallEnabled, (newValue) => {
+  if (!isDesktopDevice()) return;
+
+  if (newValue) {
+    createTextWaterfall();
+  } else {
+    clearTextWaterfall();
   }
 });
 </script>

@@ -1,7 +1,7 @@
 <!-- components/MyGoogleLogin.vue -->
 <template>
   <ClientOnly>
-    <div class="mr-2 flex h-full w-full items-center overflow-hidden">
+    <div class="mr-2 flex h-full w-full items-center gap-4 overflow-hidden">
       <!-- 使用從 useAuth 來的響應式 isLogin 狀態 -->
       <template v-if="isLogin && user">
         <div class="flex items-center">
@@ -20,6 +20,14 @@
             </template>
             <div class="flex flex-col items-center gap-2">
               <div>{{ t("left_points") }}: ∞</div>
+              <!-- 文字瀑布開關 -->
+              <div class="flex items-center gap-2">
+                <span class="text-sm">{{ t("text_waterfall") }}</span>
+                <el-switch
+                  :model-value="textWaterfallEnabled"
+                  @update:model-value="handleTextWaterfallToggle"
+                />
+              </div>
               <el-button
                 @click="handleLogout"
                 type="danger"
@@ -56,6 +64,22 @@ const { t } = useI18n();
 
 const { user, isLogin, setLoginInfo, logout } = useAuth();
 const myAPI = useApi();
+
+// 接收父組件傳來的 props
+const props = defineProps({
+  textWaterfallEnabled: {
+    type: Boolean,
+    required: true,
+  },
+});
+
+// 定義 emit 事件
+const emit = defineEmits(["update:textWaterfallEnabled"]);
+
+// 處理開關切換
+const handleTextWaterfallToggle = (value) => {
+  emit("update:textWaterfallEnabled", value);
+};
 
 const handleLoginCallback = async (response) => {
   const userData = decodeCredential(response.credential);
