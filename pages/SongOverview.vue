@@ -334,6 +334,9 @@ const sortOrder = ref("desc"); // 'asc' or 'desc'
 // Ref for scrollable container
 const scrollContainer = ref(null);
 
+// Store scroll position for author list
+const authorListScrollPosition = ref(0);
+
 // Computed property for current author
 const currentAuthor = computed(() => {
   if (!activeTab.value || activeTab.value === "all") return null;
@@ -464,14 +467,27 @@ const formatDate = (dateString) => {
 };
 
 const handleAuthorSelect = (authorId) => {
+  // Save scroll position before leaving author list view
+  const authorListContainer = document.querySelector('.flex.w-full.flex-1.flex-wrap.content-start.justify-center.gap-4.overflow-y-auto');
+  if (authorListContainer) {
+    authorListScrollPosition.value = authorListContainer.scrollTop;
+  }
+
   const authorIdStr = String(authorId);
   activeTab.value = authorIdStr;
   handleTabChange(authorIdStr);
 };
 
-const handleBackToAll = () => {
+const handleBackToAll = async () => {
   activeTab.value = "all";
-  handleTabChange("all");
+  await handleTabChange("all");
+
+  // Restore scroll position after returning to author list view
+  await nextTick();
+  const authorListContainer = document.querySelector('.flex.w-full.flex-1.flex-wrap.content-start.justify-center.gap-4.overflow-y-auto');
+  if (authorListContainer && authorListScrollPosition.value > 0) {
+    authorListContainer.scrollTop = authorListScrollPosition.value;
+  }
 };
 
 const handleVideoClick = (source_id) => {
