@@ -559,6 +559,11 @@ const handleClearSpecialLearningList = () => {
         saveSpecialLearningList();
         ElMessage.success(t("special_learning_list_cleared"));
 
+        // if current mode is special, switch to hiragana
+        if (activeTab.value === "special") {
+          activeTab.value = "hiragana";
+        }
+
         specialLearningListDialogVisible.value = false;
         isRotating.value = false;
       }, 500);
