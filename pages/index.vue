@@ -67,19 +67,6 @@
         </h2>
 
         <div class="flex flex-col gap-2">
-          <!-- 線上留言 -->
-          <div
-            class="my-4 flex w-fit items-center gap-4"
-            @click="handleReportClick('online')"
-          >
-            <el-button type="warning" class="" plain circle>
-              <el-icon :size="20"><ChatLineRound /></el-icon>
-            </el-button>
-            <span class="pointer-cursor mb-2 text-[#e6a23c]">{{
-              t("anonymous_feedback")
-            }}</span>
-          </div>
-
           <!-- gmail -->
           <div
             class="my-4 flex flex-col gap-4"
@@ -213,20 +200,17 @@
         </div>
       </section>
     </div>
-    <ContactForm :visible="showContactForm" @close="showContactForm = false" />
-  </div>
+    </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElementPlus } from "@element-plus/icons-vue";
-import ContactForm from "~/components/ContactForm.vue";
-import { VideoCameraFilled, ChatLineRound } from "@element-plus/icons-vue";
+import { VideoCameraFilled } from "@element-plus/icons-vue";
 
 const router = useRouter();
 const localePath = useLocalePath();
-const showContactForm = ref(false);
 
 import { useI18n } from "vue-i18n";
 const { t, locale } = useI18n();
@@ -236,9 +220,6 @@ const config = useRuntimeConfig();
 const siteUrl = config.public.siteBase || "https://mygojuon.vercel.app";
 
 const handleReportClick = (item) => {
-  if (item == "online") {
-    showContactForm.value = true;
-  }
   gtag("event", `回報問題: ${item}`);
 };
 

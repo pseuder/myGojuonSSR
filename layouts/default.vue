@@ -37,12 +37,31 @@
         <router-view> </router-view>
       </div>
     </main>
+
+    <!-- Floating Contact Button -->
+    <div
+      class="floating-contact-button"
+      @click="showContactForm = !showContactForm"
+    >
+      <el-button
+        type="warning"
+        plain
+        circle
+        size="large"
+        :title="t('anonymous_feedback')"
+      >
+        <el-icon :size="25"><ChatLineRound /></el-icon>
+      </el-button>
+    </div>
+    <ContactForm :visible="showContactForm" @close="showContactForm = false" />
   </div>
 </template>
 
 <script setup>
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { ChatLineRound } from "@element-plus/icons-vue";
+import ContactForm from "~/components/ContactForm.vue";
 
 import fiftySoundsData from "/data/fifty-sounds.json";
 import myGoogleLogin from "/components/myGoogleLogin.vue";
@@ -53,6 +72,9 @@ import { useAuth } from "~/composables/useAuth";
 // 在應用程序啟動時，初始化認證狀態
 const { initializeAuth, user } = useAuth();
 initializeAuth();
+
+const { gtag } = useGtag();
+const showContactForm = ref(false);
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
@@ -245,5 +267,14 @@ watch(textWaterfallEnabled, (newValue) => {
     transform: translateY(120vh);
     opacity: 0;
   }
+}
+
+/* Floating Contact Button */
+.floating-contact-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 100;
+  cursor: pointer;
 }
 </style>

@@ -87,9 +87,12 @@
             </div>
           </div>
 
-          <el-tag v-if="currentVideo.remark" type="success">{{
-            currentVideo.remark
-          }}</el-tag>
+          <el-alert type="success">
+            <p class="w-[90%] wrap-break-word">
+              {{ currentVideo.remark }}
+            </p>
+          </el-alert>
+          <!-- <el-tag v-if="currentVideo.remark" type="success"></el-tag> -->
         </div>
       </div>
 
@@ -158,7 +161,7 @@
     </div>
 
     <!-- 浮動播放/暫停按鈕 (只在小於lg螢幕時顯示) -->
-    <div v-if="currentVideo" class="fixed right-4 bottom-4 z-50 lg:hidden">
+    <div v-if="currentVideo" class="fixed right-8 bottom-22 z-50 lg:hidden">
       <el-button type="primary" size="large" circle @click="togglePlayPause">
         <el-icon :size="28">
           <VideoPause v-if="isPlaying" />

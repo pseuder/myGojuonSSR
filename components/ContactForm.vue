@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="visible"
-    class="fixed right-4 bottom-4 z-50 w-full max-w-md rounded-lg bg-white p-6 shadow-lg"
+    class="fixed right-4 bottom-24 z-50 w-[90%] max-w-md rounded-lg bg-white p-6 shadow-lg"
   >
     <div class="flex items-center justify-between">
       <h3 class="text-xl font-semibold text-gray-800">

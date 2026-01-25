@@ -498,6 +498,8 @@ const recommendQuery = ref("");
 const recommendLoading = ref(false);
 const recommendHiraganas = ref([]);
 const currentOpenPopover = ref({ lineIndex: -1, lyricIndex: -1 });
+const hiraganaCache = ref(new Map());
+const CACHE_MAX_SIZE = 10;
 
 // 顏色選擇 Dialog
 const colorPickerVisible = ref(false);
@@ -742,7 +744,17 @@ const handleCopyHiragana = () => {
 
 //-- 推薦假名相關 --//
 const handleRecommendHiragana = async (text) => {
-  if (text === "") return;
+  if (!text) return;
+
+  // Check cache first
+  if (hiraganaCache.value.has(text)) {
+    const cachedValue = hiraganaCache.value.get(text);
+    recommendHiraganas.value = cachedValue;
+    // Move the accessed item to the end to mark it as recently used
+    hiraganaCache.value.delete(text);
+    hiraganaCache.value.set(text, cachedValue);
+    return;
+  }
 
   if (text === recommendQuery.value) return;
 
@@ -754,6 +766,15 @@ const handleRecommendHiragana = async (text) => {
       text,
     });
     recommendHiraganas.value = response.data;
+
+    // Store in cache
+    hiraganaCache.value.set(text, response.data);
+
+    // Evict oldest item if cache is full
+    if (hiraganaCache.value.size > CACHE_MAX_SIZE) {
+      const oldestKey = hiraganaCache.value.keys().next().value;
+      hiraganaCache.value.delete(oldestKey);
+    }
   } catch (error) {
     ElMessage.error("獲取推薦假名失敗");
   } finally {
