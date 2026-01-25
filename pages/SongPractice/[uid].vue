@@ -87,8 +87,8 @@
             </div>
           </div>
 
-          <el-alert type="success">
-            <p class="w-[90%] wrap-break-word">
+          <el-alert v-if="currentVideo.remark" type="success">
+            <p class="w-[88%] wrap-break-word">
               {{ currentVideo.remark }}
             </p>
           </el-alert>
