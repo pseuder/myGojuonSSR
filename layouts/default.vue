@@ -39,19 +39,29 @@
     </main>
 
     <!-- Floating Contact Button -->
-    <div
-      class="floating-contact-button"
-      @click="showContactForm = !showContactForm"
-    >
+    <div v-if="showFloatingButton" class="floating-contact-button">
+      <!-- Close Button -->
       <el-button
-        type="warning"
+        class="close-button"
+        type="danger"
         plain
-        circle
-        size="large"
-        :title="t('anonymous_feedback')"
+        @click.stop="showFloatingButton = false"
+        link
       >
-        <el-icon :size="25"><ChatLineRound /></el-icon>
+        <el-icon :size="18"><CloseBold /></el-icon>
       </el-button>
+
+      <div @click="showContactForm = !showContactForm">
+        <el-button
+          type="warning"
+          plain
+          circle
+          size="large"
+          :title="t('anonymous_feedback')"
+        >
+          <el-icon :size="25"><ChatLineRound /></el-icon>
+        </el-button>
+      </div>
     </div>
     <ContactForm :visible="showContactForm" @close="showContactForm = false" />
   </div>
@@ -60,7 +70,7 @@
 <script setup>
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { ChatLineRound } from "@element-plus/icons-vue";
+import { ChatLineRound, CloseBold } from "@element-plus/icons-vue";
 import ContactForm from "~/components/ContactForm.vue";
 
 import fiftySoundsData from "/data/fifty-sounds.json";
@@ -75,6 +85,7 @@ initializeAuth();
 
 const { gtag } = useGtag();
 const showContactForm = ref(false);
+const showFloatingButton = ref(true);
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
@@ -276,5 +287,12 @@ watch(textWaterfallEnabled, (newValue) => {
   right: 30px;
   z-index: 100;
   cursor: pointer;
+}
+
+.close-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 101;
 }
 </style>
