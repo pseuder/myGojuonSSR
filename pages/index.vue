@@ -194,13 +194,13 @@
             <el-button
               :icon="VideoCameraFilled"
               circle
-              @click="router.push(localePath('/SongEdit/empty'))"
+              @click="router.push(localePath('/S/empty'))"
             />
           </div>
         </div>
       </section>
     </div>
-    </div>
+  </div>
 </template>
 
 <script setup>

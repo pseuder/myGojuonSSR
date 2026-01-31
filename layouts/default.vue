@@ -114,7 +114,9 @@ watch(
 const isInSongPractice = computed(() => route.path.includes("/SongPractice"));
 const isInSongOverview = computed(() => route.path.includes("/SongOverview"));
 const isInBackend = computed(() => route.path.includes("/Backend"));
-const isInSongEdit = computed(() => route.path.includes("/SongEdit"));
+const isInSongEdit = computed(
+  () => route.path.includes("/S") || route.path.includes("/s"),
+);
 
 // ===== 文字瀑布 =====
 const TEXT_COUNT = 100; // 下落文字數量

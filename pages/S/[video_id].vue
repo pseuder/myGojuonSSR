@@ -9,7 +9,7 @@
         class="flex flex-col gap-2"
         :style="{ width: isMobile ? '100%' : `${leftPanelWidth}%` }"
       >
-        <!-- 第二列 -->
+        <!-- 第一列: 獲取YT影片 -->
         <div class="flex">
           <el-input v-model="videoId" class="w-full" placeholder="輸入YT ID" />
           <el-button type="primary" plain @click="handleReloadYT">
@@ -20,22 +20,30 @@
           </el-button>
         </div>
 
-        <!-- 第三列 -->
+        <!-- 第二列 歌名 -->
         <div class="flex gap-2">
           <el-input
             v-model="videoTitle"
             class="w-full"
-            placeholder="輸入音樂標題"
+            placeholder="輸入歌名"
           />
+        </div>
+
+        <!-- 第三列 歌手 -->
+        <div class="flex gap-2">
           <el-input
             v-model="videoChannel"
             class="w-full"
             placeholder="輸入歌手名稱"
           />
+        </div>
+
+        <!-- 第四列 標籤 -->
+        <div class="flex gap-2">
           <el-input v-model="tag" class="w-full" placeholder="輸入標籤" />
         </div>
 
-        <!-- 第四列 -->
+        <!-- 第五列: 功能列 -->
         <div class="flex gap-2">
           <el-button type="info" plain @click="handleClearLyrics" class="flex-1"
             >清空</el-button
@@ -59,6 +67,7 @@
           </el-button>
         </div>
 
+        <!-- 第六列: 功能列 -->
         <div class="flex gap-2">
           <el-button
             class="flex-1"
@@ -81,7 +90,7 @@
           </el-button>
         </div>
 
-        <!-- 第五列 -->
+        <!-- 第七列: 時間控制 -->
         <div class="flex gap-2">
           <el-input
             v-model="timeDiff"
@@ -96,7 +105,7 @@
           >
         </div>
 
-        <!-- 第一列 -->
+        <!-- 第八列: 功能列 -->
         <div class="flex w-full items-center gap-2">
           <el-checkbox v-model="autoScroll">scrolling</el-checkbox>
           <el-input-number
@@ -459,7 +468,7 @@ const route = useRoute();
 const { gtag } = useGtag();
 
 const isDirty = ref(false);
-const autoScroll = ref(true);
+const autoScroll = ref(false);
 const playbackRate = ref(1);
 
 // 影片資訊
