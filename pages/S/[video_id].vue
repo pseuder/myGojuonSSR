@@ -18,6 +18,9 @@
           <el-button type="primary" @click="openSearchDialog">
             搜尋影片
           </el-button>
+          <el-button class="grow" type="success" @click="handlePublishSong">
+            發布歌曲
+          </el-button>
         </div>
 
         <!-- 第二列 歌名 -->
@@ -117,10 +120,6 @@
             @change="changePlaybackRate(playbackRate)"
           />
           <el-checkbox v-model="formData.is_public">publish</el-checkbox>
-
-          <el-button class="grow" type="success" @click="handlePublishSong">
-            發布歌曲
-          </el-button>
         </div>
 
         <!-- 功能列 -->
@@ -234,25 +233,32 @@
                 >
                   <span class="flex">
                     <el-button
-                      link
+                      class="text-sm text-yellow-500"
+                      @click="handleDoubleClick(index, lyIndex, ly.ori)"
+                      type="text"
+                    >
+                      推
+                    </el-button>
+                    <el-button
                       class="text-sm text-blue-500"
                       @click="handleWidthenLyric(index, lyIndex)"
+                      type="text"
                     >
-                      加寬
+                      寬
                     </el-button>
                     <el-button
-                      link
                       class="text-sm text-red-500"
                       @click="handleDeleteLyric(index, lyIndex)"
+                      type="text"
                     >
-                      刪除
+                      刪
                     </el-button>
                     <el-button
-                      link
                       class="text-sm text-yellow-800"
                       @click="handleAddLyric(index, lyIndex)"
+                      type="text"
                     >
-                      增加
+                      增
                     </el-button>
                   </span>
                   <input
@@ -272,7 +278,6 @@
                     <template #reference>
                       <input
                         v-model="ly.ori"
-                        @dblclick="handleDoubleClick(index, lyIndex, ly.ori)"
                         class="lyric-ori h-6 w-full cursor-pointer rounded border border-gray-300 p-2"
                         placeholder=""
                       />
@@ -316,7 +321,7 @@
                       :class="ly.color ? '' : 'bg-gray-200'"
                       title="設定顏色"
                     >
-                      <span v-if="!ly.color" class="text-xs">色</span>
+                      <span class="text-xs">色</span>
                     </el-button>
                     <el-button
                       size="small"
@@ -342,8 +347,9 @@
                       size="small"
                       class="text-xs text-gray-500"
                       @click="ly.color = ''"
+                      type="text"
                     >
-                      清除
+                      X
                     </el-button>
                   </div>
                 </div>
