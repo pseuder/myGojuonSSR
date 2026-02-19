@@ -118,7 +118,10 @@
             v-for="(line, index) in lyrics"
             :key="index"
             :id="`lyric-${index}`"
-            :class="{ 'bg-yellow-200': currentLyricIndex === index }"
+            :style="{
+              'background-color':
+                currentLyricIndex === index ? '#fff085' : 'white',
+            }"
             class="flex items-center gap-4 py-2"
           >
             <div class="flex flex-shrink-0 items-center">
