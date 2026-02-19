@@ -137,6 +137,11 @@ const isDesktopDevice = () => {
     "ipod",
     "blackberry",
     "windows phone",
+    "smart-tv",
+    "smarttv",
+    "googletv",
+    "appletv",
+    "hbbtv",
   ];
   const isMobile = mobileKeywords.some((keyword) =>
     userAgent.includes(keyword),
